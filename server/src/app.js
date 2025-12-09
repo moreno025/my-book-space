@@ -9,6 +9,7 @@ import { connectDB } from "./config/db.js";
 import logger from "./utils/logger.js";
 import { security } from "./middleware/security.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 
 
@@ -45,7 +46,8 @@ app.use(
 );
 
 // Rutas
-app.use("/auth", userRoutes);
+app.use("/auth", authRoutes);
+app.use("/user", userRoutes);
 
 // Manejo global de errores (siempre el último middleware)
 app.use(errorHandler);
