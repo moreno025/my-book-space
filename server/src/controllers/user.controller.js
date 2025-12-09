@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import BookList from "../models/bookList.model.js";
+import Review from "../models/review.model.js";
 
 
 // ------------------------
@@ -187,4 +188,19 @@ export const getUserLists = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: "Error obteniendo listas del usuario" });
     }
+};
+
+
+// ------------------------
+// Get User Reviews
+// ------------------------
+export const getUserReviews = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const reviews = await Review.find({ user: userId }).populate("user", "username avatar");
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error obteniendo reseñas del usuario" });
+  }
 };
