@@ -60,7 +60,7 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Email o contraseña incorrectos" });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "24h" });
         const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
 
         user.refreshTokens.push(refreshToken);
@@ -102,7 +102,7 @@ export const refreshToken = async (req, res) => {
       return res.status(401).json({ message: "Refresh token inválido" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "24h" });
 
     res.status(200).json({ token });
   } catch (err) {
