@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  savedLists: [{ type: mongoose.Schema.Types.ObjectId, ref: "BookList" }],
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   refreshTokens: [{ type: String }],
