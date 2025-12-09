@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isPrivate: {
+    type: Boolean,
+    default: false,
+  },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   refreshTokens: [{ type: String }],
@@ -51,7 +55,6 @@ const userSchema = new mongoose.Schema({
   emailVerificationToken: { type: String },
   emailVerificationExpires: { type: Date }
 }, { timestamps: true });
-
 
 
 userSchema.pre("save", async function () {
