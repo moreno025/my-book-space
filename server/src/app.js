@@ -12,6 +12,8 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import bookListRoutes from "./routes/bookList.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
+import bookRoutes from "./routes/book.routes.js";
 
 
 const __filename = path.resolve(process.cwd(), 'src/app.js'); // Fallback or strict location
@@ -49,6 +51,8 @@ app.use(
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/book-list", bookListRoutes);
+app.use("/review", reviewRoutes);
+app.use("/book", bookRoutes);
 
 // Manejo global de errores (siempre el último middleware)
 app.use(errorHandler);
