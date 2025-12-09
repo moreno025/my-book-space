@@ -43,4 +43,46 @@ export async function sendPasswordResetEmail(toEmail, token) {
     };
 
     await transporter.sendMail(mailOptions);
-}
+};
+
+export const sendEmailChangedEmail = async (oldEmail, newEmail) => {
+    try {
+    await transporter.sendMail({
+      from: `${APP_NAME} <${MAIL_FROM}>`,
+      to: oldEmail,
+      subject: "Tu email ha sido actualizado",
+      html: `
+        <h2>Cambio de correo detectado</h2>
+        <p>Tu dirección de correo ha sido modificada.</p>
+        <p><strong>Nuevo correo:</strong> ${newEmail}</p>
+        <p>Si no has realizado este cambio, por favor cambia tu contraseña inmediatamente.</p>
+        <p>Fecha: ${new Date().toLocaleString()}</p>
+      `,
+    });
+  } catch (error) {
+    console.error("Error enviando email de cambio de correo:", error);
+  }
+};
+
+export const sendVerifyNewEmail = async (newEmail, token) => {
+  try {
+    const url = `${process.env.FRONTEND_URL}/verify-new-email?token=${token}`;
+
+    await transporter.sendMail({
+      from: `${APP_NAME} <${MAIL_FROM}>`,
+      to: newEmail,
+      subject: "Verifica tu nuevo correo",
+      html: `
+        <h2>Verifica tu nuevo correo electrónico</h2>
+        <p>Haz clic en el siguiente botón para confirmar el cambio de tu correo:</p>
+        <a href="${url}" style="padding: 10px 20px; background: #4CAF50; color: #fff; text-decoration:none;">
+          Verificar nuevo correo
+        </a>
+        <p>Si no has solicitado este cambio, ignora este mensaje.</p>
+      `
+    });
+  } catch (error) {
+    console.error("Error enviando verificación de nuevo correo:", error);
+  }
+};
+

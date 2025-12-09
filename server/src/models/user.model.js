@@ -47,21 +47,25 @@ const userSchema = new mongoose.Schema({
   refreshTokens: [{ type: String }],
   resetPasswordToken: String, 
   resetPasswordExpires: Date,
+  pendingEmail: { type: String },
+  emailVerificationToken: { type: String },
+  emailVerificationExpires: { type: Date }
 }, { timestamps: true });
 
-// Hashear password antes de guardar
-userSchema.pre("save", async function() {
+
+
+userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-  this.password = bcrypt.hash(this.password, 10);
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Comparar password en login
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (err) {
-    throw new Error("Error comparando contraseña");
-  }
+
+userSchema.methods.matchPassword = async function (enteredPassword) {
+
+  return await bcrypt.compare(enteredPassword, this.password);
 };
+
 
 export default mongoose.model("User", userSchema);
