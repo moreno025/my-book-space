@@ -5,9 +5,16 @@ import { Feather } from '@expo/vector-icons';
 interface InputProps extends TextInputProps {
     error?: string;
     secureTextEntry?: boolean;
+    placeholderTextColor?: string;
 }
 
-export const Input = ({ error, secureTextEntry, style, ...props }: InputProps) => {
+export const Input = ({
+    error,
+    secureTextEntry,
+    placeholderTextColor = "#555",
+    style,
+    ...props
+}: InputProps) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(!secureTextEntry);
 
@@ -33,6 +40,7 @@ export const Input = ({ error, secureTextEntry, style, ...props }: InputProps) =
                     secureTextEntry={secureTextEntry && !showPassword}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
+                    placeholderTextColor={placeholderTextColor} // ← ahora usa la prop
                     style={[
                         styles.input,
                         { borderColor: error ? "red" : isFocused ? "#007AFF" : "#000" },
