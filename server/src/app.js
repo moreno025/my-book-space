@@ -5,7 +5,6 @@ import { fileURLToPath } from "url";
 import cors from "cors";
 import morgan from "morgan";
 
-import { connectDB } from "./config/db.js";
 import logger from "./utils/logger.js";
 import { security } from "./middleware/security.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -28,24 +27,33 @@ app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 // Necesario si usas Nginx / proxies / HTTPS en producción
 app.set("trust proxy", 1);
 
-// Conectar a MongoDB
-connectDB();
 
 // Middlewares base
 app.use(express.json());
-app.use(cors());
+
+//CORS
+app.use(cors({
+  origin: '*',
+  methods: ['GET','POST','PUT','DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Seguridad (helmet + sanitización + rate limit + mongoSanitize + xss)
 security(app);
 
 // Logger HTTP con morgan + winston
-app.use(
+/*app.use(
   morgan("combined", {
     stream: {
       write: (message) => logger.info(message.trim()),
     },
   })
-);
+);    PRODUCCION */
+
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
+
 
 // Rutas
 app.use("/auth", authRoutes);

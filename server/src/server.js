@@ -4,15 +4,19 @@ import https from "https";
 import fs from "fs";
 import http from "http";
 import app from "./app.js";
+import { connectDB } from "./config/db.js";
 
 const PORT = process.env.PORT || 4000;
 
-const options = {
+/*const options = {
   key: fs.readFileSync("./src/https/key.pem"),
   cert: fs.readFileSync("./src/https/cert.pem"),
-};
+}; PRODUCCION   */
 
-//https.createServer(options, app).listen(PORT, () => {
-http.createServer(options, app).listen(PORT, () => {
+// Conexion db
+await connectDB();
+
+//https.createServer(options, app).listen(PORT, () => {   PRODUCCION
+http.createServer(app).listen(PORT, () => {
   console.log(`Servidor HTTPS corriendo en https://localhost:${PORT}`);
 });
