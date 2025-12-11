@@ -4,3 +4,5 @@ logs
 combined.log
 error.log
 uploads/
+.vscode
+.expo
