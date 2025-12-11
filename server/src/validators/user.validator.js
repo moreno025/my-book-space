@@ -16,11 +16,12 @@ export const registerSchema = Joi.object({
       "string.email": "El email no es válido",
     }),
   password: Joi.string()
-    .max(7)
+    .min(6)
+    .max(10)
     .required()
     .messages({
       "string.empty": "La contraseña es obligatoria",
-      "string.max": "La contraseña debe tener como máximo 7 caracteres",
+      "string.max": "La contraseña debe tener como máximo 10 caracteres",
     }),
   name: Joi.string()
     .max(20)
