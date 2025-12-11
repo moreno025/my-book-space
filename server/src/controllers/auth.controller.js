@@ -42,48 +42,42 @@ export const register = async (req, res) => {
 // Login
 // ------------------------
 export const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email y contraseña son obligatorios" });
-        }
+    if (!email || !password)
+      return res.status(400).json({ message: "Email y contraseña son obligatorios" });
 
-        const user = await User.findOne({ email }).select("+password");
-        
-        if (!user) {
-            return res.status(400).json({ message: "Email o contraseña incorrectos" });
-        }
-        
-        const isMatch = await user.matchPassword(password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Email o contraseña incorrectos" });
-        }
+    const user = await User.findOne({ email }).select("+password");
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "24h" });
-        const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+    if (!user) return res.status(400).json({ message: "Email o contraseña incorrectos" });
 
-        user.refreshTokens.push(refreshToken);
-        await user.save();
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) return res.status(400).json({ message: "Email o contraseña incorrectos" });
 
-        res.status(200).json({
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                avatar: user.avatar,
-                name: user.name,
-                lastName: user.lastName,
-                bio: user.bio,
-            },
-            token,
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "24h" });
+    const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+
+    user.refreshTokens = [refreshToken];
+    await user.save();
+
+    res.status(200).json({
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        name: user.name,
+        lastName: user.lastName,
+        bio: user.bio,
+      },
+      token,
       refreshToken,
-        });
-
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: error.message });
-    }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
 };
 
 
