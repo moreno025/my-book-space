@@ -115,8 +115,10 @@ const styles = StyleSheet.create({
         color: "#fff",
     },
     link: {
-        color: "#007AFF",
+        color: "#c7dcf3ff",
         marginTop: 12,
         textAlign: "center",
+        fontSize: 17,
+        fontWeight: "bold",
     },
 });
