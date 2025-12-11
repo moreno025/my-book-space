@@ -12,7 +12,7 @@ export const Button = ({ title, onPress, style }: ButtonProps) => (
         onPress={onPress}
         style={[
             {
-                backgroundColor: "#823e07ff",
+                backgroundColor: "#da6c12ff",
                 paddingVertical: 14,
                 borderRadius: 8,
                 alignItems: "center",
