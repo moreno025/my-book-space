@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import https from "https";
 import fs from "fs";
+import http from "http";
 import app from "./app.js";
 
 const PORT = process.env.PORT || 4000;
@@ -11,6 +12,7 @@ const options = {
   cert: fs.readFileSync("./src/https/cert.pem"),
 };
 
-https.createServer(options, app).listen(PORT, () => {
+//https.createServer(options, app).listen(PORT, () => {
+http.createServer(options, app).listen(PORT, () => {
   console.log(`Servidor HTTPS corriendo en https://localhost:${PORT}`);
 });
