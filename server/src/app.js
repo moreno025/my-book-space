@@ -13,6 +13,7 @@ import userRoutes from "./routes/user.routes.js";
 import bookListRoutes from "./routes/bookList.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import bookRoutes from "./routes/book.routes.js";
+import redirectRoutes from "./routes/redirect.routes.js";
 
 
 const __filename = path.resolve(process.cwd(), 'src/app.js'); // Fallback or strict location
@@ -61,6 +62,7 @@ app.use("/user", userRoutes);
 app.use("/book-list", bookListRoutes);
 app.use("/review", reviewRoutes);
 app.use("/book", bookRoutes);
+app.use("/redirect", redirectRoutes);
 
 // Manejo global de errores (siempre el último middleware)
 app.use(errorHandler);

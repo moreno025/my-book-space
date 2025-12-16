@@ -139,17 +139,17 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Usuario no encontrado" });
 
-    // Generar token temporal de recuperación
     const token = jwt.sign({ id: user._id }, process.env.JWT_RESET_SECRET, { expiresIn: "1h" });
     user.resetPasswordToken = token;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
     await user.save();
 
+    // Enviar email con nodemailer (producción vía OAuth2)
     await sendPasswordResetEmail(email, token);
 
-    res.status(200).json({ message: "Email de recuperación enviado" });
+    return res.status(200).json({ message: "Email de recuperación enviado" });
   } catch (error) {
-    console.log(error);
+    console.error("Error en forgotPassword:", error);
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -158,7 +158,6 @@ export const forgotPassword = async (req, res) => {
 // Update Password
 // ------------------------
 export const updatePassword = async (req, res) => {
-
   const { token, newPassword } = req.body;
   if (!token || !newPassword) return res.status(400).json({ message: "Token y nueva contraseña requeridos" });
 
@@ -178,8 +177,12 @@ export const updatePassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Contraseña actualizada correctamente" });
+    // opcional: notificar por email que la contraseña cambió
+    // await sendPasswordChangeNotification(user.email);
+
+    return res.status(200).json({ message: "Contraseña actualizada correctamente" });
   } catch (err) {
+    console.error("Error en updatePassword:", err);
     return res.status(400).json({ message: "Token inválido o expirado" });
   }
 };
