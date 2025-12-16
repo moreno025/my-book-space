@@ -15,7 +15,7 @@ interface AuthContextType {
     loading: boolean;
     login: (email: string, password: string) => Promise<boolean>;
     register: (values: any) => Promise<boolean>;
-    logout: () => void;
+    logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -24,7 +24,7 @@ export const AuthContext = createContext<AuthContextType>({
     loading: true,
     login: async () => false,
     register: async () => false,
-    logout: () => { },
+    logout: async () => { },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -68,11 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return res.ok;
     }
 
-    function logout() {
+    async function logout() {
+        setLoading(true);
         setUser(null);
         setToken(null);
-        removeItem("token");
-        removeItem("user");
+        await removeItem("token");
+        await removeItem("user");
+        setLoading(false);
     }
 
     return (
