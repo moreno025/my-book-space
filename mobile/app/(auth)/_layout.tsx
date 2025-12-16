@@ -6,7 +6,7 @@ export default function AuthLayout() {
         <View style={styles.container}>
             <Stack
                 screenOptions={{
-                    headerShown: false, // Oculta headers de navegación en auth
+                    headerShown: false,
                 }}
             >
                 <Stack.Screen name="login" options={{ title: "Inicio" }} />
@@ -20,7 +20,7 @@ export default function AuthLayout() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff", // Fondo general para auth
+        backgroundColor: "#fff",
         justifyContent: "center",
     },
 });
