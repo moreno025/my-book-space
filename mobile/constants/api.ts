@@ -13,6 +13,9 @@ export const authApi = {
     forgotPassword: async (email: string) => {
         return axios.post(`${API_URL}/auth/forgot-password`, { email });
     },
+    updatePassword: async (data: { token: string; newPassword: string }) => {
+        return axios.post(`${API_URL}/auth/update-password`, data);
+    },
 };
 
 
