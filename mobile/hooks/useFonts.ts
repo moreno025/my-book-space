@@ -7,6 +7,8 @@ export function useAppFonts() {
         'Nunito-Regular': require('../assets/fonts/Nunito-Regular.ttf'),
         'Nunito-Bold': require('../assets/fonts/Nunito-Bold.ttf'),
         'Nunito-SemiBold': require('../assets/fonts/Nunito-SemiBold.ttf'),
+        'Nunito-BoldItalic': require('../assets/fonts/Nunito-BoldItalic.ttf'),
+        'Nunito-Italic': require('../assets/fonts/Nunito-Italic.ttf'),
     });
 
     return fontsLoaded;
