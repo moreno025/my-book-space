@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import { getItem, setItem, removeItem } from "../utils/storage";
-import { loginRequest, registerRequest } from "../constants/auth-api";
+import { authApi } from "../constants/api";
+
 
 interface User {
     id: string;
@@ -32,11 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Cargar credenciales guardadas
     useEffect(() => {
         async function loadSession() {
             const savedToken = await getItem("token");
             const savedUser = await getItem("user");
+
+            console.log("TOKEN RECUPERADO EN CONTEXT:", savedToken);
 
             if (savedToken && savedUser) {
                 setToken(savedToken);
@@ -50,32 +52,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     async function login(email: string, password: string) {
-        const res = await loginRequest(email, password);
+        const res = await authApi.login(email, password);
 
-        if (!res.ok) return false;
+        console.log("LOGIN RESPONSE:", res.data);
 
-        setToken(res.data.token);
-        setUser(res.data.user);
+        const { token, user } = res.data;
 
-        await setItem("token", res.data.token);
-        await setItem("user", JSON.stringify(res.data.user));
+        if (!token) {
+            console.error("TOKEN NO VIENE EN LA RESPUESTA");
+            return false;
+        }
+
+        await setItem("token", token);
+        await setItem("user", JSON.stringify(user));
+
+        setToken(token);
+        setUser(user);
 
         return true;
     }
 
     async function register(values: any) {
-        const res = await registerRequest(values);
-        return res.ok;
+        const res = await authApi.register(values);
+        return res.status === 200 || res.status === 201;
     }
 
     async function logout() {
-        setLoading(true);
         setUser(null);
         setToken(null);
         await removeItem("token");
         await removeItem("user");
-        setLoading(false);
     }
+
+    console.log("user auth en el front:", user);
 
     return (
         <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
