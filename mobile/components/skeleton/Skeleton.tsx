@@ -8,7 +8,7 @@ export function Skeleton({
     style,
 }: {
     width: number | string;
-    height: number;
+    height?: number | string;
     borderRadius?: number;
     style?: any;
 }) {
@@ -44,6 +44,6 @@ export function Skeleton({
 
 const styles = StyleSheet.create({
     skeleton: {
-        backgroundColor: "#1F2933",
+        backgroundColor: "#929497ff",
     },
 });
