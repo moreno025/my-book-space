@@ -42,8 +42,9 @@ export default function SearchScreen() {
 
     /* ================= SEARCH ================= */
     useEffect(() => {
-        if (query.trim().length < 2) {
+        if (query.trim().length === 0) {
             setBooks([]);
+            setLoading(false);
             return;
         }
 
@@ -51,7 +52,6 @@ export default function SearchScreen() {
 
         const timeout = setTimeout(async () => {
             try {
-                setLoading(true);
                 const res = await booksApi.searchBooks(query, controller.signal);
                 const items = res.data.items ?? [];
 
@@ -60,6 +60,7 @@ export default function SearchScreen() {
                     coverUrl: item.volumeInfo.imageLinks?.thumbnail,
                     rating: item.volumeInfo.averageRating,
                 }));
+
                 setBooks(mapped);
                 setHasSearched(true);
             } catch (err: any) {
@@ -78,6 +79,7 @@ export default function SearchScreen() {
             controller.abort();
         };
     }, [query]);
+
 
     /* ================= HANDLE BOOK PRESS ================= */
     const handleBookPress = async (id: string) => {
@@ -117,6 +119,10 @@ export default function SearchScreen() {
                         onChangeText={(text) => {
                             setQuery(text);
                             setHasSearched(false);
+
+                            if (text.trim().length > 0) {
+                                setLoading(true);
+                            }
                         }}
                         autoFocus
                     />
