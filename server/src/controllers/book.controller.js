@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 import axios from "axios";
+import SearchHistory from "../models/searchHistory.model.js";
+
 
 // ------------------------
 // Buscar libros
@@ -44,3 +46,83 @@ export const getBookById = async (req, res) => {
     res.status(500).json({ message: "Error obteniendo libro", error: error.message });
   }
 };
+
+
+// ------------------------
+// Search History
+// ------------------------
+export const saveSearchHistory = async (req, res) => {
+  try {
+    const { query } = req.body;
+    const userId = req.user.id;
+
+    const exists = await SearchHistory.findOne({ user: userId, query });
+
+    if (!exists) {
+      await new SearchHistory({ query, user: userId }).save();
+    }
+
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    console.error("Save search error:", err);
+    res.status(500).json({ message: "Error saving history" });
+  }
+};
+
+
+
+// ------------------------
+// Get Search History
+// ------------------------
+export const getSearchHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const history = await SearchHistory.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.json(history);
+  } catch (err) {
+    console.error("Get history error:", err);
+    res.status(500).json({ message: "Error fetching history" });
+  }
+};
+
+
+// ------------------------
+// Delete Search History
+// ------------------------
+export const deleteSearchHistory = async (req, res) => {
+  try{
+    const userId = req.user.id;
+    await SearchHistory.deleteMany({ user: userId });
+    res.status(200).json({ ok: true, message: "Search history cleared" });
+  }catch(err){
+    console.error("Delete history error:", err);
+    res.status(500).json({ message: "Error deleting history" });
+  }
+};
+
+
+// ------------------------
+// Delete single search history item
+// ------------------------
+export const deleteHistoryItem = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { query } = req.params; // Recibimos el query como parámetro de ruta
+
+    if (!query) {
+      return res.status(400).json({ message: "Query parameter required" });
+    }
+
+    await SearchHistory.deleteOne({ user: userId, query });
+
+    res.status(200).json({ ok: true, deletedQuery: query });
+  } catch (err) {
+    console.error("Delete history item error:", err);
+    res.status(500).json({ message: "Error deleting history item" });
+  }
+};
+
+
