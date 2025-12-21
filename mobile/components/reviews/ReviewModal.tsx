@@ -19,6 +19,8 @@ interface ReviewModalProps {
     onClose: () => void;
     onSubmit: (data: { rating: number; review: string }) => void;
     loading?: boolean;
+    initialRating?: number;
+    initialReview?: string;
 }
 
 export function ReviewModal({
@@ -26,24 +28,29 @@ export function ReviewModal({
     onClose,
     onSubmit,
     loading,
+    initialRating = 0,
+    initialReview = "",
 }: ReviewModalProps) {
-    const [rating, setRating] = useState(0);
-    const [review, setReview] = useState("");
+    const [rating, setRating] = useState(initialRating);
+    const [review, setReview] = useState(initialReview);
 
     useEffect(() => {
-        if (!visible) {
+        if (visible) {
+            setRating(initialRating);
+            setReview(initialReview);
+        } else {
             setRating(0);
             setReview("");
         }
-    }, [visible]);
+    }, [visible, initialRating, initialReview]);
 
     const canSubmit = rating > 0 && review.trim().length > 0;
 
     const handleClose = () => {
-        setRating(0);
-        setReview("");
         onClose();
     };
+
+    const isEditing = initialRating > 0;
 
     return (
         <Modal
@@ -104,7 +111,9 @@ export function ReviewModal({
                                     {loading ? (
                                         <ActivityIndicator color="#FFFFFF" size="small" />
                                     ) : (
-                                        <Text style={styles.submitText}>Post Review</Text>
+                                        <Text style={styles.submitText}>
+                                            {isEditing ? "Update Review" : "Post Review"}
+                                        </Text>
                                     )}
                                 </TouchableOpacity>
                             </View>
