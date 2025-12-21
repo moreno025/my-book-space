@@ -13,7 +13,7 @@ import { BlurView } from 'expo-blur';
 
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { authApi } from '../../constants/api';
+import { authApi } from '../../constants/api/index';
 import { useAppFonts } from '../../hooks/useFonts';
 import { useAuth } from '../../hooks/useAuth';
 

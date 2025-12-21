@@ -7,7 +7,7 @@ import { Button } from "../../components/ui/button";
 import { registerSchema } from "../../schemas/auth";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
-import { authApi } from "../../constants/api";
+import { authApi } from "../../constants/api/index";
 import { useAppFonts } from "../../hooks/useFonts";
 
 export default function Register() {
@@ -26,7 +26,7 @@ export default function Register() {
             const res = await authApi.register(data);
             if (res.status === 201) {
                 login(data.email, data.password);
-                router.replace("/(tabs)");
+                router.replace("/");
             }
         } catch (error: any) {
             const msg = error.response?.data?.message || "Ha ocurrido un error";

@@ -7,8 +7,9 @@ import { Button } from "../../components/ui/button";
 import { loginSchema } from "../../schemas/auth";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
-import { authApi } from "../../constants/api";
+import { api, authApi } from "../../constants/api/index";
 import { useAppFonts } from "../../hooks/useFonts";
+
 
 export default function Login() {
     const router = useRouter();
@@ -25,11 +26,11 @@ export default function Login() {
             const res = await authApi.login(data.email, data.password);
             if (res.status === 200) {
                 login(data.email, data.password);
-                router.replace("/(tabs)");
+
+                router.replace("/");
             }
         } catch (error: any) {
             const msg = error.response?.data?.message || "Credenciales incorrectas.";
-            // Asignar error genérico a ambos inputs
             setError("email", { message: msg });
             setError("password", { message: msg });
         }

@@ -14,7 +14,7 @@ import { BlurView } from "expo-blur";
 
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { authApi } from "../../constants/api";
+import { authApi } from "../../constants/api/index";
 import { forgotPasswordSchema } from "../../schemas/auth";
 import { useAppFonts } from "../../hooks/useFonts";
 
