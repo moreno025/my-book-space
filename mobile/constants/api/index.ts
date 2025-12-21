@@ -36,4 +36,7 @@ export const booksApi = {
 
     deleteHistoryItem: (query: string) =>
         privateApi.delete(`/book/search/history/${query}`),
+
+    getBookById: (id: string) =>
+        publicApi.get(`/book/${id}`),
 };
