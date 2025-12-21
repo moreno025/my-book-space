@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
     View,
     Text,
@@ -14,25 +14,41 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
+// hooks
+import { useBookReviews } from "../../../hooks/Book/useBookReviews";
 import { useAppFonts } from "../../../hooks/useFonts";
 import { useBookDetail } from "../../../hooks/Book/useBookDetail";
+import { useCreateReview } from "../../../hooks/Review/useCreateReview";
+import { useUpdateReview } from "../../../hooks/Review/useUpdateReview";
+import { AuthContext } from "../../../context/AuthContext";
+import { useToast } from "../../../context/ToastContext";
+
+// components
 import { BookDetailSkeleton } from "../../../components/skeleton/BookDetailSkeleton";
 import { SimilarBooksCarousel } from "@/components/book/SimilarBookCarousel";
+import { ReviewModal } from "@/components/reviews/ReviewModal";
 
-import { useBookReviews } from "../../../hooks/Book/useBookReviews";
+// api
+import { reviewBookApi } from "../../../constants/api/index";
+
 
 const estimateReadingTime = (pages?: number | null) => {
     if (!pages) return "—";
-    return `${Math.ceil(pages / 40)}h read`;
+    return `${Math.ceil(pages / 40)}h `;
 };
 
 export default function BookDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const fontsLoaded = useAppFonts();
     const router = useRouter();
+    const { user } = useContext(AuthContext);
+    const { showToast } = useToast();
 
     const { book, loading } = useBookDetail(id);
-    const { reviews, loading: loadingReviews } = useBookReviews(id);
+    const { reviews, loading: loadingReviews, refetch: refetchReviews } = useBookReviews(id);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
 
     const [activeTab, setActiveTab] =
         useState<"Reviews" | "Readers" | "Lists">("Reviews");
@@ -44,6 +60,18 @@ export default function BookDetailScreen() {
     const coverOpacity = useRef(new Animated.Value(0)).current;
     const contentOpacity = useRef(new Animated.Value(0)).current;
     const contentTranslate = useRef(new Animated.Value(16)).current;
+    const {
+        createReview,
+        loading: creatingReview,
+        error: reviewError,
+        isDuplicate,
+    } = useCreateReview(id);
+
+    // Find if user already reviewed
+    const userReview = reviews.find(r => r.user?._id === user?.id);
+    const { updateReview, loading: updatingReview } = useUpdateReview(userReview?._id || "");
+
+    const isSubmitting = creatingReview || updatingReview;
 
     useEffect(() => {
         if (!loading) {
@@ -92,10 +120,10 @@ export default function BookDetailScreen() {
         );
     }
 
-    // Extract unique readers from reviews
     const readers = Array.from(
         new Map(reviews.filter((r) => r?.user?._id).map((r) => [r.user._id, r.user])).values()
     );
+
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -194,6 +222,55 @@ export default function BookDetailScreen() {
                             )}
                         </View>
                     )}
+
+                    <View style={styles.actionsRow}>
+                        <TouchableOpacity
+                            style={styles.actionButtonSecondary}
+                            onPress={() => { }}
+                        >
+                            <Ionicons name="list-outline" size={20} color="#111827" />
+                            <Text style={styles.actionText}>Add to list</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => setShowReviewModal(true)}
+                        >
+                            <Ionicons
+                                name={userReview ? "create" : "create-outline"}
+                                size={18}
+                                color="#111827"
+                            />
+                            <Text style={styles.actionText}>
+                                {userReview ? "Update review" : "Write a review"}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <ReviewModal
+                            visible={showReviewModal}
+                            onClose={() => setShowReviewModal(false)}
+                            loading={isSubmitting}
+                            initialRating={userReview?.rating}
+                            initialReview={userReview?.review}
+                            onSubmit={async ({ rating, review }) => {
+                                try {
+                                    if (userReview) {
+                                        await updateReview({ rating, review });
+                                        showToast("Review updated!", "success");
+                                    } else {
+                                        const result = await createReview({ rating, review });
+                                        if (!result) return;
+                                        showToast("Review posted!", "success");
+                                    }
+                                    setShowReviewModal(false);
+                                    refetchReviews();
+                                } catch (error) {
+                                    console.error(error);
+                                    showToast("Something went wrong. Try again later.", "error");
+                                }
+                            }}
+                        />
+                    </View>
 
                     {/* TABS */}
                     <View style={styles.tabs}>
@@ -352,4 +429,36 @@ const styles = StyleSheet.create({
     readerCard: { alignItems: "center", marginRight: 12, marginBottom: 12 },
     readerAvatar: { width: 40, height: 40, borderRadius: 20 },
     readerName: { color: "#E5E7EB", fontSize: 12, marginTop: 4 },
+    actionsRow: {
+        flexDirection: "row",
+        gap: 12,
+        marginTop: 20,
+        marginBottom: 16,
+    },
+    actionButton: {
+        flex: 1,
+        backgroundColor: "#F9FAFB",
+        paddingVertical: 12,
+        borderRadius: 14,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 8,
+    },
+    actionButtonSecondary: {
+        flex: 1,
+        backgroundColor: "#E5E7EB",
+        paddingVertical: 12,
+        borderRadius: 14,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 8,
+    },
+    actionText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#111827",
+    },
+
 });
