@@ -220,7 +220,9 @@ export default function BookDetailScreen() {
                                         reviews.map((r) => (
                                             <View key={r._id} style={styles.reviewCard}>
                                                 <Image
-                                                    source={{ uri: r.user.avatar }}
+                                                    source={{
+                                                        uri: r.user.avatar || "https://via.placeholder.com/40",
+                                                    }}
                                                     style={styles.reviewAvatar}
                                                 />
                                                 <View style={styles.reviewContent}>
@@ -327,8 +329,21 @@ const styles = StyleSheet.create({
     tabs: { flexDirection: "row", justifyContent: "space-around", marginTop: 24, borderBottomWidth: 1, borderBottomColor: "#4B5563", paddingBottom: 8 },
     tabText: { fontSize: 16, color: "#9CA3AF", fontWeight: "600" },
     tabActive: { color: "#F9FAFB", borderBottomWidth: 2, borderBottomColor: "#22C55E", paddingBottom: 4 },
-    reviewCard: { flexDirection: "row", backgroundColor: "#1F2933", borderRadius: 12, padding: 12, marginBottom: 12, alignItems: "center" },
-    reviewAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
+    reviewCard: {
+        flexDirection: "row",
+        backgroundColor: "#1F2933",
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 12,
+        alignItems: "flex-start",
+    },
+    reviewAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 12,
+        backgroundColor: "#374151",
+    },
     reviewContent: { flex: 1 },
     reviewUser: { color: "#F9FAFB", fontWeight: "700", marginBottom: 2 },
     reviewRating: { flexDirection: "row", marginBottom: 4 },
