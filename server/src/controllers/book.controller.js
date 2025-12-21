@@ -1,7 +1,6 @@
-import dotenv from "dotenv";
-dotenv.config();
 import axios from "axios";
 import SearchHistory from "../models/searchHistory.model.js";
+import logger from "../utils/logger.js";
 
 
 // ------------------------
@@ -17,12 +16,21 @@ export const searchBooks = async (req, res) => {
         q,
         key: process.env.GOOGLE_BOOKS_API_KEY,
         maxResults: 20,
+        printType: "books",
+        orderBy: "relevance",
       },
     });
 
     res.status(200).json(response.data);
   } catch (error) {
-    console.error("Error buscando libros:", error.message);
+    if (error.response) {
+      logger.error("Error buscando libros (Google API): " + error.response.status + " " + JSON.stringify(error.response.data));
+      return res.status(error.response.status).json({ 
+        message: "Error de la API de Google Books", 
+        error: error.response.data 
+      });
+    }
+    logger.error("Error buscando libros: " + error.message);
     res.status(500).json({ message: "Error buscando libros", error: error.message });
   }
 };
@@ -42,7 +50,14 @@ export const getBookById = async (req, res) => {
 
     res.status(200).json({ book: response.data });
   } catch (error) {
-    console.error("Error obteniendo libro:", error.message);
+    if (error.response) {
+      logger.error("Error obteniendo libro (Google API): " + error.response.status + " " + JSON.stringify(error.response.data));
+      return res.status(error.response.status).json({ 
+        message: "Error de la API de Google Books", 
+        error: error.response.data 
+      });
+    }
+    logger.error("Error obteniendo libro: " + error.message);
     res.status(500).json({ message: "Error obteniendo libro", error: error.message });
   }
 };
