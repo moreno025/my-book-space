@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
@@ -10,89 +10,28 @@ import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAuth } from "../../../hooks/useAuth";
+import { useBookSearch } from "../../../hooks/Search/useBookSearch";
+import { useSearchHistory } from "../../../hooks/Search/useSearchHistory";
+
 import { BookGrid } from "../../../components/book/BookGrid";
-import { booksApi } from "../../../constants/api";
-import { useAppFonts } from "../../../hooks/useFonts";
 import { BookGridSkeleton } from "../../../components/skeleton/BookGridSkeleton";
+import { useAppFonts } from "../../../hooks/useFonts";
 
 export default function SearchScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const fontsLoaded = useAppFonts();
 
+    const { token } = useAuth();
+
     const [query, setQuery] = useState("");
-    const [books, setBooks] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [history, setHistory] = useState<string[]>([]);
-    const [hasSearched, setHasSearched] = useState(false);
 
-    /* ================= LOAD HISTORY ================= */
-    useEffect(() => {
-        const loadHistory = async () => {
-            try {
-                const res = await booksApi.getHistory();
-                setHistory(res.data.map((h: any) => h.query));
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        loadHistory();
-    }, []);
+    const { books, loading, hasSearched } = useBookSearch(query);
+    const { history, save, remove, clear } = useSearchHistory(token);
 
-    const insets = useSafeAreaInsets();
-
-    /* ================= SEARCH ================= */
-    useEffect(() => {
-        if (query.trim().length === 0) {
-            setBooks([]);
-            setLoading(false);
-            return;
-        }
-
-        const controller = new AbortController();
-
-        const timeout = setTimeout(async () => {
-            try {
-                const res = await booksApi.searchBooks(query, controller.signal);
-                const items = res.data.items ?? [];
-
-                const mapped = items.map((item: any) => ({
-                    id: item.id,
-                    coverUrl: item.volumeInfo.imageLinks?.thumbnail,
-                    rating: item.volumeInfo.averageRating,
-                }));
-
-                setBooks(mapped);
-                setHasSearched(true);
-            } catch (err: any) {
-                if (err.name !== "CanceledError") {
-                    console.error(err);
-                }
-            } finally {
-                if (!controller.signal.aborted) {
-                    setLoading(false);
-                }
-            }
-        }, 800);
-
-        return () => {
-            clearTimeout(timeout);
-            controller.abort();
-        };
-    }, [query]);
-
-
-    /* ================= HANDLE BOOK PRESS ================= */
     const handleBookPress = async (id: string) => {
-        try {
-            if (query.length >= 3) {
-                await booksApi.saveHistory(query);
-                const updated = await booksApi.getHistory();
-                setHistory(updated.data.map((h: any) => h.query));
-            }
-        } catch (err) {
-            console.error("Error saving search history:", err);
-        }
-
+        await save(query);
         router.push({ pathname: "/book/[id]", params: { id } });
     };
 
@@ -102,7 +41,7 @@ export default function SearchScreen() {
         <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
             <Stack.Screen options={{ headerShown: false }} />
 
-            {/* CUSTOM HEADER */}
+            {/* HEADER */}
             <View style={styles.customHeader}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#111827" />
@@ -116,30 +55,17 @@ export default function SearchScreen() {
                         placeholderTextColor="#9CA3AF"
                         style={styles.headerInput}
                         value={query}
-                        onChangeText={(text) => {
-                            setQuery(text);
-                            setHasSearched(false);
-
-                            if (text.trim().length > 0) {
-                                setLoading(true);
-                            }
-                        }}
+                        onChangeText={setQuery}
                         autoFocus
                     />
 
                     {query.length > 0 && (
-                        <View style={styles.clearButtonContainer}>
-                            <Ionicons
-                                name="close-circle"
-                                size={28}
-                                color="#9CA3AF"
-                                onPress={() => {
-                                    setQuery("");
-                                    setBooks([]);
-                                    setHasSearched(false);
-                                }}
-                            />
-                        </View>
+                        <TouchableOpacity
+                            style={styles.clearButtonContainer}
+                            onPress={() => setQuery("")}
+                        >
+                            <Ionicons name="close-circle" size={26} color="#9CA3AF" />
+                        </TouchableOpacity>
                     )}
                 </View>
             </View>
@@ -149,42 +75,22 @@ export default function SearchScreen() {
                 <View style={styles.historyContainer}>
                     <View style={styles.historyHeader}>
                         <Text style={styles.historyTitle}>Recent searches</Text>
-                        <TouchableOpacity
-                            onPress={async () => {
-                                try {
-                                    await booksApi.clearHistory();
-                                    setHistory([]);
-                                } catch (err) {
-                                    console.error("Error clearing history:", err);
-                                }
-                            }}
-                        >
+
+                        <TouchableOpacity onPress={clear}>
                             <Ionicons name="trash-outline" size={20} color="#6B7280" />
                         </TouchableOpacity>
                     </View>
+
                     {history.map((item) => (
                         <View key={item} style={styles.historyRow}>
                             <TouchableOpacity
                                 style={{ flex: 1 }}
-                                onPress={() => {
-                                    setQuery(item);
-                                    setHasSearched(false);
-                                }}
+                                onPress={() => setQuery(item)}
                             >
                                 <Text style={styles.historyText}>{item}</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity
-                                onPress={async () => {
-                                    try {
-                                        await booksApi.deleteHistoryItem(item);
-                                        setHistory((prev) => prev.filter((h) => h !== item));
-                                    } catch (err) {
-                                        console.error("Error deleting item:", err);
-                                    }
-                                }}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                            >
+                            <TouchableOpacity onPress={() => remove(item)}>
                                 <Ionicons name="close-outline" size={20} color="#9CA3AF" />
                             </TouchableOpacity>
                         </View>
@@ -192,13 +98,14 @@ export default function SearchScreen() {
                 </View>
             )}
 
+            {/* RESULTS */}
             {loading && <BookGridSkeleton />}
 
             {!loading && books.length > 0 && (
                 <BookGrid books={books} onBookPress={handleBookPress} />
             )}
 
-            {!loading && query.length > 1 && books.length === 0 && hasSearched && (
+            {!loading && hasSearched && books.length === 0 && query.length > 1 && (
                 <Text style={styles.empty}>No results found</Text>
             )}
         </View>
@@ -226,7 +133,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         height: 40,
     },
-
     headerInput: {
         flex: 1,
         marginLeft: 8,
@@ -234,15 +140,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
         paddingVertical: 6,
     },
-
     clearButtonContainer: {
         padding: 6,
         justifyContent: "center",
         alignItems: "center",
     },
-    empty: { marginTop: 32, textAlign: "center", color: "#6B7280" },
-    historyContainer: { marginTop: 24, marginHorizontal: 16 },
-    historyTitle: { fontSize: 14, fontWeight: "600", color: "#6B7280" },
+
+    empty: {
+        marginTop: 32,
+        textAlign: "center",
+        color: "#6B7280",
+    },
+
+    historyContainer: {
+        marginTop: 24,
+        marginHorizontal: 16,
+    },
+    historyHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    historyTitle: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#6B7280",
+    },
     historyRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -254,11 +178,5 @@ const styles = StyleSheet.create({
     historyText: {
         fontSize: 16,
         color: "#111827",
-    },
-    historyHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 8,
     },
 });
