@@ -6,12 +6,14 @@ interface InputProps extends TextInputProps {
     error?: string;
     secureTextEntry?: boolean;
     placeholderTextColor?: string;
+    borderColor?: string;
 }
 
 export const Input = ({
     error,
     secureTextEntry,
     placeholderTextColor = "#555",
+    borderColor,
     style,
     ...props
 }: InputProps) => {
@@ -30,7 +32,7 @@ export const Input = ({
                 Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
             ]).start();
         }
-    }, [error]);
+    }, [error, shakeAnim]);
 
     return (
         <Animated.View style={[styles.container, { transform: [{ translateX: shakeAnim }] }]}>
@@ -43,7 +45,7 @@ export const Input = ({
                     placeholderTextColor={placeholderTextColor} // ← ahora usa la prop
                     style={[
                         styles.input,
-                        { borderColor: error ? "red" : isFocused ? "#007AFF" : "#000" },
+                        { borderColor: borderColor || (error ? "red" : isFocused ? "#007AFF" : "#000") },
                         style,
                     ]}
                 />
