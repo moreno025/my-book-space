@@ -59,4 +59,7 @@ export const reviewBookApi = {
 
     getBookReviews: (bookId: string) =>
         publicApi.get(`/review/book/${bookId}`),
+
+    updateReview: (reviewId: string, review: string, rating: number) =>
+        privateApi.put(`/review/${reviewId}`, { review, rating }),
 };
