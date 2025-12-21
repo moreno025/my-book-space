@@ -19,13 +19,6 @@ const EMAIL_FROM = process.env.EMAIL_FROM;
 const APP_NAME = process.env.APP_NAME || 'MyBookSpace';
 const IP_SERVER_HTTPS = process.env.IP_SERVER_HTTPS;
 
-console.log(CLIENT_ID);
-console.log(CLIENT_SECRET);
-console.log(REFRESH_TOKEN);
-console.log(REDIRECT_URI);
-console.log(EMAIL_FROM);
-console.log(APP_NAME);
-
 
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
