@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect } from "react";
 import { getItem, setItem, removeItem } from "../utils/storage";
-import { authApi } from "../constants/api";
+import { api, authApi } from "../constants/api/index";
+import { authEvents, AUTH_EVENTS } from "../utils/authEvents";
+
 
 
 interface User {
@@ -38,9 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const savedToken = await getItem("token");
             const savedUser = await getItem("user");
 
-            console.log("TOKEN RECUPERADO EN CONTEXT:", savedToken);
-
             if (savedToken && savedUser) {
+                api.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
                 setToken(savedToken);
                 setUser(JSON.parse(savedUser));
             }
@@ -51,19 +52,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadSession();
     }, []);
 
+
+    useEffect(() => {
+        const onSessionExpired = () => {
+            setUser(null);
+            setToken(null);
+        };
+
+        authEvents.on(AUTH_EVENTS.SESSION_EXPIRED, onSessionExpired);
+
+        return () => {
+            authEvents.off(AUTH_EVENTS.SESSION_EXPIRED, onSessionExpired);
+        };
+    }, []);
+
+    useEffect(() => {
+        const onTokenRefreshed = (newToken: string) => {
+            setToken(newToken);
+            api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+        };
+
+        authEvents.on(AUTH_EVENTS.TOKEN_REFRESHED, onTokenRefreshed);
+
+        return () => {
+            authEvents.off(AUTH_EVENTS.TOKEN_REFRESHED, onTokenRefreshed);
+        };
+    }, []);
+
     async function login(email: string, password: string) {
         const res = await authApi.login(email, password);
 
-        console.log("LOGIN RESPONSE:", res.data);
+        const { token, user, refreshToken } = res.data;
 
-        const { token, user } = res.data;
-
-        if (!token) {
-            console.error("TOKEN NO VIENE EN LA RESPUESTA");
+        if (!token || !refreshToken) {
+            console.error("Token o refresh token faltante");
             return false;
         }
 
         await setItem("token", token);
+        await setItem("refreshToken", refreshToken);
         await setItem("user", JSON.stringify(user));
 
         setToken(token);
@@ -78,13 +105,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function logout() {
+        const refreshToken = await getItem("refreshToken");
+
+        if (refreshToken) {
+            try {
+                await authApi.logout(refreshToken);
+            } catch { }
+        }
+
         setUser(null);
         setToken(null);
+
         await removeItem("token");
+        await removeItem("refreshToken");
         await removeItem("user");
     }
-
-    console.log("user auth en el front:", user);
 
     return (
         <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
