@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -16,10 +15,8 @@ import bookRoutes from "./routes/book.routes.js";
 import redirectRoutes from "./routes/redirect.routes.js";
 
 
-const __filename = path.resolve(process.cwd(), 'src/app.js'); // Fallback or strict location
+const __filename = path.resolve(process.cwd(), 'src/app.js');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const app = express();
 
