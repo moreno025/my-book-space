@@ -29,6 +29,14 @@ export const protect = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error en middleware protect:", error);
-    return res.status(401).json({ message: "No autorizado, token inválido" });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Token expirado",
+        code: "TOKEN_EXPIRED",
+      });
+    }
+    return res.status(401).json({
+      message: "Token inválido",
+    });
   }
 };
