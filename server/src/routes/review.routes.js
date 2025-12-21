@@ -7,7 +7,7 @@ import { validateBody } from "../middleware/validate.js";
 
 const router = express.Router();
 
-router.post("/", protect, validateBody(createReviewSchema), createReview);
+router.post("/:bookId", protect, validateBody(createReviewSchema), createReview);
 router.put("/:id", protect, updateReview);
 router.delete("/:id", protect, deleteReview);
 router.get("/book/:bookId", getBookReviews);

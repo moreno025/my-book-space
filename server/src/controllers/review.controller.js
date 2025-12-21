@@ -1,16 +1,19 @@
 import Review from "../models/review.model.js";
 
 // ------------------------
-// Create review
+// Create book review
 // ------------------------
 export const createReview = async (req, res) => {
     try {
-        const { bookId, rating, review, listId } = req.body;
-        if (!bookId || !rating) return res.status(400).json({ message: "BookId y rating son obligatorios" });
-    
-        // Validar si ya existe reseña del mismo usuario para el mismo libro
+        const { bookId } = req.params;
+        const { rating, review, listId } = req.body;
+
+        if (!bookId || !rating) 
+            return res.status(400).json({ message: "BookId y rating son obligatorios" });
+
         const existing = await Review.findOne({ bookId, user: req.user._id });
-        if (existing) return res.status(400).json({ message: "Ya existe una reseña para este libro" });
+        if (existing) 
+            return res.status(400).json({ message: "Ya existe una reseña para este libro" });
 
         const newReview = await Review.create({
             user: req.user._id,
@@ -20,7 +23,7 @@ export const createReview = async (req, res) => {
             listId,
         });
 
-    res.status(201).json({ message: "Reseña creada", review: newReview });
+        res.status(201).json({ message: "Reseña creada", review: newReview });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error creando reseña" });

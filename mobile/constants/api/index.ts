@@ -40,3 +40,11 @@ export const booksApi = {
     getBookById: (id: string) =>
         publicApi.get(`/book/${id}`),
 };
+
+export const reviewBookApi = {
+    createReview: (bookId: string, review: string, rating: number) =>
+        privateApi.post(`/review/book/${bookId}`, { review, rating }),
+
+    getBookReviews: (bookId: string) =>
+        publicApi.get(`/review/book/${bookId}`),
+};

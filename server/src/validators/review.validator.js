@@ -1,10 +1,6 @@
 import Joi from "joi";
 
 export const createReviewSchema = Joi.object({
-  bookId: Joi.string().required().messages({
-    "string.empty": "El ID del libro es obligatorio",
-    "any.required": "El ID del libro es obligatorio",
-  }),
   rating: Joi.number().integer().min(1).max(5).required().messages({
     "number.base": "La puntuación debe ser un número",
     "number.min": "La puntuación mínima es 1",
