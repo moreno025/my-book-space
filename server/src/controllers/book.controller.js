@@ -48,7 +48,25 @@ export const getBookById = async (req, res) => {
       params: { key: process.env.GOOGLE_BOOKS_API_KEY }
     });
 
-    res.status(200).json({ book: response.data });
+    const v = response.data.volumeInfo;
+
+    const book = {
+      id: response.data.id,
+      title: v.title ?? "",
+      authors: v.authors ?? [],
+      description: v.description ?? "",
+      coverUrl: v.imageLinks?.thumbnail ?? null,
+      rating: v.averageRating ?? null,
+      ratingsCount: v.ratingsCount ?? null,
+      pages: v.pageCount ?? null,
+      publishedYear: v.publishedDate
+        ? Number(v.publishedDate.slice(0, 4))
+        : null,
+      categories: v.categories ?? [],
+      language: v.language ?? "en",
+    };
+
+    res.status(200).json(book);
   } catch (error) {
     if (error.response) {
       logger.error("Error obteniendo libro (Google API): " + error.response.status + " " + JSON.stringify(error.response.data));
