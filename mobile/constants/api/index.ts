@@ -42,8 +42,20 @@ export const booksApi = {
 };
 
 export const reviewBookApi = {
-    createReview: (bookId: string, review: string, rating: number) =>
-        privateApi.post(`/review/book/${bookId}`, { review, rating }),
+    async createReview(bookId: string, review: string, rating: number) {
+        try {
+            const response = await privateApi.post(`/review/${bookId}`, { review, rating });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 400) {
+                return Promise.reject({
+                    type: "DUPLICATE_REVIEW",
+                    message: error.response.data.message,
+                });
+            }
+            throw error;
+        }
+    },
 
     getBookReviews: (bookId: string) =>
         publicApi.get(`/review/book/${bookId}`),
