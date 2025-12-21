@@ -20,12 +20,14 @@ import { useAppFonts } from "../../../hooks/useFonts";
 import { useBookDetail } from "../../../hooks/Book/useBookDetail";
 import { useCreateReview } from "../../../hooks/Review/useCreateReview";
 import { useUpdateReview } from "../../../hooks/Review/useUpdateReview";
+import { useRelatedBooks } from "../../../hooks/Book/useRelatedBooks";
 import { AuthContext } from "../../../context/AuthContext";
 import { useToast } from "../../../context/ToastContext";
 
 // components
 import { BookDetailSkeleton } from "../../../components/skeleton/BookDetailSkeleton";
 import { SimilarBooksCarousel } from "@/components/book/SimilarBookCarousel";
+import { RelatedBookCarousel } from "@/components/book/RelatedBookCarousel";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
 
 // api
@@ -45,6 +47,7 @@ export default function BookDetailScreen() {
     const { showToast } = useToast();
 
     const { book, loading } = useBookDetail(id);
+    const { relatedBooks } = useRelatedBooks(book);
     const { reviews, loading: loadingReviews, refetch: refetchReviews } = useBookReviews(id);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -350,7 +353,8 @@ export default function BookDetailScreen() {
                     </Animated.View>
                 </Animated.View>
 
-                <SimilarBooksCarousel />
+                <SimilarBooksCarousel currentBook={book} allBooks={relatedBooks} />
+                {/* <RelatedBookCarousel currentBook={book} /> */}
             </ScrollView>
         </SafeAreaView>
     );
