@@ -1,5 +1,6 @@
 import { publicApi } from "./publicApi";
 import { privateApi } from "./privateApi";
+import { BookList } from "../../types/bookList";
 
 export { publicApi, privateApi };
 export { privateApi as api };
@@ -62,4 +63,9 @@ export const reviewBookApi = {
 
     updateReview: (reviewId: string, review: string, rating: number) =>
         privateApi.put(`/review/${reviewId}`, { review, rating }),
+};
+
+export const bookListApi = {
+    getUserLists: (username: string) =>
+        privateApi.get<{ lists: BookList[] }>(`/book-list/${username}/lists`),
 };
