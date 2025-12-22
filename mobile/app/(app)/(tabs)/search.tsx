@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "../../../hooks/useAuth";
 import { useBookSearch } from "../../../hooks/Search/useBookSearch";
@@ -20,7 +20,7 @@ import { useAppFonts } from "../../../hooks/useFonts";
 
 export default function SearchScreen() {
     const router = useRouter();
-    const insets = useSafeAreaInsets();
+    // const insets = useSafeAreaInsets(); // Not needed if using SafeAreaView
     const fontsLoaded = useAppFonts();
 
     const { token } = useAuth();
@@ -38,7 +38,7 @@ export default function SearchScreen() {
     if (!fontsLoaded) return null;
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <Stack.Screen options={{ headerShown: false }} />
 
             {/* HEADER */}
@@ -108,7 +108,7 @@ export default function SearchScreen() {
             {!loading && hasSearched && books.length === 0 && query.length > 1 && (
                 <Text style={styles.empty}>No results found</Text>
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
