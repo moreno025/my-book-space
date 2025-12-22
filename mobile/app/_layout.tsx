@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import 'react-native-reanimated';
 import { AuthProvider } from "../context/AuthContext";
+import { ToastProvider } from "../context/ToastContext";
 import { useAuth } from "../hooks/useAuth";
 import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
@@ -11,9 +12,11 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AuthGate />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <AuthGate />
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 
