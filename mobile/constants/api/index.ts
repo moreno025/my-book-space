@@ -68,4 +68,13 @@ export const reviewBookApi = {
 export const bookListApi = {
     getUserLists: (username: string) =>
         privateApi.get<{ lists: BookList[] }>(`/book-list/${username}/lists`),
+
+    createBookList: (data: { title: string; description?: string; isPublic?: boolean }) =>
+        privateApi.post<{ list: BookList }>("/book-list", data),
+
+    addBookToList: (listId: string, bookData: { googleBookId: string; title: string; authors: string[]; thumbnail: string; publishedDate?: string }) =>
+        privateApi.post(`/book-list/${listId}/add-book`, bookData),
+
+    removeBookFromList: (listId: string, googleBookId: string) =>
+        privateApi.delete(`/book-list/${listId}/remove-book/${googleBookId}`),
 };

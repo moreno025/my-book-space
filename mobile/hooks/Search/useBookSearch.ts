@@ -3,8 +3,11 @@ import { booksApi } from "../../constants/api/index";
 
 type Book = {
     id: string;
+    title: string;
+    authors: string[];
     coverUrl: string;
     rating?: number;
+    publishedDate?: string;
 };
 
 function scoreBook(item: any, query: string) {
@@ -81,8 +84,11 @@ export function useBookSearch(query: string) {
                     .slice(0, 12)
                     .map((item: any) => ({
                         id: item.id,
+                        title: item.volumeInfo.title,
+                        authors: item.volumeInfo.authors || [],
                         coverUrl: item.volumeInfo.imageLinks.thumbnail,
                         rating: item.volumeInfo.averageRating,
+                        publishedDate: item.volumeInfo.publishedDate,
                     }));
 
                 setBooks(mapped);
