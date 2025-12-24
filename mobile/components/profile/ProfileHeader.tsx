@@ -5,9 +5,10 @@ import { Ionicons } from "@expo/vector-icons";
 
 interface ProfileHeaderProps {
     user: User | null;
+    onAddList?: () => void;
 }
 
-export function ProfileHeader({ user }: ProfileHeaderProps) {
+export function ProfileHeader({ user, onAddList }: ProfileHeaderProps) {
     const [imageError, setImageError] = useState(false);
 
     if (!user) return null;
@@ -23,6 +24,12 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             <TouchableOpacity style={styles.settingsButton}>
                 <Ionicons name="settings-outline" size={24} color="#E5E7EB" />
             </TouchableOpacity>
+
+            {onAddList && (
+                <TouchableOpacity style={styles.addButton} onPress={onAddList}>
+                    <Ionicons name="add-circle-outline" size={28} color="#3B82F6" />
+                </TouchableOpacity>
+            )}
 
             <View style={styles.headerContent}>
                 {/* Avatar Section */}
@@ -45,12 +52,12 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                     <Text style={styles.email}>{user.username}</Text>
                 </View>
 
-                {/* Actions */}
+                {/* Actions
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity style={styles.shareButton}>
                         <Text style={styles.shareButtonText}>Share Profile</Text>
                     </TouchableOpacity>
-                </View>
+                </View>*/}
 
                 {/* Stats */}
                 <View style={styles.statsContainer}>
@@ -77,6 +84,12 @@ const styles = StyleSheet.create({
         position: "absolute",
         top: 20,
         left: 20,
+        zIndex: 10,
+    },
+    addButton: {
+        position: "absolute",
+        top: 20,
+        right: 20,
         zIndex: 10,
     },
     headerContent: {
