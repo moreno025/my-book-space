@@ -1,6 +1,7 @@
 import axios from "axios";
 import SearchHistory from "../models/searchHistory.model.js";
 import logger from "../utils/logger.js";
+import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
 
 
 // ------------------------
@@ -21,7 +22,14 @@ export const searchBooks = async (req, res) => {
       },
     });
 
-    res.status(200).json(response.data);
+    const books = (response.data.items ?? []).map(item => {
+      if (item.volumeInfo?.imageLinks?.thumbnail) {
+        item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail);
+      }
+      return item;
+    });
+
+    res.status(200).json({ ...response.data, items: books });
   } catch (error) {
     if (error.response) {
       logger.error("Error buscando libros (Google API): " + error.response.status + " " + JSON.stringify(error.response.data));
@@ -55,7 +63,7 @@ export const getBookById = async (req, res) => {
       title: v.title ?? "",
       authors: v.authors ?? [],
       description: v.description ?? "",
-      coverUrl: v.imageLinks?.thumbnail ?? null,
+      coverUrl: cleanGoogleBooksUrl(v.imageLinks?.thumbnail),
       rating: v.averageRating ?? null,
       ratingsCount: v.ratingsCount ?? null,
       pages: v.pageCount ?? null,

@@ -1,5 +1,6 @@
 import BookList from "../models/bookList.model.js";
 import User from "../models/user.model.js";
+import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
 
 // ------------------------
 // Create Book List
@@ -85,7 +86,9 @@ export const addBookToList = async (req, res) => {
             return res.status(400).json({ message: "El libro ya está en la lista" });
         }
         
-        list.books.push({ googleBookId, title, authors, thumbnail, publishedDate });
+        const cleanThumbnail = cleanGoogleBooksUrl(thumbnail);
+        
+        list.books.push({ googleBookId, title, authors, thumbnail: cleanThumbnail, publishedDate });
         await list.save();
 
         res.status(200).json({ message: "Libro añadido a la lista", list });
