@@ -188,3 +188,31 @@ export const saveList = async (req, res) => {
 
 
 
+
+// ------------------------
+// Get User Lists
+// ------------------------
+export const getUserLists = async (req, res) => {
+    try {
+        const { username } = req.params;
+        const user = await User.findOne({ username });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        let query = { user: user._id };
+        
+        // Si el usuario logueado NO es el dueño del perfil, solo mostrar listas públicas
+        if (req.user._id.toString() !== user._id.toString()) {
+            query.isPublic = true;
+        }
+
+        const lists = await BookList.find(query).sort({ createdAt: -1 });
+
+        res.status(200).json({ lists });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error obteniendo listas del usuario" });
+    }
+};

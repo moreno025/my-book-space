@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/protect.js";
-import { createBookList, updateList, deleteList, addBookToList, searchListsByBook, removeBookFromList, saveList } from "../controllers/bookList.controller.js";
+import { createBookList, updateList, deleteList, addBookToList, searchListsByBook, removeBookFromList, saveList, getUserLists } from "../controllers/bookList.controller.js";
 import { validateBody } from "../middleware/validate.js";
 import { bookListSchema } from "../validators/bookList.validator.js";
 
@@ -13,5 +13,6 @@ router.post("/:listId/add-book", protect, addBookToList);
 router.delete("/:listId/remove-book/:googleBookId", protect, removeBookFromList);
 router.post("/:listId/save", protect, saveList);
 router.get("/search/:title", protect, searchListsByBook);
+router.get("/:username/lists", protect, getUserLists);
 
 export default router;
