@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
         margin: 6,
         borderRadius: 12,
         backgroundColor: "#fff",
+        overflow: 'hidden',
 
         // iOS 
         shadowColor: "#000",
@@ -61,8 +62,7 @@ const styles = StyleSheet.create({
     cover: {
         width: "100%",
         aspectRatio: 2 / 3,
-        borderTopLeftRadius: 12,
-        borderTopRightRadius: 12,
+        borderRadius: 12,
     },
     ratingContainer: {
         paddingVertical: 6,

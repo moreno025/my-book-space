@@ -188,6 +188,7 @@ const styles = StyleSheet.create({
     cover: {
         width: "100%",
         height: "100%",
+        borderRadius: 12,
     },
     bookTitle: {
         fontSize: 14,
