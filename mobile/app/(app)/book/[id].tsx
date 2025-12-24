@@ -40,7 +40,7 @@ const estimateReadingTime = (pages?: number | null) => {
 };
 
 export default function BookDetailScreen() {
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const { id, writeReview } = useLocalSearchParams<{ id: string; writeReview?: string }>();
     const fontsLoaded = useAppFonts();
     const router = useRouter();
     const { user } = useContext(AuthContext);
@@ -52,6 +52,12 @@ export default function BookDetailScreen() {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
+    // Auto-open review modal if coming from long-press "Write a Review"
+    useEffect(() => {
+        if (!loading && book && writeReview === "true") {
+            setShowReviewModal(true);
+        }
+    }, [loading, book, writeReview]);
 
     const [activeTab, setActiveTab] =
         useState<"Reviews" | "Readers" | "Lists">("Reviews");
