@@ -2,15 +2,7 @@ import { createContext, useState, useEffect } from "react";
 import { getItem, setItem, removeItem } from "../utils/storage";
 import { api, authApi } from "../constants/api/index";
 import { authEvents, AUTH_EVENTS } from "../utils/authEvents";
-
-
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: "user" | "admin";
-}
+import { User } from "../types/user";
 
 interface AuthContextType {
     user: User | null;
