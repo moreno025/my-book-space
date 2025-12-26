@@ -6,9 +6,10 @@ import { Ionicons } from "@expo/vector-icons";
 interface ProfileHeaderProps {
     user: User | null;
     onAddList?: () => void;
+    listsCount?: number;
 }
 
-export function ProfileHeader({ user, onAddList }: ProfileHeaderProps) {
+export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProps) {
     const [imageError, setImageError] = useState(false);
 
     if (!user) return null;
@@ -16,7 +17,7 @@ export function ProfileHeader({ user, onAddList }: ProfileHeaderProps) {
     const stats = [
         { label: "Followers", value: user.followersCount || 0 },
         { label: "Following", value: user.followingCount || 0 },
-        { label: "Lists", value: user.listsCount || 0 },
+        { label: "Lists", value: listsCount ?? user.listsCount ?? 0 },
     ];
 
     return (

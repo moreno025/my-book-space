@@ -10,7 +10,6 @@ import { useAppFonts } from "../../../hooks/useFonts";
 
 // components
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-
 import { BookListCarousel } from "@/components/profile/BookListCarousel";
 import { CreateListModal } from "@/components/profile/CreateListModal";
 import { AddBookToListModal } from "@/components/profile/AddBookToListModal";
@@ -74,7 +73,11 @@ export default function ProfileScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             <ScrollView contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}>
                 {/* Header */}
-                <ProfileHeader user={user} onAddList={handleCreateList} />
+                <ProfileHeader
+                    user={user}
+                    onAddList={handleCreateList}
+                    listsCount={lists.length}
+                />
 
                 {/* Lists */}
                 {loading ? (
