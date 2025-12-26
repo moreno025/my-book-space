@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useUserLists } from "../../../hooks/BookList/useUserList";
 import { useAuth } from "../../../hooks/useAuth";
 import { BookListBook } from "../../../types/bookList";
@@ -63,7 +63,7 @@ export default function ListDetailScreen() {
                 </TouchableOpacity>
                 <Text style={styles.title} numberOfLines={1}>{title || "List Details"}</Text>
                 <TouchableOpacity onPress={() => setAddBookModalVisible(true)} style={styles.backButton}>
-                    <Ionicons name="add" size={24} color="#3B82F6" />
+                    <MaterialIcons name="add" size={30} color="#3B82F6" />
                 </TouchableOpacity>
             </View>
 
