@@ -53,6 +53,7 @@ export function RenameListModal({
                     <KeyboardAvoidingView
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
                         style={styles.keyboardView}
+                        keyboardVerticalOffset={10}
                     >
                         <TouchableWithoutFeedback>
                             <View style={styles.content}>

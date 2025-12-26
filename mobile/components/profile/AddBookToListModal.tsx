@@ -42,12 +42,11 @@ export function AddBookToListModal({ visible, onClose, listId, onBookAdded }: Ad
                 thumbnail: book.coverUrl,
                 publishedDate: book.publishedDate,
             });
-            setQuery(""); // Reset search
-            onBookAdded(); // Refresh parent list
+            setQuery("");
+            onBookAdded();
             onClose();
         } catch (error) {
             console.error("Failed to add book to list", error);
-            // Optionally show an alert here
         } finally {
             setAddingBookId(null);
         }
@@ -64,7 +63,7 @@ export function AddBookToListModal({ visible, onClose, listId, onBookAdded }: Ad
         <Modal
             visible={visible}
             transparent
-            animationType="slide"
+            animationType="fade"
             onRequestClose={handleClose}
         >
             <View style={styles.overlay}>
@@ -73,9 +72,9 @@ export function AddBookToListModal({ visible, onClose, listId, onBookAdded }: Ad
                 </TouchableWithoutFeedback>
 
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
                     style={styles.keyboardWrapper}
-                    keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+                    keyboardVerticalOffset={0}
                 >
                     <View style={styles.container}>
                         <View style={styles.header}>
@@ -163,23 +162,27 @@ export function AddBookToListModal({ visible, onClose, listId, onBookAdded }: Ad
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        justifyContent: "flex-end", // Bottom sheet style
+        justifyContent: "center",
+        alignItems: "center",
         backgroundColor: "rgba(0, 0, 0, 0.7)",
+        paddingHorizontal: 20,
     },
     backdrop: {
         ...StyleSheet.absoluteFillObject,
     },
     keyboardWrapper: {
         width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
     },
     container: {
         backgroundColor: "#111827",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderRadius: 20,
         padding: 20,
-        height: "80%", // Take up 80% of screen height
+        width: "100%",
+        height: "75%",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: -4 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 10,
