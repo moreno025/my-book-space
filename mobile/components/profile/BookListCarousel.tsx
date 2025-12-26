@@ -6,6 +6,7 @@ import { BookListBook } from "../../types/bookList";
 import { useAppFonts } from "../../hooks/useFonts";
 import { bookListApi } from "../../constants/api";
 import { BookOptionsModal } from "./BookOptionsModal";
+import { ListOptionsModal } from "./ListOptionsModal";
 
 interface BookListCarouselProps {
     title: string;
@@ -13,18 +14,20 @@ interface BookListCarouselProps {
     books: BookListBook[];
     onAddBook?: () => void;
     onRefresh?: () => void;
+    onRename?: (listId: string, currentTitle: string) => void;
 }
 
 // const { width } = Dimensions.get("window"); // Unused for now
 const CARD_WIDTH = 100;
 const CARD_HEIGHT = 150;
 
-export function BookListCarousel({ title, listId, books, onAddBook, onRefresh }: BookListCarouselProps) {
+export function BookListCarousel({ title, listId, books, onAddBook, onRefresh, onRename }: BookListCarouselProps) {
     const router = useRouter();
     const fontsLoaded = useAppFonts();
 
     const [selectedBook, setSelectedBook] = useState<BookListBook | null>(null);
     const [showOptionsModal, setShowOptionsModal] = useState(false);
+    const [showListOptionsModal, setShowListOptionsModal] = useState(false);
 
     if (!fontsLoaded) return null;
 
@@ -57,7 +60,7 @@ export function BookListCarousel({ title, listId, books, onAddBook, onRefresh }:
         );
     };
 
-    const handleDeleteList = () => {
+    const confirmDeleteList = () => {
         Alert.alert(
             "Delete List",
             `Are you sure you want to delete "${title}"? This action cannot be undone.`,
@@ -85,7 +88,7 @@ export function BookListCarousel({ title, listId, books, onAddBook, onRefresh }:
             <View style={styles.header}>
                 <View style={styles.titleContainer}>
                     <Text style={styles.title}>{title}</Text>
-                    <TouchableOpacity onPress={handleDeleteList} style={styles.optionsButton}>
+                    <TouchableOpacity onPress={() => setShowListOptionsModal(true)} style={styles.optionsButton}>
                         <Ionicons name="ellipsis-horizontal" size={20} color="#9CA3AF" />
                     </TouchableOpacity>
                 </View>
@@ -162,6 +165,14 @@ export function BookListCarousel({ title, listId, books, onAddBook, onRefresh }:
                 bookTitle={selectedBook?.title || ""}
                 onWriteReview={() => selectedBook && handleWriteReview(selectedBook)}
                 onDelete={() => selectedBook && handleDeleteBook(selectedBook)}
+            />
+
+            <ListOptionsModal
+                visible={showListOptionsModal}
+                onClose={() => setShowListOptionsModal(false)}
+                listTitle={title}
+                onRename={() => onRename?.(listId, title)}
+                onDelete={confirmDeleteList}
             />
         </View>
     );

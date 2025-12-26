@@ -16,6 +16,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { BookListBook } from "../../../types/bookList";
 import { bookListApi } from "../../../constants/api";
 import { useAppFonts } from "../../../hooks/useFonts";
+import { AddBookToListModal } from "../../../components/profile/AddBookToListModal";
 
 const COVER_WIDTH = 60;
 const COVER_HEIGHT = 90;
@@ -26,6 +27,7 @@ export default function ListDetailScreen() {
     const { user } = useAuth();
     const { lists, refetch } = useUserLists({ username: user?.username || "" });
     const fontsLoaded = useAppFonts();
+    const [addBookModalVisible, setAddBookModalVisible] = React.useState(false);
 
     if (!fontsLoaded) return null;
 
@@ -60,7 +62,9 @@ export default function ListDetailScreen() {
                     <Ionicons name="arrow-back" size={24} color="#F9FAFB" />
                 </TouchableOpacity>
                 <Text style={styles.title} numberOfLines={1}>{title || "List Details"}</Text>
-                <View style={{ width: 40 }} />
+                <TouchableOpacity onPress={() => setAddBookModalVisible(true)} style={styles.backButton}>
+                    <Ionicons name="add" size={24} color="#3B82F6" />
+                </TouchableOpacity>
             </View>
 
             <FlatList
@@ -102,6 +106,15 @@ export default function ListDetailScreen() {
                         <Text style={styles.emptyText}>No books in this list yet.</Text>
                     </View>
                 }
+            />
+
+            <AddBookToListModal
+                visible={addBookModalVisible}
+                listId={id}
+                onClose={() => setAddBookModalVisible(false)}
+                onBookAdded={() => {
+                    refetch();
+                }}
             />
         </SafeAreaView>
     );
