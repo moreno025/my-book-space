@@ -14,6 +14,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { BookListCarousel } from "@/components/profile/BookListCarousel";
 import { CreateListModal } from "@/components/profile/CreateListModal";
 import { AddBookToListModal } from "@/components/profile/AddBookToListModal";
+import { RenameListModal } from "@/components/profile/RenameListModal";
 import { bookListApi } from "../../../constants/api";
 
 export default function ProfileScreen() {
@@ -25,7 +26,9 @@ export default function ProfileScreen() {
     });
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [addBookModalVisible, setAddBookModalVisible] = useState(false);
+    const [renameModalVisible, setRenameModalVisible] = useState(false);
     const [selectedListId, setSelectedListId] = useState<string | null>(null);
+    const [listToRename, setListToRename] = useState<{ id: string; title: string } | null>(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -47,6 +50,24 @@ export default function ProfileScreen() {
     const handleOpenAddBook = (listId: string) => {
         setSelectedListId(listId);
         setAddBookModalVisible(true);
+    };
+
+    const handleRenameList = (id: string, title: string) => {
+        setListToRename({ id, title });
+        setRenameModalVisible(true);
+    };
+
+    const handleRenameSubmit = async (newTitle: string) => {
+        if (listToRename) {
+            try {
+                await bookListApi.updateBookList(listToRename.id, { title: newTitle });
+                setRenameModalVisible(false);
+                setListToRename(null);
+                refetch();
+            } catch (error) {
+                console.error("Failed to rename list:", error);
+            }
+        }
     };
 
     return (
@@ -74,6 +95,7 @@ export default function ProfileScreen() {
                             title={list.title}
                             books={list.books}
                             onAddBook={() => handleOpenAddBook(list._id)}
+                            onRename={handleRenameList}
                             onRefresh={refetch}
                         />
                     ))
@@ -96,6 +118,16 @@ export default function ProfileScreen() {
                 onBookAdded={() => {
                     refetch();
                 }}
+            />
+
+            <RenameListModal
+                visible={renameModalVisible}
+                currentTitle={listToRename?.title || ""}
+                onClose={() => {
+                    setRenameModalVisible(false);
+                    setListToRename(null);
+                }}
+                onSubmit={handleRenameSubmit}
             />
         </SafeAreaView >
     );
