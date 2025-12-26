@@ -77,4 +77,7 @@ export const bookListApi = {
 
     removeBookFromList: (listId: string, googleBookId: string) =>
         privateApi.delete(`/book-list/${listId}/remove-book/${googleBookId}`),
+
+    deleteBookList: (listId: string) =>
+        privateApi.delete(`/book-list/${listId}`),
 };
