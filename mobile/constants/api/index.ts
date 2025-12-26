@@ -80,4 +80,7 @@ export const bookListApi = {
 
     deleteBookList: (listId: string) =>
         privateApi.delete(`/book-list/${listId}`),
+
+    updateBookList: (listId: string, data: { title?: string; description?: string; isPublic?: boolean }) =>
+        privateApi.put(`/book-list/${listId}`, data),
 };
