@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, Alert } from "react-native";
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BookListBook } from "../../types/bookList";
 import { useAppFonts } from "../../hooks/useFonts";
@@ -57,10 +57,38 @@ export function BookListCarousel({ title, listId, books, onAddBook, onRefresh }:
         );
     };
 
+    const handleDeleteList = () => {
+        Alert.alert(
+            "Delete List",
+            `Are you sure you want to delete "${title}"? This action cannot be undone.`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await bookListApi.deleteBookList(listId);
+                            onRefresh?.();
+                        } catch (error) {
+                            console.error("Failed to delete list", error);
+                            Alert.alert("Error", "Could not delete the list. Please try again.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>{title}</Text>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.title}>{title}</Text>
+                    <TouchableOpacity onPress={handleDeleteList} style={styles.optionsButton}>
+                        <Ionicons name="ellipsis-horizontal" size={20} color="#9CA3AF" />
+                    </TouchableOpacity>
+                </View>
                 {books.length > 0 && (
                     <TouchableOpacity onPress={() => router.push({ pathname: "/list/[id]", params: { id: listId, title } })}>
                         <Text style={styles.seeAll}>See all</Text>
@@ -151,11 +179,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         marginBottom: 16,
     },
+    titleContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
     title: {
         fontSize: 20,
         fontWeight: "700",
         color: "#F9FAFB",
         fontFamily: "Nunito-Bold",
+    },
+    optionsButton: {
+        marginLeft: 8,
+        padding: 4,
     },
     seeAll: {
         fontSize: 14,
