@@ -22,12 +22,12 @@ export const searchBooks = async (req, res) => {
       },
     });
 
-    const books = (response.data.items ?? []).map(item => {
-      if (item.volumeInfo?.imageLinks?.thumbnail) {
+    const books = (response.data.items ?? [])
+      .filter(item => item.volumeInfo?.imageLinks?.thumbnail)
+      .map(item => {
         item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail);
-      }
-      return item;
-    });
+        return item;
+      });
 
     res.status(200).json({ ...response.data, items: books });
   } catch (error) {
