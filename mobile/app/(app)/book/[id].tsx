@@ -27,11 +27,12 @@ import { useToast } from "../../../context/ToastContext";
 // components
 import { BookDetailSkeleton } from "../../../components/skeleton/BookDetailSkeleton";
 import { SimilarBooksCarousel } from "@/components/book/SimilarBookCarousel";
-import { RelatedBookCarousel } from "@/components/book/RelatedBookCarousel";
 import { ReviewModal } from "@/components/reviews/ReviewModal";
+import { SaveBookModal } from "@/components/book/SaveBookModal";
+import { CreateListModal } from "@/components/profile/CreateListModal";
 
 // api
-import { reviewBookApi } from "../../../constants/api/index";
+import { bookListApi } from "../../../constants/api/index";
 
 
 const estimateReadingTime = (pages?: number | null) => {
@@ -50,7 +51,8 @@ export default function BookDetailScreen() {
     const { relatedBooks } = useRelatedBooks(book);
     const { reviews, loading: loadingReviews, refetch: refetchReviews } = useBookReviews(id);
     const [showReviewModal, setShowReviewModal] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [createModalVisible, setCreateModalVisible] = useState(false);
 
     // Auto-open review modal if coming from long-press "Write a Review"
     useEffect(() => {
@@ -58,6 +60,26 @@ export default function BookDetailScreen() {
             setShowReviewModal(true);
         }
     }, [loading, book, writeReview]);
+
+    const handleSaveSuccess = (listName: string) => {
+        showToast(`Saved to ${listName}!`, "success");
+    };
+
+    const handleCreateListSubmit = async (data: { title: string; description: string; isPublic: boolean }) => {
+        try {
+            await bookListApi.createBookList(data);
+            showToast("List created!", "success");
+            setCreateModalVisible(false);
+            // After creating, we might want to re-open the save modal to select it
+            // but for simplicity we'll just stay here. 
+            // Better yet, the user might expect it to save automatically to the new list,
+            // but the current API create doesn't take books.
+            setShowSaveModal(true);
+        } catch (error) {
+            console.error(error);
+            showToast("Failed to create list.", "error");
+        }
+    };
 
     const [activeTab, setActiveTab] =
         useState<"Reviews" | "Readers" | "Lists">("Reviews");
@@ -72,8 +94,6 @@ export default function BookDetailScreen() {
     const {
         createReview,
         loading: creatingReview,
-        error: reviewError,
-        isDuplicate,
     } = useCreateReview(id);
 
     // Find if user already reviewed
@@ -108,7 +128,7 @@ export default function BookDetailScreen() {
                 }),
             ]).start();
         }
-    }, [loading]);
+    }, [loading, coverScale, coverOpacity, contentOpacity, contentTranslate]);
 
     useEffect(() => {
         fadeAnimTab.setValue(0);
@@ -117,7 +137,7 @@ export default function BookDetailScreen() {
             duration: 250,
             useNativeDriver: true,
         }).start();
-    }, [activeTab]);
+    }, [activeTab, fadeAnimTab]);
 
     if (!fontsLoaded) return null;
 
@@ -235,7 +255,7 @@ export default function BookDetailScreen() {
                     <View style={styles.actionsRow}>
                         <TouchableOpacity
                             style={styles.actionButtonSecondary}
-                            onPress={() => { }}
+                            onPress={() => setShowSaveModal(true)}
                         >
                             <Ionicons name="list-outline" size={20} color="#111827" />
                             <Text style={styles.actionText}>Add to list</Text>
@@ -362,6 +382,27 @@ export default function BookDetailScreen() {
                 <SimilarBooksCarousel currentBook={book} allBooks={relatedBooks} />
                 {/* <RelatedBookCarousel currentBook={book} /> */}
             </ScrollView>
+
+            <SaveBookModal
+                visible={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                book={{
+                    id: book.id,
+                    title: book.title,
+                    authors: book.authors,
+                    coverUrl: book.coverUrl ?? undefined,
+                    publishedDate: book.publishedYear?.toString()
+                }}
+                onSuccess={handleSaveSuccess}
+                onError={(msg) => showToast(msg, "error")}
+                onCreateList={() => setCreateModalVisible(true)}
+            />
+
+            <CreateListModal
+                visible={createModalVisible}
+                onClose={() => setCreateModalVisible(false)}
+                onSubmit={handleCreateListSubmit}
+            />
         </SafeAreaView>
     );
 }
