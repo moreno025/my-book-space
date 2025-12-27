@@ -2,11 +2,11 @@ import Joi from "joi";
 
 export const registerSchema = Joi.object({
   username: Joi.string()
-    .max(10)
+    .max(15)
     .required()
     .messages({
       "string.empty": "El username es obligatorio",
-      "string.max": "El username debe tener como máximo 10 caracteres",
+      "string.max": "El username debe tener como máximo 15 caracteres",
     }),
   email: Joi.string()
     .email()
