@@ -14,7 +14,9 @@ interface ListOptionsModalProps {
     visible: boolean;
     onClose: () => void;
     listTitle: string;
+    isPublic: boolean;
     onRename: () => void;
+    onToggleVisibility: () => void;
     onDelete: () => void;
 }
 
@@ -22,7 +24,9 @@ export function ListOptionsModal({
     visible,
     onClose,
     listTitle,
+    isPublic,
     onRename,
+    onToggleVisibility,
     onDelete,
 }: ListOptionsModalProps) {
     return (
@@ -63,6 +67,25 @@ export function ListOptionsModal({
                                     <Ionicons name="create-outline" size={22} color="#10B981" />
                                 </View>
                                 <Text style={styles.optionText}>Rename List</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.option}
+                                onPress={() => {
+                                    onToggleVisibility();
+                                    onClose();
+                                }}
+                            >
+                                <View style={[styles.iconContainer, { backgroundColor: "rgba(59, 130, 246, 0.1)" }]}>
+                                    <Ionicons
+                                        name={isPublic ? "lock-closed-outline" : "globe-outline"}
+                                        size={22}
+                                        color="#3B82F6"
+                                    />
+                                </View>
+                                <Text style={styles.optionText}>
+                                    {isPublic ? "Make Private" : "Make Public"}
+                                </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity

@@ -11,17 +11,19 @@ import { ListOptionsModal } from "./ListOptionsModal";
 interface BookListCarouselProps {
     title: string;
     listId: string;
+    isPublic: boolean;
     books: BookListBook[];
     onAddBook?: () => void;
     onRefresh?: () => void;
     onRename?: (listId: string, currentTitle: string) => void;
+    onToggleVisibility?: (listId: string, currentIsPublic: boolean) => void;
 }
 
 // const { width } = Dimensions.get("window"); // Unused for now
 const CARD_WIDTH = 100;
 const CARD_HEIGHT = 150;
 
-export function BookListCarousel({ title, listId, books, onAddBook, onRefresh, onRename }: BookListCarouselProps) {
+export function BookListCarousel({ title, listId, isPublic, books, onAddBook, onRefresh, onRename, onToggleVisibility }: BookListCarouselProps) {
     const router = useRouter();
     const fontsLoaded = useAppFonts();
 
@@ -88,6 +90,14 @@ export function BookListCarousel({ title, listId, books, onAddBook, onRefresh, o
             <View style={styles.header}>
                 <View style={styles.titleContainer}>
                     <Text style={styles.title}>{title}</Text>
+                    {!isPublic && (
+                        <Ionicons
+                            name="lock-closed"
+                            size={16}
+                            color="#9CA3AF"
+                            style={{ marginLeft: 8 }}
+                        />
+                    )}
                     <TouchableOpacity onPress={() => setShowListOptionsModal(true)} style={styles.optionsButton}>
                         <Ionicons name="ellipsis-horizontal" size={20} color="#9CA3AF" />
                     </TouchableOpacity>
@@ -171,7 +181,9 @@ export function BookListCarousel({ title, listId, books, onAddBook, onRefresh, o
                 visible={showListOptionsModal}
                 onClose={() => setShowListOptionsModal(false)}
                 listTitle={title}
+                isPublic={isPublic}
                 onRename={() => onRename?.(listId, title)}
+                onToggleVisibility={() => onToggleVisibility?.(listId, isPublic)}
                 onDelete={confirmDeleteList}
             />
         </View>
