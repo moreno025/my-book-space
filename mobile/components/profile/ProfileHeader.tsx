@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { User } from "../../types/user";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 interface ProfileHeaderProps {
     user: User | null;
@@ -11,6 +12,7 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProps) {
     const [imageError, setImageError] = useState(false);
+    const router = useRouter();
 
     if (!user) return null;
 
@@ -22,7 +24,7 @@ export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProp
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.settingsButton}>
+            <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
                 <Ionicons name="settings-outline" size={24} color="#E5E7EB" />
             </TouchableOpacity>
 
