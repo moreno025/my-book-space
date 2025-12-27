@@ -88,6 +88,9 @@ export default function BookDetailScreen() {
     const fadeAnimTab = useRef(new Animated.Value(0)).current;
 
     const [expanded, setExpanded] = useState(false);
+    const [showMoreReviews, setShowMoreReviews] = useState(false);
+    const [showMoreReaders, setShowMoreReaders] = useState(false);
+    const [showMoreLists, setShowMoreLists] = useState(false);
 
     const coverScale = useRef(new Animated.Value(0.92)).current;
     const coverOpacity = useRef(new Animated.Value(0)).current;
@@ -98,7 +101,6 @@ export default function BookDetailScreen() {
         loading: creatingReview,
     } = useCreateReview(id);
 
-    // Find if user already reviewed
     const userReview = reviews.find(r => r.user?._id === user?.id);
     const { updateReview, loading: updatingReview } = useUpdateReview(userReview?._id || "");
 
@@ -154,6 +156,15 @@ export default function BookDetailScreen() {
     const readers = Array.from(
         new Map(reviews.filter((r) => r?.user?._id).map((r) => [r.user._id, r.user])).values()
     );
+
+    const calculateAverageRating = () => {
+        if (reviews.length < 5) return null;
+        const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+        return (sum / reviews.length).toFixed(1);
+    };
+
+    const displayRating = calculateAverageRating() || book.rating;
+    const ratingSource = calculateAverageRating() ? "user" : "google";
 
 
     return (
@@ -230,8 +241,8 @@ export default function BookDetailScreen() {
                         <View style={styles.stats}>
                             <Metric
                                 icon={<Ionicons name="star" size={18} color="#FBBF24" />}
-                                value={book.rating ?? "—"}
-                                label="Rating"
+                                value={displayRating ?? "—"}
+                                label={ratingSource === "user" ? `Rating (${reviews.length})` : "Rating"}
                             />
                             <Metric
                                 icon={
@@ -350,32 +361,49 @@ export default function BookDetailScreen() {
                                     {loadingReviews && <ActivityIndicator color="#FFFFFF" />}
                                     {!loadingReviews &&
                                         (reviews.length ? (
-                                            reviews.map((r) => (
-                                                <View key={r._id} style={styles.reviewCard}>
-                                                    <View style={styles.reviewHeader}>
-                                                        <Image
-                                                            source={{
-                                                                uri: r.user.avatar || "https://via.placeholder.com/40",
-                                                            }}
-                                                            style={styles.reviewAvatar}
-                                                        />
-                                                        <View style={styles.reviewUserInfo}>
-                                                            <Text style={styles.reviewUser}>{r.user.username}</Text>
-                                                            <View style={styles.reviewRating}>
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <Ionicons
-                                                                        key={i}
-                                                                        name={i < r.rating ? "star" : "star-outline"}
-                                                                        size={14}
-                                                                        color="#FBBF24"
-                                                                    />
-                                                                ))}
+                                            <>
+                                                {(showMoreReviews ? reviews : reviews.slice(0, 5)).map((r) => (
+                                                    <View key={r._id} style={styles.reviewCard}>
+                                                        <View style={styles.reviewHeader}>
+                                                            <Image
+                                                                source={{
+                                                                    uri: r.user.avatar || "https://via.placeholder.com/40",
+                                                                }}
+                                                                style={styles.reviewAvatar}
+                                                            />
+                                                            <View style={styles.reviewUserInfo}>
+                                                                <Text style={styles.reviewUser}>{r.user.username}</Text>
+                                                                <View style={styles.reviewRating}>
+                                                                    {[...Array(5)].map((_, i) => (
+                                                                        <Ionicons
+                                                                            key={i}
+                                                                            name={i < r.rating ? "star" : "star-outline"}
+                                                                            size={14}
+                                                                            color="#FBBF24"
+                                                                        />
+                                                                    ))}
+                                                                </View>
+                                                                <Text style={styles.reviewComment}>{r.review}</Text>
                                                             </View>
-                                                            <Text style={styles.reviewComment}>{r.review}</Text>
                                                         </View>
                                                     </View>
-                                                </View>
-                                            ))
+                                                ))}
+                                                {reviews.length > 5 && (
+                                                    <TouchableOpacity
+                                                        style={styles.showMoreButton}
+                                                        onPress={() => setShowMoreReviews(!showMoreReviews)}
+                                                    >
+                                                        <Text style={styles.showMoreText}>
+                                                            {showMoreReviews ? "Show Less" : `Show More (${reviews.length - 5} more)`}
+                                                        </Text>
+                                                        <Ionicons
+                                                            name={showMoreReviews ? "chevron-up" : "chevron-down"}
+                                                            size={18}
+                                                            color="#38BDF8"
+                                                        />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </>
                                         ) : (
                                             <Text style={{ color: "#E5E7EB", marginTop: 10 }}>No reviews yet</Text>
                                         ))}
@@ -385,25 +413,45 @@ export default function BookDetailScreen() {
                             {activeTab === "Readers" && (
                                 <>
                                     {readers.length ? (
-                                        <View style={styles.readersContainer}>
-                                            {readers.map((u) => (
-                                                <View key={u._id} style={styles.readerCard}>
-                                                    <Image
-                                                        source={{ uri: u.avatar }}
-                                                        style={styles.readerAvatar}
+                                        <>
+                                            <View style={styles.readersContainer}>
+                                                {(showMoreReaders ? readers : readers.slice(0, 5)).map((u) => (
+                                                    <View key={u._id} style={styles.readerCard}>
+                                                        <Image
+                                                            source={{ uri: u.avatar || "https://via.placeholder.com/40" }}
+                                                            style={styles.readerAvatar}
+                                                        />
+                                                        <View style={styles.readerInfo}>
+                                                            <Text style={styles.readerName}>{u.username}</Text>
+                                                            <Text style={styles.readerLabel}>Reader</Text>
+                                                        </View>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                            {readers.length > 5 && (
+                                                <TouchableOpacity
+                                                    style={styles.showMoreButton}
+                                                    onPress={() => setShowMoreReaders(!showMoreReaders)}
+                                                >
+                                                    <Text style={styles.showMoreText}>
+                                                        {showMoreReaders ? "Show Less" : `Show More (${readers.length - 5} more)`}
+                                                    </Text>
+                                                    <Ionicons
+                                                        name={showMoreReaders ? "chevron-up" : "chevron-down"}
+                                                        size={18}
+                                                        color="#38BDF8"
                                                     />
-                                                    <Text style={styles.readerName}>{u.username}</Text>
-                                                </View>
-                                            ))}
-                                        </View>
+                                                </TouchableOpacity>
+                                            )}
+                                        </>
                                     ) : (
-                                        <Text style={{ color: "#E5E7EB" }}>No readers yet</Text>
+                                        <Text style={{ color: "#94A3B8", marginTop: 10, fontFamily: "Nunito-Medium" }}>No readers yet</Text>
                                     )}
                                 </>
                             )}
 
                             {activeTab === "Lists" && (
-                                <Text style={{ color: "#E5E7EB" }}>Lists tab placeholder</Text>
+                                <Text style={{ color: "#94A3B8", fontFamily: "Nunito-Medium" }}>Lists tab placeholder</Text>
                             )}
                         </Animated.View>
                     </Animated.View>
@@ -576,10 +624,42 @@ const styles = StyleSheet.create({
     reviewUser: { color: "#F9FAFB", fontWeight: "700", fontSize: 15, fontFamily: "Nunito-Bold", marginBottom: 4 },
     reviewRating: { flexDirection: "row", gap: 2 },
     reviewComment: { color: "#E5E7EB", fontSize: 14, lineHeight: 20, fontFamily: "Nunito-Medium", marginTop: 8 },
-    readersContainer: { flexDirection: "row", flexWrap: "wrap" },
-    readerCard: { alignItems: "center", marginRight: 12, marginBottom: 12 },
-    readerAvatar: { width: 40, height: 40, borderRadius: 20 },
-    readerName: { color: "#E5E7EB", fontSize: 12, marginTop: 4 },
+    readersContainer: { gap: 12 },
+    readerCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(30, 41, 59, 0.8)",
+        borderRadius: 16,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.2)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    readerAvatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        marginRight: 12,
+        borderWidth: 1.5,
+        borderColor: "rgba(255, 255, 255, 0.2)",
+    },
+    readerInfo: { flex: 1 },
+    readerName: {
+        color: "#F9FAFB",
+        fontSize: 15,
+        fontWeight: "700",
+        fontFamily: "Nunito-Bold",
+        marginBottom: 2,
+    },
+    readerLabel: {
+        color: "#94A3B8",
+        fontSize: 12,
+        fontFamily: "Nunito-Medium",
+    },
     actionsRow: {
         flexDirection: "row",
         gap: 12,
@@ -623,6 +703,25 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "700",
         color: "#E5E7EB",
+        fontFamily: "Nunito-Bold",
+    },
+    showMoreButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        marginTop: 12,
+        backgroundColor: "rgba(56, 189, 248, 0.1)",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "rgba(56, 189, 248, 0.3)",
+        gap: 8,
+    },
+    showMoreText: {
+        color: "#38BDF8",
+        fontSize: 14,
+        fontWeight: "700",
         fontFamily: "Nunito-Bold",
     },
 
