@@ -7,6 +7,7 @@ import {
     StyleSheet,
     TouchableWithoutFeedback,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 
 interface ListOptionsModalProps {
@@ -31,48 +32,55 @@ export function ListOptionsModal({
             animationType="fade"
             onRequestClose={onClose}
         >
-            <TouchableWithoutFeedback onPress={onClose}>
-                <View style={styles.overlay}>
-                    <TouchableWithoutFeedback>
-                        <View style={styles.content}>
-                            <View style={styles.header}>
-                                <Text style={styles.title} numberOfLines={1}>{listTitle}</Text>
-                                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                                    <Ionicons name="close" size={24} color="#9CA3AF" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.optionsContainer}>
-                                <TouchableOpacity
-                                    style={styles.option}
-                                    onPress={() => {
-                                        onRename();
-                                        onClose();
-                                    }}
-                                >
-                                    <View style={[styles.iconContainer, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
-                                        <Ionicons name="create-outline" size={22} color="#10B981" />
-                                    </View>
-                                    <Text style={styles.optionText}>Rename List</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={[styles.option, styles.lastOption]}
-                                    onPress={() => {
-                                        onDelete();
-                                        onClose();
-                                    }}
-                                >
-                                    <View style={[styles.iconContainer, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}>
-                                        <Ionicons name="trash-outline" size={22} color="#EF4444" />
-                                    </View>
-                                    <Text style={[styles.optionText, { color: "#EF4444" }]}>Delete List</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+            <View style={styles.overlay}>
+                <BlurView
+                    intensity={40}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                >
+                    <TouchableWithoutFeedback onPress={onClose}>
+                        <View style={styles.backdrop} />
                     </TouchableWithoutFeedback>
-                </View>
-            </TouchableWithoutFeedback>
+                </BlurView>
+                <TouchableWithoutFeedback>
+                    <View style={styles.content}>
+                        <View style={styles.header}>
+                            <Text style={styles.title} numberOfLines={1}>{listTitle}</Text>
+                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                                <Ionicons name="close" size={24} color="#9CA3AF" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.optionsContainer}>
+                            <TouchableOpacity
+                                style={styles.option}
+                                onPress={() => {
+                                    onRename();
+                                    onClose();
+                                }}
+                            >
+                                <View style={[styles.iconContainer, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
+                                    <Ionicons name="create-outline" size={22} color="#10B981" />
+                                </View>
+                                <Text style={styles.optionText}>Rename List</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.option, styles.lastOption]}
+                                onPress={() => {
+                                    onDelete();
+                                    onClose();
+                                }}
+                            >
+                                <View style={[styles.iconContainer, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}>
+                                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                                </View>
+                                <Text style={[styles.optionText, { color: "#EF4444" }]}>Delete List</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </TouchableWithoutFeedback>
+            </View>
         </Modal>
     );
 }
@@ -80,10 +88,12 @@ export function ListOptionsModal({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
+    },
+    backdrop: {
+        flex: 1,
     },
     content: {
         width: "100%",

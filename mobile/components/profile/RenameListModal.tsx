@@ -10,6 +10,7 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 
 interface RenameListModalProps {
@@ -48,57 +49,64 @@ export function RenameListModal({
             animationType="fade"
             onRequestClose={onClose}
         >
-            <TouchableWithoutFeedback onPress={onClose}>
-                <View style={styles.overlay}>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={styles.keyboardView}
-                        keyboardVerticalOffset={10}
-                    >
-                        <TouchableWithoutFeedback>
-                            <View style={styles.content}>
-                                <View style={styles.header}>
-                                    <Text style={styles.title}>Rename List</Text>
-                                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                                        <Ionicons name="close" size={24} color="#9CA3AF" />
+            <View style={styles.overlay}>
+                <BlurView
+                    intensity={40}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                >
+                    <TouchableWithoutFeedback onPress={onClose}>
+                        <View style={styles.backdrop} />
+                    </TouchableWithoutFeedback>
+                </BlurView>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.keyboardView}
+                    keyboardVerticalOffset={10}
+                >
+                    <TouchableWithoutFeedback>
+                        <View style={styles.content}>
+                            <View style={styles.header}>
+                                <Text style={styles.title}>Rename List</Text>
+                                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                                    <Ionicons name="close" size={24} color="#9CA3AF" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.form}>
+                                <Text style={styles.label}>List Name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={newTitle}
+                                    onChangeText={setNewTitle}
+                                    placeholder="Enter new list name..."
+                                    placeholderTextColor="#6B7280"
+                                    autoFocus
+                                />
+
+                                <View style={styles.footer}>
+                                    <TouchableOpacity
+                                        style={styles.cancelButton}
+                                        onPress={onClose}
+                                    >
+                                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.submitButton,
+                                            (!newTitle.trim() || newTitle === currentTitle) && styles.submitButtonDisabled,
+                                        ]}
+                                        onPress={handleSubmit}
+                                        disabled={!newTitle.trim() || newTitle === currentTitle}
+                                    >
+                                        <Text style={styles.submitButtonText}>Save</Text>
                                     </TouchableOpacity>
                                 </View>
-
-                                <View style={styles.form}>
-                                    <Text style={styles.label}>List Name</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={newTitle}
-                                        onChangeText={setNewTitle}
-                                        placeholder="Enter new list name..."
-                                        placeholderTextColor="#6B7280"
-                                        autoFocus
-                                    />
-
-                                    <View style={styles.footer}>
-                                        <TouchableOpacity
-                                            style={styles.cancelButton}
-                                            onPress={onClose}
-                                        >
-                                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.submitButton,
-                                                (!newTitle.trim() || newTitle === currentTitle) && styles.submitButtonDisabled,
-                                            ]}
-                                            onPress={handleSubmit}
-                                            disabled={!newTitle.trim() || newTitle === currentTitle}
-                                        >
-                                            <Text style={styles.submitButtonText}>Save</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
                             </View>
-                        </TouchableWithoutFeedback>
-                    </KeyboardAvoidingView>
-                </View>
-            </TouchableWithoutFeedback>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
+            </View>
         </Modal>
     );
 }
@@ -106,10 +114,12 @@ export function RenameListModal({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
+    },
+    backdrop: {
+        flex: 1,
     },
     keyboardView: {
         width: "100%",

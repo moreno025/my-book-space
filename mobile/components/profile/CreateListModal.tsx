@@ -12,6 +12,7 @@ import {
     Platform,
     TouchableWithoutFeedback,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 
 interface CreateListModalProps {
@@ -55,9 +56,15 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
             onRequestClose={handleClose}
         >
             <View style={styles.overlay}>
-                <TouchableWithoutFeedback onPress={handleClose}>
-                    <View style={styles.backdrop} />
-                </TouchableWithoutFeedback>
+                <BlurView
+                    intensity={40}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                >
+                    <TouchableWithoutFeedback onPress={handleClose}>
+                        <View style={styles.backdrop} />
+                    </TouchableWithoutFeedback>
+                </BlurView>
 
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -152,10 +159,9 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
     },
     backdrop: {
-        ...StyleSheet.absoluteFillObject,
+        flex: 1,
     },
     keyboardWrapper: {
         width: "100%",
