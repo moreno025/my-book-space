@@ -366,14 +366,14 @@ export default function BookDetailScreen() {
                                                                     <Ionicons
                                                                         key={i}
                                                                         name={i < r.rating ? "star" : "star-outline"}
-                                                                        size={12}
+                                                                        size={14}
                                                                         color="#FBBF24"
                                                                     />
                                                                 ))}
                                                             </View>
+                                                            <Text style={styles.reviewComment}>{r.review}</Text>
                                                         </View>
                                                     </View>
-                                                    <Text style={styles.reviewComment}>{r.review}</Text>
                                                 </View>
                                             ))
                                         ) : (
@@ -548,17 +548,21 @@ const styles = StyleSheet.create({
     tabText: { fontSize: 14, color: "#94A3B8", fontWeight: "700", fontFamily: "Nunito-Bold" },
     tabTextActive: { color: "#F9FAFB" },
     reviewCard: {
-        backgroundColor: "rgba(30, 41, 59, 0.4)",
+        backgroundColor: "rgba(30, 41, 59, 0.8)",
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.05)",
+        borderColor: "rgba(255, 255, 255, 0.2)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
     },
     reviewHeader: {
         flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
+        alignItems: "flex-start",
     },
     reviewAvatar: {
         width: 36,
@@ -566,12 +570,12 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         marginRight: 10,
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: "rgba(255, 255, 255, 0.2)",
     },
     reviewUserInfo: { flex: 1 },
-    reviewUser: { color: "#F9FAFB", fontWeight: "700", fontSize: 13, fontFamily: "Nunito-Bold" },
-    reviewRating: { flexDirection: "row", marginTop: 2 },
-    reviewComment: { color: "#CBD5E1", fontSize: 14, lineHeight: 20, fontFamily: "Nunito-Medium" },
+    reviewUser: { color: "#F9FAFB", fontWeight: "700", fontSize: 15, fontFamily: "Nunito-Bold", marginBottom: 4 },
+    reviewRating: { flexDirection: "row", gap: 2 },
+    reviewComment: { color: "#E5E7EB", fontSize: 14, lineHeight: 20, fontFamily: "Nunito-Medium", marginTop: 8 },
     readersContainer: { flexDirection: "row", flexWrap: "wrap" },
     readerCard: { alignItems: "center", marginRight: 12, marginBottom: 12 },
     readerAvatar: { width: 40, height: 40, borderRadius: 20 },

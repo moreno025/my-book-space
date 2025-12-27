@@ -7,6 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../../../hooks/useAuth";
 import { useUserLists } from "../../../hooks/BookList/useUserList";
 import { useAppFonts } from "../../../hooks/useFonts";
+import { useToast } from "../../../context/ToastContext";
 
 // components
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -23,6 +24,7 @@ export default function ProfileScreen() {
         username: user?.username ?? "",
         enabled: !!user?.username,
     });
+    const { showToast } = useToast();
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [addBookModalVisible, setAddBookModalVisible] = useState(false);
     const [renameModalVisible, setRenameModalVisible] = useState(false);
@@ -69,6 +71,18 @@ export default function ProfileScreen() {
         }
     };
 
+    const handleToggleVisibility = async (listId: string, currentIsPublic: boolean) => {
+        try {
+            await bookListApi.updateBookList(listId, { isPublic: !currentIsPublic });
+            const newStatus = !currentIsPublic ? "public" : "private";
+            showToast(`List is now ${newStatus}!`, "success");
+            refetch();
+        } catch (error) {
+            console.error("Failed to toggle visibility:", error);
+            showToast("Failed to update list visibility", "error");
+        }
+    };
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <ScrollView contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}>
@@ -96,9 +110,11 @@ export default function ProfileScreen() {
                             key={list._id}
                             listId={list._id}
                             title={list.title}
+                            isPublic={list.isPublic}
                             books={list.books}
                             onAddBook={() => handleOpenAddBook(list._id)}
                             onRename={handleRenameList}
+                            onToggleVisibility={handleToggleVisibility}
                             onRefresh={refetch}
                         />
                     ))
