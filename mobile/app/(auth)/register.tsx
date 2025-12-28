@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
-import { Text, ImageBackground, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useContext } from "react";
+import { Text, ImageBackground, StyleSheet, View, useWindowDimensions } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../components/ui/input";
@@ -11,10 +12,10 @@ import { authApi } from "../../constants/api/index";
 import { useAppFonts } from "../../hooks/useFonts";
 
 export default function Register() {
+    const { height } = useWindowDimensions();
     const router = useRouter();
     const fontsLoaded = useAppFonts();
     const { login } = useContext(AuthContext);
-    const [showPassword, setShowPassword] = useState(false);
 
     const { control, handleSubmit, setError, formState: { errors } } = useForm({
         resolver: zodResolver(registerSchema),
@@ -45,64 +46,76 @@ export default function Register() {
             style={styles.background}
             resizeMode="cover"
         >
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                style={styles.container}
+            <View style={styles.overlay} />
+            <KeyboardAwareScrollView
+                contentContainerStyle={styles.scrollContent}
+                enableOnAndroid={true}
+                enableAutomaticScroll={true}
+                extraScrollHeight={100}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                bounces={false}
             >
-                <Text style={styles.title}>My Book Space</Text>
+                <View style={[styles.innerContainer, { minHeight: height }]}>
+                    <Text style={styles.title}>My Book Space</Text>
 
-                {/* Username */}
-                <Controller
-                    control={control}
-                    name="username"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            placeholder="Username"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            error={errors.username?.message}
-                        />
-                    )}
-                />
+                    {/* Username */}
+                    <Controller
+                        control={control}
+                        name="username"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                placeholder="Username"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                autoCorrect={false}
+                                error={errors.username?.message}
+                            />
+                        )}
+                    />
 
-                {/* Email */}
-                <Controller
-                    control={control}
-                    name="email"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            placeholder="Email"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            error={errors.email?.message}
-                        />
-                    )}
-                />
+                    {/* Email */}
+                    <Controller
+                        control={control}
+                        name="email"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                placeholder="Email"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                autoCorrect={false}
+                                error={errors.email?.message}
+                            />
+                        )}
+                    />
 
-                {/* Password */}
-                <Controller
-                    control={control}
-                    name="password"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            placeholder="Contraseña"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            secureTextEntry={!showPassword}
-                            error={errors.password?.message}
-                        />
-                    )}
-                />
+                    {/* Password */}
+                    <Controller
+                        control={control}
+                        name="password"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                placeholder="Contraseña"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                secureTextEntry
+                                error={errors.password?.message}
+                            />
+                        )}
+                    />
 
-                <Button title="Registrarse" onPress={handleSubmit(onSubmit)} />
+                    <Button title="Registrarse" onPress={handleSubmit(onSubmit)} />
 
-                <Text style={styles.link} onPress={() => router.push("../login")}>
-                    ¿Ya tienes cuenta? Inicia sesión
-                </Text>
-            </KeyboardAvoidingView>
+                    <View style={styles.linksContainer}>
+                        <Text style={styles.link} onPress={() => router.push("../login")}>
+                            ¿Ya tienes cuenta? Inicia sesión
+                        </Text>
+                    </View>
+                </View>
+            </KeyboardAwareScrollView>
         </ImageBackground>
     );
 }
@@ -111,12 +124,17 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
     },
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        padding: 20,
-        paddingTop: 60,
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
         backgroundColor: "rgba(0,0,0,0.35)",
+    },
+    scrollContent: {
+        flexGrow: 1,
+    },
+    innerContainer: {
+        justifyContent: "center",
+        paddingHorizontal: 24,
+        paddingBottom: 40,
     },
     title: {
         fontSize: 36,
@@ -124,6 +142,9 @@ const styles = StyleSheet.create({
         fontFamily: "PlaywrightNorge-Regular",
         textAlign: "center",
         color: "#fff",
+    },
+    linksContainer: {
+        marginTop: 16,
     },
     link: {
         color: "#c7dcf3ff",

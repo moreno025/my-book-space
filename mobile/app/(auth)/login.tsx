@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
-import { Text, ImageBackground, StyleSheet, KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Text, ImageBackground, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../components/ui/input";
@@ -7,11 +8,11 @@ import { Button } from "../../components/ui/button";
 import { loginSchema } from "../../schemas/auth";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
-import { api, authApi } from "../../constants/api/index";
+import { authApi } from "../../constants/api/index";
 import { useAppFonts } from "../../hooks/useFonts";
 
-
 export default function Login() {
+    const { height } = useWindowDimensions();
     const router = useRouter();
     const fontsLoaded = useAppFonts();
     const { login } = useContext(AuthContext);
@@ -26,7 +27,6 @@ export default function Login() {
             const res = await authApi.login(data.email, data.password);
             if (res.status === 200) {
                 login(data.email, data.password);
-
                 router.replace("/");
             }
         } catch (error: any) {
@@ -45,51 +45,61 @@ export default function Login() {
             resizeMode="cover"
         >
             <View style={styles.overlay} />
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                style={styles.container}
+            <KeyboardAwareScrollView
+                contentContainerStyle={styles.scrollContent}
+                enableOnAndroid={true}
+                enableAutomaticScroll={true}
+                extraScrollHeight={100} // Extra offset to push content up
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                bounces={false}
             >
-                <Text style={styles.title}>My Book Space</Text>
+                <View style={[styles.innerContainer, { minHeight: height }]}>
+                    <Text style={styles.title}>My Book Space</Text>
 
-                <Controller
-                    control={control}
-                    name="email"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            placeholder="Email"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            error={errors.email?.message || errors.root?.message}
-                        />
-                    )}
-                />
+                    <Controller
+                        control={control}
+                        name="email"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                placeholder="Email"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                autoCorrect={false}
+                                error={errors.email?.message || errors.root?.message}
+                            />
+                        )}
+                    />
 
-                <Controller
-                    control={control}
-                    name="password"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            placeholder="Contraseña"
-                            secureTextEntry
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            error={errors.password?.message || errors.root?.message}
-                        />
-                    )}
-                />
+                    <Controller
+                        control={control}
+                        name="password"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                placeholder="Contraseña"
+                                secureTextEntry
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                error={errors.password?.message || errors.root?.message}
+                            />
+                        )}
+                    />
 
-                <Button title="Iniciar sesión" onPress={handleSubmit(onSubmit)} />
+                    <Button title="Iniciar sesión" onPress={handleSubmit(onSubmit)} />
 
-                <Text style={styles.link} onPress={() => router.push("../register")}>
-                    ¿No tienes cuenta? Regístrate
-                </Text>
+                    <View style={styles.linksContainer}>
+                        <Text style={styles.link} onPress={() => router.push("../register")}>
+                            ¿No tienes cuenta? Regístrate
+                        </Text>
 
-                <Text style={styles.link} onPress={() => router.push("../forgot-password")}>
-                    ¿Olvidaste tu contraseña?
-                </Text>
-            </KeyboardAvoidingView>
+                        <Text style={styles.link} onPress={() => router.push("../forgot-password")}>
+                            ¿Olvidaste tu contraseña?
+                        </Text>
+                    </View>
+                </View>
+            </KeyboardAwareScrollView>
         </ImageBackground>
     );
 }
@@ -102,11 +112,13 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         backgroundColor: "rgba(0,0,0,0.3)",
     },
-    container: {
-        flex: 1,
+    scrollContent: {
+        flexGrow: 1,
+    },
+    innerContainer: {
         justifyContent: "center",
-        padding: 20,
-        paddingTop: 60,
+        paddingHorizontal: 24,
+        paddingBottom: 40,
     },
     title: {
         fontSize: 36,
@@ -114,6 +126,9 @@ const styles = StyleSheet.create({
         fontFamily: "PlaywrightNorge-Regular",
         textAlign: "center",
         color: "#fff",
+    },
+    linksContainer: {
+        marginTop: 16,
     },
     link: {
         color: "#c7dcf3ff",
