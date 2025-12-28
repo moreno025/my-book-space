@@ -21,7 +21,8 @@ export default function RootLayout() {
 }
 
 function AuthGate() {
-  const { token, loading, logout } = useAuth();
+  const { token, user, loading, logout } = useAuth();
+  console.log("🚪 [AuthGate] Render State:", { hasToken: !!token, hasUser: !!user, loading });
   const router = useRouter();
   const [pendingRoute, setPendingRoute] = useState<{ path: string, params?: any } | null>(null);
 
@@ -30,7 +31,6 @@ function AuthGate() {
       const data = Linking.parse(url);
 
       if (data.path === 'reset-password' && data.queryParams?.token) {
-        // Set pending route and logout
         setPendingRoute({
           path: '/(auth)/reset-password',
           params: { token: data.queryParams?.token as string }
@@ -49,14 +49,26 @@ function AuthGate() {
     return () => subscription.remove();
   }, [logout]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    if (!token || !user) {
+
+      setTimeout(() => {
+        router.replace("/(auth)/login");
+      }, 0);
+    } else if (token && user) {
+      // Redirect to home if authenticated and currently in auth group (optional but good for deep links)
+      // This part is handled naturally by the user navigation usually, but good to ensure
+    }
+  }, [token, user, loading, router]);
+
   // Handle pending navigation once logged out
   useEffect(() => {
     if (!token && pendingRoute) {
-      // Clear pending route before navigating to avoid loops
       const route = pendingRoute;
       setPendingRoute(null);
 
-      // Navigate to the pending route
       router.replace({
         pathname: route.path as any,
         params: route.params
@@ -67,8 +79,8 @@ function AuthGate() {
   if (loading) return null;
 
   return (
-    <Stack key={token ? 'authenticated' : 'unauthenticated'} screenOptions={{ headerShown: false }}>
-      {token ? (
+    <Stack key={token && user ? 'authenticated' : 'unauthenticated'} screenOptions={{ headerShown: false }}>
+      {token && user ? (
         <Stack.Screen name="(app)" />
       ) : (
         <Stack.Screen name="(auth)" />

@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import { getItem, setItem, removeItem } from "../utils/storage";
-import { api, authApi } from "../constants/api/index";
+import { api, authApi, booksApi } from "../constants/api/index";
 import { authEvents, AUTH_EVENTS } from "../utils/authEvents";
 import { User } from "../types/user";
 
@@ -29,16 +29,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         async function loadSession() {
-            const savedToken = await getItem("token");
-            const savedUser = await getItem("user");
 
-            if (savedToken && savedUser) {
-                api.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
-                setToken(savedToken);
-                setUser(JSON.parse(savedUser));
+            try {
+                const savedToken = await getItem("token");
+                const savedUser = await getItem("user");
+
+                if (savedToken && savedUser) {
+                    const parsedUser = JSON.parse(savedUser);
+
+                    if (parsedUser && parsedUser.id && parsedUser.email) {
+                        api.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
+
+                        try {
+                            console.log("Session validation: checking history...");
+                            await booksApi.getHistory();
+                            console.log("Session validation: success");
+
+                            setToken(savedToken);
+                            setUser(parsedUser);
+                        } catch (error: any) {
+                            console.error("Session validation error:", error.message, error.response?.status);
+                            if (error.response?.status !== 401) {
+                                setToken(savedToken);
+                                setUser(parsedUser);
+                            }
+                        }
+                    } else {
+                        console.log("Invalid parsed user:", parsedUser);
+                        await removeItem("user");
+                        await removeItem("token");
+                    }
+                }
+            } catch (err) {
+                console.error("🔒 [AuthContext] Critical error in loadSession:", err);
+            } finally {
+                setLoading(false);
             }
-
-            setLoading(false);
         }
 
         loadSession();
