@@ -12,13 +12,6 @@ export default function AppLayout() {
       <Tabs.Screen name="index" options={{ title: "Inicio" }} />
       <Tabs.Screen name="search" options={{ title: "Buscar" }} />
       <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Ajustes",
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }
