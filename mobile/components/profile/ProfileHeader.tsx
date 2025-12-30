@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, Easing } from "react-native";
+import { useState, useRef } from "react";
 import { User } from "../../types/user";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { getImageUrl } from "@/utils/url";
 
 interface ProfileHeaderProps {
     user: User | null;
@@ -14,6 +15,43 @@ export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProp
     const [imageError, setImageError] = useState(false);
     const router = useRouter();
 
+    // Animation values
+    const settingsScale = useRef(new Animated.Value(1)).current;
+    const avatarScale = useRef(new Animated.Value(1)).current;
+    const addScale = useRef(new Animated.Value(1)).current;
+
+
+    const handlePress = (target: 'settings' | 'avatar' | 'add') => {
+        const scaleVal =
+            target === 'settings' ? settingsScale :
+                target === 'avatar' ? avatarScale : addScale;
+
+        // Sequence: Squish -> Navigate/Action
+        Animated.sequence([
+            Animated.timing(scaleVal, {
+                toValue: 0.82,
+                duration: 120,
+                easing: Easing.out(Easing.quad),
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleVal, {
+                toValue: 1,
+                friction: 3,
+                tension: 40,
+                useNativeDriver: true,
+            })
+        ]).start();
+
+        // Delay for feedback before action
+        setTimeout(() => {
+            if (target === 'settings' || target === 'avatar') {
+                router.push('/settings');
+            } else if (target === 'add' && onAddList) {
+                onAddList();
+            }
+        }, 250);
+    };
+
     if (!user) return null;
 
     const stats = [
@@ -24,30 +62,43 @@ export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProp
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
-                <Ionicons name="settings-outline" size={24} color="#E5E7EB" />
-            </TouchableOpacity>
+            <Animated.View style={[styles.settingsButton, { transform: [{ scale: settingsScale }] }]}>
+                <TouchableOpacity
+                    onPress={() => handlePress('settings')}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="settings-outline" size={24} color="#E5E7EB" />
+                </TouchableOpacity>
+            </Animated.View>
 
             {onAddList && (
-                <TouchableOpacity style={styles.addButton} onPress={onAddList}>
-                    <Ionicons name="add-circle-outline" size={28} color="#3B82F6" />
-                </TouchableOpacity>
+                <Animated.View style={[styles.addButton, { transform: [{ scale: addScale }] }]}>
+                    <TouchableOpacity onPress={() => handlePress('add')}>
+                        <Ionicons name="add-circle-outline" size={28} color="#3B82F6" />
+                    </TouchableOpacity>
+                </Animated.View>
             )}
 
             <View style={styles.headerContent}>
                 {/* Avatar Section */}
-                <View style={styles.avatarContainer}>
-                    <Image
-                        source={
-                            user.avatar && !imageError
-                                ? { uri: user.avatar }
-                                : require("../../assets/images/avatar.jpg")
-                        }
-                        style={styles.avatar}
-                        onError={() => setImageError(true)}
-                    />
-                    <View style={styles.statusBadge} />
-                </View>
+                <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
+                    <TouchableOpacity
+                        style={styles.avatarContainer}
+                        onPress={() => handlePress('avatar')}
+                        activeOpacity={0.8}
+                    >
+                        <Image
+                            source={
+                                user.avatar && !imageError
+                                    ? { uri: getImageUrl(user.avatar) as string }
+                                    : require("../../assets/images/avatar.jpg")
+                            }
+                            style={styles.avatar}
+                            onError={() => setImageError(true)}
+                        />
+                        <View style={styles.statusBadge} />
+                    </TouchableOpacity>
+                </Animated.View>
 
                 {/* User Info */}
                 <View style={styles.infoContainer}>

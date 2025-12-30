@@ -1,12 +1,11 @@
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useCallback, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 
 // hooks
 import { useAuth } from "../../../hooks/useAuth";
 import { useUserLists } from "../../../hooks/BookList/useUserList";
-import { useAppFonts } from "../../../hooks/useFonts";
 import { useToast } from "../../../context/ToastContext";
 
 // components
@@ -18,12 +17,13 @@ import { RenameListModal } from "@/components/profile/RenameListModal";
 import { bookListApi } from "../../../constants/api";
 
 export default function ProfileScreen() {
-    const { user, logout } = useAuth();
-    const fontsLoaded = useAppFonts();
-    const { lists, loading, error, refetch } = useUserLists({
+    const insets = useSafeAreaInsets();
+    const { user } = useAuth();
+    const { lists, loading, refetch } = useUserLists({
         username: user?.username ?? "",
         enabled: !!user?.username,
     });
+
     const { showToast } = useToast();
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [addBookModalVisible, setAddBookModalVisible] = useState(false);
@@ -44,8 +44,12 @@ export default function ProfileScreen() {
     };
 
     const handleCreateListSubmit = async (data: { title: string; description: string; isPublic: boolean }) => {
-        await bookListApi.createBookList(data);
-        refetch();
+        try {
+            await bookListApi.createBookList(data);
+            refetch();
+        } catch (error: any) {
+            console.error("Failed to create list:", error);
+        }
     };
 
     const handleOpenAddBook = (listId: string) => {
@@ -85,7 +89,7 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            <ScrollView contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 90, flexGrow: 1 }}>
                 {/* Header */}
                 <ProfileHeader
                     user={user}

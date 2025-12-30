@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { getImageUrl } from "@/utils/url";
 
 // hooks
 import { useBookReviews } from "../../../hooks/Book/useBookReviews";
@@ -56,7 +57,6 @@ export default function BookDetailScreen() {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [createModalVisible, setCreateModalVisible] = useState(false);
 
-    // Auto-open review modal if coming from long-press "Write a Review"
     useEffect(() => {
         if (!loading && book && writeReview === "true") {
             setShowReviewModal(true);
@@ -90,7 +90,6 @@ export default function BookDetailScreen() {
     const [expanded, setExpanded] = useState(false);
     const [showMoreReviews, setShowMoreReviews] = useState(false);
     const [showMoreReaders, setShowMoreReaders] = useState(false);
-    const [showMoreLists, setShowMoreLists] = useState(false);
 
     const coverScale = useRef(new Animated.Value(0.92)).current;
     const coverOpacity = useRef(new Animated.Value(0)).current;
@@ -367,7 +366,7 @@ export default function BookDetailScreen() {
                                                         <View style={styles.reviewHeader}>
                                                             <Image
                                                                 source={{
-                                                                    uri: r.user.avatar || "https://via.placeholder.com/40",
+                                                                    uri: getImageUrl(r.user.avatar) || "https://via.placeholder.com/40",
                                                                 }}
                                                                 style={styles.reviewAvatar}
                                                             />
@@ -418,7 +417,9 @@ export default function BookDetailScreen() {
                                                 {(showMoreReaders ? readers : readers.slice(0, 5)).map((u) => (
                                                     <View key={u._id} style={styles.readerCard}>
                                                         <Image
-                                                            source={{ uri: u.avatar || "https://via.placeholder.com/40" }}
+                                                            source={{
+                                                                uri: getImageUrl(u.avatar) || "https://via.placeholder.com/40"
+                                                            }}
                                                             style={styles.readerAvatar}
                                                         />
                                                         <View style={styles.readerInfo}>
