@@ -5,6 +5,8 @@ export interface User {
     email: string;
     avatar?: string;
     role?: "user" | "admin";
+    lastName?: string;
+    bio?: string;
     followersCount?: number;
     followingCount?: number;
     listsCount?: number;

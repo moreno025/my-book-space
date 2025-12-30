@@ -20,6 +20,9 @@ export const authApi = {
 
     updatePassword: ({ token, newPassword }: any) =>
         publicApi.post("/auth/update-password", { token, newPassword }),
+
+    updateProfile: (data: FormData) =>
+        privateApi.put("/auth/update-profile", data),
 };
 
 export const booksApi = {
