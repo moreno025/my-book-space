@@ -15,6 +15,7 @@ type Book = {
 type BookGridProps = {
     books: Book[];
     onBookPress: (id: string) => void;
+    contentContainerStyle?: any;
 };
 
 const { width } = Dimensions.get("window");
@@ -27,13 +28,13 @@ function getNumColumns() {
     return 3;
 }
 
-export function BookGrid({ books, onBookPress }: BookGridProps) {
+export function BookGrid({ books, onBookPress, contentContainerStyle }: BookGridProps) {
     return (
         <FlatList
             data={books}
             keyExtractor={(item) => item.id}
             numColumns={getNumColumns()}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, contentContainerStyle]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
