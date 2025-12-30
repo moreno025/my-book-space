@@ -11,6 +11,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<boolean>;
     register: (values: any) => Promise<boolean>;
     logout: () => Promise<void>;
+    updateUserProfile: (data: FormData) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -20,6 +21,7 @@ export const AuthContext = createContext<AuthContextType>({
     login: async () => false,
     register: async () => false,
     logout: async () => { },
+    updateUserProfile: async () => false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -139,8 +141,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await removeItem("user");
     }
 
+    async function updateUserProfile(data: FormData) {
+        try {
+            const res = await authApi.updateProfile(data);
+            if (res.status === 200) {
+                const { user: updatedUser } = res.data;
+                const newUser = { ...user, ...updatedUser };
+
+                setUser(newUser);
+                await setItem("user", JSON.stringify(newUser));
+                return true;
+            }
+            return false;
+        } catch (error: any) {
+            console.error("Error updating profile:", error);
+            if (error.response) {
+                console.error("Server response:", error.response.status, error.response.data);
+            }
+            return false;
+        }
+    }
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile }}>
             {children}
         </AuthContext.Provider>
     );
