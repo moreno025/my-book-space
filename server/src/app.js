@@ -20,21 +20,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
-app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
-
-// Necesario si usas Nginx / proxies / HTTPS en producción
-app.set("trust proxy", 1);
-
-
-// Middlewares base
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-//CORS
+// CORS - Move to top
 app.use(cors({
   origin: '*',
   methods: ['GET','POST','PUT','DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Necesario si usas Nginx / proxies / HTTPS en producción
+app.set("trust proxy", 1);
 
 // Seguridad (helmet + sanitización + rate limit + mongoSanitize + xss)
 security(app);

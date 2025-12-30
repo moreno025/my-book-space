@@ -19,7 +19,9 @@ const sanitizeObject = (obj) => {
 
 export const security = (app) => {
   // Seguridad en cabeceras
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  }));
 
   // Rate Limit (protege contra brute force / DDoS)
   app.use(
