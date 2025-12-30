@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "../../../hooks/useAuth";
 import { useBookSearch } from "../../../hooks/Search/useBookSearch";
@@ -20,7 +20,7 @@ import { useAppFonts } from "../../../hooks/useFonts";
 
 export default function SearchScreen() {
     const router = useRouter();
-    // const insets = useSafeAreaInsets(); // Not needed if using SafeAreaView
+    const insets = useSafeAreaInsets();
     const fontsLoaded = useAppFonts();
 
     const { token } = useAuth();
@@ -102,7 +102,11 @@ export default function SearchScreen() {
             {loading && <BookGridSkeleton />}
 
             {!loading && books.length > 0 && (
-                <BookGrid books={books} onBookPress={handleBookPress} />
+                <BookGrid
+                    books={books}
+                    onBookPress={handleBookPress}
+                    contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+                />
             )}
 
             {!loading && hasSearched && books.length === 0 && query.length > 1 && (
