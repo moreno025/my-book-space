@@ -16,6 +16,8 @@ type BookGridProps = {
     books: Book[];
     onBookPress: (id: string) => void;
     contentContainerStyle?: any;
+    ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
+    scrollEnabled?: boolean;
 };
 
 const { width } = Dimensions.get("window");
@@ -28,15 +30,19 @@ function getNumColumns() {
     return 3;
 }
 
-export function BookGrid({ books, onBookPress, contentContainerStyle }: BookGridProps) {
+export function BookGrid({ books, onBookPress, contentContainerStyle, ListHeaderComponent, scrollEnabled = true }: BookGridProps) {
+    const numCols = getNumColumns();
     return (
         <FlatList
+            key={numCols}
             data={books}
             keyExtractor={(item) => item.id}
-            numColumns={getNumColumns()}
+            numColumns={numCols}
             contentContainerStyle={[styles.list, contentContainerStyle]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            ListHeaderComponent={ListHeaderComponent}
+            scrollEnabled={scrollEnabled}
             renderItem={({ item }) => (
                 <BookCard
                     id={item.id}

@@ -20,12 +20,13 @@ export function BookCard({
     coverUrl,
     rating,
     onPress,
+    width,
 }: BookCardProps) {
     return (
         <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => onPress(id)}
-            style={styles.container}
+            style={[styles.container, { width }]}
         >
             <Image
                 source={{ uri: coverUrl }}
@@ -33,7 +34,7 @@ export function BookCard({
                 resizeMode="cover"
             />
 
-            {rating !== undefined && (
+            {rating !== undefined && rating > 0 && (
                 <View style={styles.ratingContainer}>
                     <Text style={styles.ratingText}>★ {rating.toFixed(1)}</Text>
                 </View>
@@ -44,20 +45,12 @@ export function BookCard({
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         margin: 6,
         borderRadius: 12,
-        backgroundColor: "#fff",
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
         overflow: 'hidden',
-
-        // iOS 
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-
-        // Android
-        elevation: 3,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
     },
     cover: {
         width: "100%",
@@ -71,5 +64,6 @@ const styles = StyleSheet.create({
     ratingText: {
         fontSize: 13,
         fontWeight: "600",
+        color: "#F9FAFB",
     },
 });
