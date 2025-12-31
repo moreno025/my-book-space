@@ -5,12 +5,15 @@ import { bookListApi } from "../../constants/api";
 export function useListDetail(listId: string) {
     const [list, setList] = useState<BookList | null>(null);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchList = useCallback(async () => {
         if (!listId) return;
         try {
-            setLoading(true);
+            if (!list) setLoading(true);
+            else setRefreshing(true);
+
             const res = await bookListApi.getListById(listId);
             setList(res.data.list);
             setError(null);
@@ -19,12 +22,13 @@ export function useListDetail(listId: string) {
             setError("Failed to load list details");
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    }, [listId]);
+    }, [listId, list]);
 
     useEffect(() => {
         fetchList();
     }, [fetchList]);
 
-    return { list, loading, error, refetch: fetchList };
+    return { list, loading, refreshing, error, refetch: fetchList };
 }

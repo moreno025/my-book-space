@@ -87,6 +87,17 @@ export default function ProfileScreen() {
         }
     };
 
+    const handleUnsaveList = async (listId: string) => {
+        try {
+            await bookListApi.unsaveList(listId);
+            showToast("List removed from your profile", "error"); // Warning style
+            refetch();
+        } catch (error) {
+            console.error("Failed to unsave list:", error);
+            showToast("Failed to remove list", "error");
+        }
+    };
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 90, flexGrow: 1 }}>
@@ -115,11 +126,16 @@ export default function ProfileScreen() {
                             listId={list._id}
                             title={list.title}
                             isPublic={list.isPublic}
+                            ownerId={typeof list.user === 'string' ? list.user : list.user._id}
                             books={list.books}
                             onAddBook={() => handleOpenAddBook(list._id)}
                             onRename={handleRenameList}
                             onToggleVisibility={handleToggleVisibility}
-                            onRefresh={refetch}
+                            onUnsave={handleUnsaveList}
+                            onRefresh={() => {
+                                showToast("List deleted", "error");
+                                refetch();
+                            }}
                         />
                     ))
                 )}
