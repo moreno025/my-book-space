@@ -21,7 +21,7 @@ export const register = async (req, res) => {
         await BookList.create({
             title: "Wishlist",
             description: "Mi lista de deseos",
-            isPublic: true,
+            isPublic: false,
             user: user._id,
             books: []
         });

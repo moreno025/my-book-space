@@ -140,6 +140,26 @@ export const searchListsByBook = async (req, res) => {
 
 
 // ------------------------
+// Get Lists By Book Id (Discovery)
+// ------------------------
+export const getListsByBookId = async (req, res) => {
+    try {
+        const { googleBookId } = req.params;
+
+        const lists = await BookList.find({
+            isPublic: true,
+            "books.googleBookId": googleBookId
+        }).populate("user", "username avatar");
+
+        res.status(200).json({ lists });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error obteniendo listas del libro" });
+    }
+};
+
+
+// ------------------------
 // Remove Book From List
 // ------------------------
 export const removeBookFromList = async (req, res) => {
@@ -189,6 +209,30 @@ export const saveList = async (req, res) => {
   }
 };
 
+// ------------------------
+// Unsave List
+// ------------------------
+export const unsaveList = async (req, res) => {
+    try {
+        const { listId } = req.params;
+        const user = await User.findById(req.user._id);
+
+        user.savedLists = user.savedLists.filter(id => id.toString() !== listId);
+        await user.save();
+
+        const list = await BookList.findById(listId);
+        if (list) {
+            list.savedBy = list.savedBy.filter(id => id.toString() !== req.user._id.toString());
+            await list.save();
+        }
+
+        res.status(200).json({ message: "Lista eliminada de tus guardados" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al dejar de guardar la lista" });
+    }
+};
+
 
 
 
@@ -204,18 +248,48 @@ export const getUserLists = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        let query = { user: user._id };
+        const isOwner = req.user._id.toString() === user._id.toString();
+
+        let query = {
+            $or: [
+                { user: user._id },
+                { _id: { $in: user.savedLists } }
+            ]
+        };
         
         // Si el usuario logueado NO es el dueño del perfil, solo mostrar listas públicas
-        if (req.user._id.toString() !== user._id.toString()) {
+        if (!isOwner) {
             query.isPublic = true;
         }
 
-        const lists = await BookList.find(query).sort({ createdAt: -1 });
+        // Ordenar por las más recientes, poblar el owner para discovery
+        const lists = await BookList.find(query).populate("user", "username avatar").sort({ createdAt: -1 });
 
         res.status(200).json({ lists });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error obteniendo listas del usuario" });
+    }
+};
+
+// ------------------------
+// Get List By ID
+// ------------------------
+export const getListById = async (req, res) => {
+    try {
+        const { listId } = req.params;
+        const list = await BookList.findById(listId).populate("user", "username avatar");
+        
+        if (!list) return res.status(404).json({ message: "Lista no encontrada" });
+
+        // Si es privada, solo el dueño puede verla
+        if (!list.isPublic && !list.user._id.equals(req.user._id)) {
+            return res.status(403).json({ message: "No autorizado para ver esta lista" });
+        }
+
+        res.status(200).json({ list });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error obteniendo la lista" });
     }
 };
