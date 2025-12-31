@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import BookList from "../models/bookList.model.js";
 import jwt from "jsonwebtoken";
 import { sendPasswordResetEmail, sendEmailChangedEmail, sendVerifyNewEmail } from "../utils/nodemailer.js";
 
@@ -16,6 +17,15 @@ export const register = async (req, res) => {
 
         const user = await User.create({ username, email, password, name, lastName, bio });
 
+        // Crear lista por defecto "Wishlist"
+        await BookList.create({
+            title: "Wishlist",
+            description: "Mi lista de deseos",
+            isPublic: true,
+            user: user._id,
+            books: []
+        });
+
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         res.status(201).json({
@@ -31,8 +41,11 @@ export const register = async (req, res) => {
         token,
         });
 
-    }catch (error) {
+    } catch (error) {
         console.log(error);
+        if (error.name === "ValidationError") {
+            return res.status(400).json({ message: error.message });
+        }
         return res.status(500).json({ message: error.message });
     }
 };
