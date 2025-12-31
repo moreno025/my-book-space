@@ -7,14 +7,17 @@ import { useAppFonts } from "../../hooks/useFonts";
 import { bookListApi } from "../../constants/api";
 import { BookOptionsModal } from "./BookOptionsModal";
 import { ListOptionsModal } from "./ListOptionsModal";
+import { useAuth } from "../../hooks/useAuth";
 
 interface BookListCarouselProps {
     title: string;
     listId: string;
     isPublic: boolean;
+    ownerId: string; // ID of the list creator
     books: BookListBook[];
     onAddBook?: () => void;
     onRefresh?: () => void;
+    onUnsave?: (listId: string) => void;
     onRename?: (listId: string, currentTitle: string) => void;
     onToggleVisibility?: (listId: string, currentIsPublic: boolean) => void;
 }
@@ -23,9 +26,12 @@ interface BookListCarouselProps {
 const CARD_WIDTH = 100;
 const CARD_HEIGHT = 150;
 
-export function BookListCarousel({ title, listId, isPublic, books, onAddBook, onRefresh, onRename, onToggleVisibility }: BookListCarouselProps) {
+export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility }: BookListCarouselProps) {
     const router = useRouter();
+    const { user } = useAuth();
     const fontsLoaded = useAppFonts();
+
+    const isOwner = user?.id === ownerId;
 
     const [selectedBook, setSelectedBook] = useState<BookListBook | null>(null);
     const [showOptionsModal, setShowOptionsModal] = useState(false);
@@ -79,6 +85,23 @@ export function BookListCarousel({ title, listId, isPublic, books, onAddBook, on
                             console.error("Failed to delete list", error);
                             Alert.alert("Error", "Could not delete the list. Please try again.");
                         }
+                    }
+                }
+            ]
+        );
+    };
+
+    const confirmUnsaveList = () => {
+        Alert.alert(
+            "Remove List",
+            `Are you sure you want to remove "${title}" from your profile?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Remove",
+                    style: "destructive",
+                    onPress: () => {
+                        onUnsave?.(listId);
                     }
                 }
             ]
@@ -182,9 +205,10 @@ export function BookListCarousel({ title, listId, isPublic, books, onAddBook, on
                 onClose={() => setShowListOptionsModal(false)}
                 listTitle={title}
                 isPublic={isPublic}
+                isOwner={isOwner}
                 onRename={() => onRename?.(listId, title)}
                 onToggleVisibility={() => onToggleVisibility?.(listId, isPublic)}
-                onDelete={confirmDeleteList}
+                onDelete={isOwner ? confirmDeleteList : confirmUnsaveList}
             />
         </View>
     );

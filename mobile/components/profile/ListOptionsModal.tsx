@@ -15,6 +15,7 @@ interface ListOptionsModalProps {
     onClose: () => void;
     listTitle: string;
     isPublic: boolean;
+    isOwner: boolean;
     onRename: () => void;
     onToggleVisibility: () => void;
     onDelete: () => void;
@@ -25,6 +26,7 @@ export function ListOptionsModal({
     onClose,
     listTitle,
     isPublic,
+    isOwner,
     onRename,
     onToggleVisibility,
     onDelete,
@@ -56,49 +58,55 @@ export function ListOptionsModal({
                         </View>
 
                         <View style={styles.optionsContainer}>
-                            <TouchableOpacity
-                                style={styles.option}
-                                onPress={() => {
-                                    onRename();
-                                    onClose();
-                                }}
-                            >
-                                <View style={[styles.iconContainer, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
-                                    <Ionicons name="create-outline" size={22} color="#10B981" />
-                                </View>
-                                <Text style={styles.optionText}>Rename List</Text>
-                            </TouchableOpacity>
+                            {isOwner && (
+                                <>
+                                    <TouchableOpacity
+                                        style={styles.option}
+                                        onPress={() => {
+                                            onRename();
+                                            onClose();
+                                        }}
+                                    >
+                                        <View style={[styles.iconContainer, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
+                                            <Ionicons name="create-outline" size={22} color="#10B981" />
+                                        </View>
+                                        <Text style={styles.optionText}>Rename List</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={styles.option}
+                                        onPress={() => {
+                                            onToggleVisibility();
+                                            onClose();
+                                        }}
+                                    >
+                                        <View style={[styles.iconContainer, { backgroundColor: "rgba(59, 130, 246, 0.1)" }]}>
+                                            <Ionicons
+                                                name={isPublic ? "lock-closed-outline" : "globe-outline"}
+                                                size={22}
+                                                color="#3B82F6"
+                                            />
+                                        </View>
+                                        <Text style={styles.optionText}>
+                                            {isPublic ? "Make Private" : "Make Public"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
 
                             <TouchableOpacity
-                                style={styles.option}
-                                onPress={() => {
-                                    onToggleVisibility();
-                                    onClose();
-                                }}
-                            >
-                                <View style={[styles.iconContainer, { backgroundColor: "rgba(59, 130, 246, 0.1)" }]}>
-                                    <Ionicons
-                                        name={isPublic ? "lock-closed-outline" : "globe-outline"}
-                                        size={22}
-                                        color="#3B82F6"
-                                    />
-                                </View>
-                                <Text style={styles.optionText}>
-                                    {isPublic ? "Make Private" : "Make Public"}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.option, styles.lastOption]}
+                                style={[styles.option, styles.lastOption, !isOwner && { borderTopWidth: 0 }]}
                                 onPress={() => {
                                     onDelete();
                                     onClose();
                                 }}
                             >
                                 <View style={[styles.iconContainer, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}>
-                                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                                    <Ionicons name={isOwner ? "trash-outline" : "close-circle-outline"} size={22} color="#EF4444" />
                                 </View>
-                                <Text style={[styles.optionText, { color: "#EF4444" }]}>Delete List</Text>
+                                <Text style={[styles.optionText, { color: "#EF4444" }]}>
+                                    {isOwner ? "Delete List" : "Remove from Profile"}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
