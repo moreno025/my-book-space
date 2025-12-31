@@ -86,4 +86,16 @@ export const bookListApi = {
 
     updateBookList: (listId: string, data: { title?: string; description?: string; isPublic?: boolean }) =>
         privateApi.put(`/book-list/${listId}`, data),
+
+    getListsByBookId: (googleBookId: string) =>
+        privateApi.get<{ lists: BookList[] }>(`/book-list/discovery/${googleBookId}`),
+
+    getListById: (listId: string) =>
+        privateApi.get<{ list: BookList }>(`/book-list/${listId}`),
+
+    saveList: (listId: string) =>
+        privateApi.post(`/book-list/${listId}/save`),
+
+    unsaveList: (listId: string) =>
+        privateApi.post(`/book-list/${listId}/unsave`),
 };

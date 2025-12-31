@@ -11,6 +11,11 @@ export interface BookList {
     title: string;
     description: string;
     isPublic: boolean;
+    user: {
+        _id: string;
+        username: string;
+        avatar?: string;
+    };
     books: BookListBook[];
     savedBy: string[];
     createdAt: string;
