@@ -99,3 +99,20 @@ export const bookListApi = {
     unsaveList: (listId: string) =>
         privateApi.post(`/book-list/${listId}/unsave`),
 };
+
+export const userApi = {
+    searchUsers: (query: string) =>
+        privateApi.get("/user/search", { params: { q: query } }),
+
+    getUserByUsername: (username: string) =>
+        privateApi.get(`/user/${username}`),
+
+    followUser: (userId: string) =>
+        privateApi.put(`/user/follow-user/${userId}`),
+
+    unfollowUser: (userId: string) =>
+        privateApi.put(`/user/unfollow-user/${userId}`),
+
+    getUserLists: (username: string) =>
+        privateApi.get(`/user/${username}/lists`),
+};

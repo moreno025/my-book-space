@@ -10,4 +10,7 @@ export interface User {
     followersCount?: number;
     followingCount?: number;
     listsCount?: number;
+    isPrivate?: boolean;
+    isFollowing?: boolean;
+    canViewFullProfile?: boolean;
 }

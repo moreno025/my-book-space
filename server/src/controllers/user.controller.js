@@ -135,26 +135,63 @@ export const getFollowing = async (req, res) => {
 
 
 // ------------------------
+// Search Users
+// ------------------------
+export const searchUsers = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) return res.status(400).json({ message: "Proporcione un término de búsqueda" });
+
+        const users = await User.find({
+            $or: [
+                { username: { $regex: q, $options: "i" } },
+                { name: { $regex: q, $options: "i" } }
+            ],
+            _id: { $ne: req.user.id } // Exclude current user
+        })
+        .select("username name avatar isPrivate")
+        .limit(20);
+
+        res.status(200).json({ users });
+
+    } catch (error) {
+        console.error("Error buscando usuarios:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+
+// ------------------------
 // Get User
 // ------------------------
 export const getUser = async (req, res) => {
     try{
         const { username } = req.params;
+        const currentUserId = req.user?.id;
 
         const user = await User.findOne({ username })
-            .select("username name lastName bio avatar followers following");
+            .select("username name lastName bio avatar followers following isPrivate");
 
         if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        const isFollowing = currentUserId ? user.followers.includes(currentUserId) : false;
+        const isSelf = currentUserId === user._id.toString();
+
+        // Privacy check
+        const canViewFullProfile = !user.isPrivate || isFollowing || isSelf;
 
         res.status(200).json({
             id: user._id,
             username: user.username,
             name: user.name,
             lastName: user.lastName,
-            bio: user.bio,
+            bio: canViewFullProfile ? user.bio : null,
             avatar: user.avatar,
             followersCount: user.followers.length,
-            followingCount: user.following.length
+            followingCount: user.following.length,
+            isPrivate: user.isPrivate,
+            isFollowing,
+            canViewFullProfile
         });
 
     }catch(error){

@@ -5,6 +5,8 @@ import {
     StyleSheet,
     TextInput,
     TouchableOpacity,
+    FlatList,
+    Image,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,11 +14,16 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { useAuth } from "../../../hooks/useAuth";
 import { useBookSearch } from "../../../hooks/Search/useBookSearch";
+import { useUserSearch } from "../../../hooks/Search/useUserSearch";
 import { useSearchHistory } from "../../../hooks/Search/useSearchHistory";
 
 import { BookGrid } from "../../../components/book/BookGrid";
 import { BookGridSkeleton } from "../../../components/skeleton/BookGridSkeleton";
 import { useAppFonts } from "../../../hooks/useFonts";
+import { getImageUrl } from "@/utils/url";
+import { jpg } from "../../../assets/images";
+
+type SearchTab = "books" | "users";
 
 export default function SearchScreen() {
     const router = useRouter();
@@ -26,8 +33,10 @@ export default function SearchScreen() {
     const { token } = useAuth();
 
     const [query, setQuery] = useState("");
+    const [activeTab, setActiveTab] = useState<SearchTab>("books");
 
-    const { books, loading, hasSearched } = useBookSearch(query);
+    const { books, loading: booksLoading, hasSearched: booksSearched } = useBookSearch(query);
+    const { users, loading: usersLoading, hasSearched: usersSearched } = useUserSearch(query);
     const { history, save, remove, clear } = useSearchHistory(token);
 
     const handleBookPress = async (id: string) => {
@@ -35,7 +44,14 @@ export default function SearchScreen() {
         router.push({ pathname: "/book/[id]", params: { id } });
     };
 
+    const handleUserPress = (username: string) => {
+        router.push({ pathname: "/user/[username]", params: { username } });
+    };
+
     if (!fontsLoaded) return null;
+
+    const loading = activeTab === "books" ? booksLoading : usersLoading;
+    const hasSearched = activeTab === "books" ? booksSearched : usersSearched;
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -51,7 +67,7 @@ export default function SearchScreen() {
                     <Ionicons name="search" size={20} color="#9CA3AF" />
 
                     <TextInput
-                        placeholder="Search books..."
+                        placeholder={`Search ${activeTab}...`}
                         placeholderTextColor="#9CA3AF"
                         style={styles.headerInput}
                         value={query}
@@ -70,8 +86,38 @@ export default function SearchScreen() {
                 </View>
             </View>
 
-            {/* SEARCH HISTORY */}
-            {query.length === 0 && history.length > 0 && (
+            {/* TAB SWITCHER */}
+            <View style={styles.tabContainer}>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === "books" && styles.activeTab]}
+                    onPress={() => setActiveTab("books")}
+                >
+                    <Ionicons
+                        name="book"
+                        size={18}
+                        color={activeTab === "books" ? "#3B82F6" : "#6B7280"}
+                    />
+                    <Text style={[styles.tabText, activeTab === "books" && styles.activeTabText]}>
+                        Books
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === "users" && styles.activeTab]}
+                    onPress={() => setActiveTab("users")}
+                >
+                    <Ionicons
+                        name="people"
+                        size={18}
+                        color={activeTab === "users" ? "#3B82F6" : "#6B7280"}
+                    />
+                    <Text style={[styles.tabText, activeTab === "users" && styles.activeTabText]}>
+                        Users
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* SEARCH HISTORY (only for books) */}
+            {activeTab === "books" && query.length === 0 && history.length > 0 && (
                 <View style={styles.historyContainer}>
                     <View style={styles.historyHeader}>
                         <Text style={styles.historyTitle}>Recent searches</Text>
@@ -99,9 +145,15 @@ export default function SearchScreen() {
             )}
 
             {/* RESULTS */}
-            {loading && <BookGridSkeleton />}
+            {loading && activeTab === "books" && <BookGridSkeleton />}
 
-            {!loading && books.length > 0 && (
+            {loading && activeTab === "users" && (
+                <View style={styles.loadingContainer}>
+                    <Text style={styles.loadingText}>Searching users...</Text>
+                </View>
+            )}
+
+            {!loading && activeTab === "books" && books.length > 0 && (
                 <BookGrid
                     books={books}
                     onBookPress={handleBookPress}
@@ -109,8 +161,41 @@ export default function SearchScreen() {
                 />
             )}
 
-            {!loading && hasSearched && books.length === 0 && query.length > 1 && (
-                <Text style={styles.empty}>No results found</Text>
+            {!loading && activeTab === "users" && users.length > 0 && (
+                <FlatList
+                    data={users}
+                    keyExtractor={(user) => user.id || user.username}
+                    contentContainerStyle={{ paddingBottom: insets.bottom + 80, paddingHorizontal: 16 }}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={styles.userItem}
+                            onPress={() => handleUserPress(item.username)}
+                        >
+                            <Image
+                                source={item.avatar ? { uri: getImageUrl(item.avatar) as string } : jpg.avatar}
+                                style={styles.userAvatar}
+                            />
+                            <View style={styles.userInfo}>
+                                <Text style={styles.userName}>@{item.username}</Text>
+                                {item.name && (
+                                    <Text style={styles.userFullName}>{item.name}</Text>
+                                )}
+                            </View>
+                            {item.isPrivate && (
+                                <Ionicons name="lock-closed" size={16} color="#6B7280" />
+                            )}
+                            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                        </TouchableOpacity>
+                    )}
+                />
+            )}
+
+            {!loading && hasSearched && activeTab === "books" && books.length === 0 && query.length > 1 && (
+                <Text style={styles.empty}>No books found</Text>
+            )}
+
+            {!loading && hasSearched && activeTab === "users" && users.length === 0 && query.length > 1 && (
+                <Text style={styles.empty}>No users found</Text>
             )}
         </SafeAreaView>
     );
@@ -150,15 +235,58 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
+    tabContainer: {
+        flexDirection: "row",
+        paddingHorizontal: 16,
+        marginBottom: 16,
+        gap: 12,
+    },
+    tab: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        gap: 6,
+    },
+    activeTab: {
+        backgroundColor: "#EFF6FF",
+        borderColor: "#3B82F6",
+    },
+    tabText: {
+        fontSize: 14,
+        fontFamily: "Nunito-SemiBold",
+        color: "#6B7280",
+    },
+    activeTabText: {
+        color: "#3B82F6",
+    },
+
     empty: {
         marginTop: 32,
         textAlign: "center",
         color: "#6B7280",
+        fontFamily: "Nunito-Medium",
+    },
+
+    loadingContainer: {
+        marginTop: 32,
+        alignItems: "center",
+    },
+    loadingText: {
+        color: "#6B7280",
+        fontFamily: "Nunito-Medium",
     },
 
     historyContainer: {
-        marginTop: 24,
+        marginTop: 8,
         marginHorizontal: 16,
+        marginBottom: 16,
     },
     historyHeader: {
         flexDirection: "row",
@@ -168,7 +296,7 @@ const styles = StyleSheet.create({
     },
     historyTitle: {
         fontSize: 14,
-        fontWeight: "600",
+        fontFamily: "Nunito-SemiBold",
         color: "#6B7280",
     },
     historyRow: {
@@ -182,5 +310,38 @@ const styles = StyleSheet.create({
     historyText: {
         fontSize: 16,
         color: "#111827",
+        fontFamily: "Nunito-Regular",
+    },
+
+    userItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        padding: 12,
+        borderRadius: 12,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+    },
+    userAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 12,
+        backgroundColor: "#E5E7EB",
+    },
+    userInfo: {
+        flex: 1,
+    },
+    userName: {
+        fontSize: 16,
+        fontFamily: "Nunito-Bold",
+        color: "#111827",
+        marginBottom: 2,
+    },
+    userFullName: {
+        fontSize: 14,
+        fontFamily: "Nunito-Regular",
+        color: "#6B7280",
     },
 });
