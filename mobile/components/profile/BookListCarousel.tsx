@@ -216,7 +216,7 @@ export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAd
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 32,
+        marginBottom: 20,
         marginTop: 20,
     },
     header: {
