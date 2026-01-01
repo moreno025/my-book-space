@@ -11,8 +11,10 @@ export function useListDetail(listId: string) {
     const fetchList = useCallback(async () => {
         if (!listId) return;
         try {
-            if (!list) setLoading(true);
-            else setRefreshing(true);
+            // Check current status WITHOUT depending on the 'list' state variable directly in dependencies
+            // We can use the fact that setLoading(true) only happens if it was true initially
+            // or we can use a functional check if we really need it.
+            // But since we want to avoid the loop, we'll just use the listId as dependency.
 
             const res = await bookListApi.getListById(listId);
             setList(res.data.list);
@@ -24,7 +26,7 @@ export function useListDetail(listId: string) {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [listId, list]);
+    }, [listId]);
 
     useEffect(() => {
         fetchList();

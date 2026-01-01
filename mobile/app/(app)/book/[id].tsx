@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import {
     View,
     Text,
@@ -16,6 +16,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { getImageUrl } from "@/utils/url";
+import { BookList } from "../../../types/bookList";
 
 // hooks
 import { useBookReviews } from "../../../hooks/Book/useBookReviews";
@@ -37,7 +38,6 @@ import { CreateListModal } from "@/components/profile/CreateListModal";
 // api
 import { bookListApi } from "../../../constants/api/index";
 
-
 const estimateReadingTime = (pages?: number | null) => {
     if (!pages) return "—";
     return `${Math.ceil(pages / 40)}h `;
@@ -56,6 +56,8 @@ export default function BookDetailScreen() {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [createModalVisible, setCreateModalVisible] = useState(false);
+    const [discoveryLists, setDiscoveryLists] = useState<BookList[]>([]);
+    const [loadingDiscovery, setLoadingDiscovery] = useState(false);
 
     useEffect(() => {
         if (!loading && book && writeReview === "true") {
@@ -63,8 +65,26 @@ export default function BookDetailScreen() {
         }
     }, [loading, book, writeReview]);
 
+    const fetchDiscovery = useCallback(async () => {
+        if (!book?.id) return;
+        setLoadingDiscovery(true);
+        try {
+            const res = await bookListApi.getListsByBookId(book.id);
+            setDiscoveryLists(res.data.lists);
+        } catch (err) {
+            console.error("Discovery error:", err);
+        } finally {
+            setLoadingDiscovery(false);
+        }
+    }, [book?.id]);
+
+    useEffect(() => {
+        fetchDiscovery();
+    }, [fetchDiscovery]);
+
     const handleSaveSuccess = (listName: string) => {
         showToast(`Saved to ${listName}!`, "success");
+        fetchDiscovery(); // Recharge discovery lists
     };
 
     const handleCreateListSubmit = async (data: { title: string; description: string; isPublic: boolean }) => {
@@ -72,10 +92,6 @@ export default function BookDetailScreen() {
             await bookListApi.createBookList(data);
             showToast("List created!", "success");
             setCreateModalVisible(false);
-            // After creating, we might want to re-open the save modal to select it
-            // but for simplicity we'll just stay here. 
-            // Better yet, the user might expect it to save automatically to the new list,
-            // but the current API create doesn't take books.
             setShowSaveModal(true);
         } catch (error) {
             console.error(error);
@@ -165,7 +181,6 @@ export default function BookDetailScreen() {
     const displayRating = calculateAverageRating() || book.rating;
     const ratingSource = calculateAverageRating() ? "user" : "google";
 
-
     return (
         <View style={styles.mainContainer}>
             <LinearGradient
@@ -185,7 +200,6 @@ export default function BookDetailScreen() {
 
             <SafeAreaView style={styles.safe}>
                 <ScrollView contentContainerStyle={{ paddingBottom: 180 }}>
-                    {/* COVER */}
                     <View style={styles.coverContainer}>
                         {book.coverUrl && (
                             <Animated.Image
@@ -197,7 +211,6 @@ export default function BookDetailScreen() {
                             />
                         )}
 
-                        {/* BACK BUTTON */}
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                             <BlurView intensity={20} tint="light" style={styles.backButtonBlur}>
                                 <Ionicons name="arrow-back" size={24} color="#F9FAFB" />
@@ -205,7 +218,6 @@ export default function BookDetailScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* CONTENT */}
                     <Animated.View
                         style={[
                             styles.content,
@@ -225,7 +237,6 @@ export default function BookDetailScreen() {
                             <Text style={styles.year}>{book.publishedYear}</Text>
                         )}
 
-                        {/* GENRES */}
                         {Array.isArray(book.categories) && book.categories.length > 0 && (
                             <View style={styles.genres}>
                                 {book.categories.map((cat, index) => (
@@ -236,7 +247,6 @@ export default function BookDetailScreen() {
                             </View>
                         )}
 
-                        {/* METRICS */}
                         <View style={styles.stats}>
                             <Metric
                                 icon={<Ionicons name="star" size={18} color="#FBBF24" />}
@@ -261,7 +271,6 @@ export default function BookDetailScreen() {
                             />
                         </View>
 
-                        {/* DESCRIPTION */}
                         {!!book.description && (
                             <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Synopsis</Text>
@@ -331,7 +340,6 @@ export default function BookDetailScreen() {
                             />
                         </View>
 
-                        {/* TABS */}
                         <View style={styles.tabs}>
                             {(["Reviews", "Readers", "Lists"] as const).map((tab) => (
                                 <TouchableOpacity
@@ -452,13 +460,39 @@ export default function BookDetailScreen() {
                             )}
 
                             {activeTab === "Lists" && (
-                                <Text style={{ color: "#94A3B8", fontFamily: "Nunito-Medium" }}>Lists tab placeholder</Text>
+                                <>
+                                    {loadingDiscovery ? (
+                                        <ActivityIndicator color="#FFFFFF" />
+                                    ) : discoveryLists.length > 0 ? (
+                                        <View style={styles.listsContainer}>
+                                            {discoveryLists.map((l) => (
+                                                <TouchableOpacity
+                                                    key={l._id}
+                                                    style={styles.discoveryListCard}
+                                                    onPress={() => router.push({ pathname: "/list/[id]", params: { id: l._id } })}
+                                                >
+                                                    <View style={styles.discoveryListInfo}>
+                                                        <Text style={styles.discoveryListTitle}>{l.title}</Text>
+                                                        <View style={styles.discoveryListMeta}>
+                                                            <Text style={styles.discoveryListUser}>by {l.user.username}</Text>
+                                                            <Text style={styles.discoveryListBooks}>{l.books.length} books</Text>
+                                                        </View>
+                                                    </View>
+                                                    <Ionicons name="chevron-forward" size={20} color="#64748B" />
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    ) : (
+                                        <Text style={{ color: "#94A3B8", fontFamily: "Nunito-Medium", marginTop: 10 }}>
+                                            No public lists contain this book yet.
+                                        </Text>
+                                    )}
+                                </>
                             )}
                         </Animated.View>
                     </Animated.View>
 
                     <SimilarBooksCarousel currentBook={book} allBooks={relatedBooks} />
-                    {/* <RelatedBookCarousel currentBook={book} /> */}
                 </ScrollView>
 
                 <SaveBookModal
@@ -486,7 +520,6 @@ export default function BookDetailScreen() {
     );
 }
 
-/* ================= COMPONENTS ================= */
 interface MetricProps {
     icon: React.ReactNode;
     value: string | number;
@@ -507,7 +540,6 @@ function Metric({ icon, value, label }: MetricProps) {
     );
 }
 
-/* ================= STYLES ================= */
 const styles = StyleSheet.create({
     mainContainer: { flex: 1, backgroundColor: "#0F172A" },
     safe: { flex: 1, backgroundColor: "transparent" },
@@ -598,11 +630,11 @@ const styles = StyleSheet.create({
     tabTextActive: { color: "#F9FAFB" },
     reviewCard: {
         backgroundColor: "rgba(30, 41, 59, 0.8)",
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 12,
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: "rgba(255, 255, 255, 0.15)",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
@@ -614,17 +646,17 @@ const styles = StyleSheet.create({
         alignItems: "flex-start",
     },
     reviewAvatar: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         marginRight: 10,
         borderWidth: 1,
         borderColor: "rgba(255, 255, 255, 0.2)",
     },
     reviewUserInfo: { flex: 1 },
-    reviewUser: { color: "#F9FAFB", fontWeight: "700", fontSize: 15, fontFamily: "Nunito-Bold", marginBottom: 4 },
+    reviewUser: { color: "#F9FAFB", fontWeight: "700", fontSize: 14, fontFamily: "Nunito-Bold", marginBottom: 2 },
     reviewRating: { flexDirection: "row", gap: 2 },
-    reviewComment: { color: "#E5E7EB", fontSize: 14, lineHeight: 20, fontFamily: "Nunito-Medium", marginTop: 8 },
+    reviewComment: { color: "#E5E7EB", fontSize: 13, lineHeight: 18, fontFamily: "Nunito-Medium", marginTop: 4 },
     readersContainer: { gap: 12 },
     readerCard: {
         flexDirection: "row",
@@ -724,6 +756,44 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "700",
         fontFamily: "Nunito-Bold",
+        paddingRight: 4,
+    },
+    listsContainer: {
+        gap: 12,
+    },
+    discoveryListCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(30, 41, 59, 0.8)",
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.15)",
+        justifyContent: "space-between",
+    },
+    discoveryListInfo: {
+        flex: 1,
+    },
+    discoveryListTitle: {
+        color: "#F9FAFB",
+        fontSize: 16,
+        fontFamily: "Nunito-Bold",
+        marginBottom: 4,
+    },
+    discoveryListMeta: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+    discoveryListUser: {
+        color: "#38BDF8",
+        fontSize: 13,
+        fontFamily: "Nunito-SemiBold",
+    },
+    discoveryListBooks: {
+        color: "#94A3B8",
+        fontSize: 13,
+        fontFamily: "Nunito-Medium",
     },
 
 });
