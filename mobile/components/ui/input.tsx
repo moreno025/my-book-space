@@ -9,14 +9,16 @@ interface InputProps extends TextInputProps {
     borderColor?: string;
 }
 
-export const Input = ({
+export const Input = React.forwardRef<TextInput, InputProps>(({
     error,
     secureTextEntry,
     placeholderTextColor = "#555",
     borderColor,
     style,
+    onFocus,
+    onBlur,
     ...props
-}: InputProps) => {
+}, ref) => {
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(!secureTextEntry);
 
@@ -34,15 +36,26 @@ export const Input = ({
         }
     }, [error, shakeAnim]);
 
+    const handleFocus = (e: any) => {
+        setIsFocused(true);
+        if (onFocus) onFocus(e);
+    };
+
+    const handleBlur = (e: any) => {
+        setIsFocused(false);
+        if (onBlur) onBlur(e);
+    };
+
     return (
         <Animated.View style={[styles.container, { transform: [{ translateX: shakeAnim }] }]}>
             <View>
                 <TextInput
                     {...props}
+                    ref={ref}
                     secureTextEntry={secureTextEntry && !showPassword}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholderTextColor={placeholderTextColor} // ← ahora usa la prop
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    placeholderTextColor={placeholderTextColor}
                     style={[
                         styles.input,
                         { borderColor: borderColor || (error ? "red" : isFocused ? "#007AFF" : "#000") },
@@ -65,7 +78,9 @@ export const Input = ({
             {error && <Text style={styles.errorText}>{error}</Text>}
         </Animated.View>
     );
-};
+});
+
+Input.displayName = "Input";
 
 const styles = StyleSheet.create({
     container: {

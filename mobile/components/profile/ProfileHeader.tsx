@@ -9,9 +9,21 @@ interface ProfileHeaderProps {
     user: User | null;
     onAddList?: () => void;
     listsCount?: number;
+    isOwnProfile?: boolean;
+    isFollowing?: boolean;
+    onFollow?: () => void;
+    onBack?: () => void;
 }
 
-export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProps) {
+export function ProfileHeader({
+    user,
+    onAddList,
+    listsCount,
+    isOwnProfile = true,
+    isFollowing = false,
+    onFollow,
+    onBack
+}: ProfileHeaderProps) {
     const [imageError, setImageError] = useState(false);
     const router = useRouter();
 
@@ -19,14 +31,30 @@ export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProp
     const settingsScale = useRef(new Animated.Value(1)).current;
     const avatarScale = useRef(new Animated.Value(1)).current;
     const addScale = useRef(new Animated.Value(1)).current;
+    const followScale = useRef(new Animated.Value(1)).current;
 
 
-    const handlePress = (target: 'settings' | 'avatar' | 'add') => {
-        const scaleVal =
-            target === 'settings' ? settingsScale :
-                target === 'avatar' ? avatarScale : addScale;
+    const handlePress = (target: 'settings' | 'avatar' | 'add' | 'follow' | 'back') => {
+        let scaleVal;
 
-        // Sequence: Squish -> Navigate/Action
+        switch (target) {
+            case 'settings':
+            case 'back':
+                scaleVal = settingsScale;
+                break;
+            case 'avatar':
+                scaleVal = avatarScale;
+                break;
+            case 'add':
+                scaleVal = addScale;
+                break;
+            case 'follow':
+                scaleVal = followScale;
+                break;
+            default:
+                scaleVal = new Animated.Value(1);
+        }
+
         Animated.sequence([
             Animated.timing(scaleVal, {
                 toValue: 0.82,
@@ -42,85 +70,130 @@ export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProp
             })
         ]).start();
 
-        // Delay for feedback before action
         setTimeout(() => {
-            if (target === 'settings' || target === 'avatar') {
+            if (target === 'settings') {
                 router.push('/settings');
+            } else if (target === 'back' && onBack) {
+                onBack();
+            } else if (target === 'avatar') {
+                if (isOwnProfile) {
+                    router.push('/settings');
+                }
             } else if (target === 'add' && onAddList) {
                 onAddList();
+            } else if (target === 'follow' && onFollow) {
+                onFollow();
             }
-        }, 250);
+        }, scaleVal ? 250 : 0); // Adjust timeout based on whether animation occurred
     };
 
     if (!user) return null;
 
     const stats = [
-        { label: "Followers", value: user.followersCount || 0 },
-        { label: "Following", value: user.followingCount || 0 },
-        { label: "Lists", value: listsCount ?? user.listsCount ?? 0 },
+        { label: "followers", value: user.followersCount || 0 },
+        { label: "following", value: user.followingCount || 0 },
+        { label: "lists", value: listsCount ?? user.listsCount ?? 0 },
     ];
 
     return (
         <View style={styles.container}>
-            <Animated.View style={[styles.settingsButton, { transform: [{ scale: settingsScale }] }]}>
+            {/* Top Bar for Navigation/Settings */}
+            <View style={styles.topBar}>
                 <TouchableOpacity
-                    onPress={() => handlePress('settings')}
+                    onPress={() => handlePress(isOwnProfile ? 'settings' : 'back')}
                     activeOpacity={0.7}
+                    style={styles.iconButton}
                 >
-                    <Ionicons name="settings-outline" size={24} color="#E5E7EB" />
+                    <Ionicons
+                        name={isOwnProfile ? "settings-outline" : "arrow-back"}
+                        size={24}
+                        color="#F9FAFB"
+                    />
                 </TouchableOpacity>
-            </Animated.View>
 
-            {onAddList && (
-                <Animated.View style={[styles.addButton, { transform: [{ scale: addScale }] }]}>
-                    <TouchableOpacity onPress={() => handlePress('add')}>
-                        <Ionicons name="add-circle-outline" size={28} color="#3B82F6" />
+                {isOwnProfile && onAddList && (
+                    <TouchableOpacity
+                        onPress={() => handlePress('add')}
+                        style={styles.iconButton}
+                    >
+                        <Ionicons name="add-circle-outline" size={28} color="#F9FAFB" />
                     </TouchableOpacity>
-                </Animated.View>
-            )}
+                )}
+            </View>
 
             <View style={styles.headerContent}>
-                {/* Avatar Section */}
-                <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
-                    <TouchableOpacity
-                        style={styles.avatarContainer}
-                        onPress={() => handlePress('avatar')}
-                        activeOpacity={0.8}
-                    >
-                        <Image
-                            source={
-                                user.avatar && !imageError
-                                    ? { uri: getImageUrl(user.avatar) as string }
-                                    : require("../../assets/images/avatar.jpg")
-                            }
-                            style={styles.avatar}
-                            onError={() => setImageError(true)}
-                        />
-                        <View style={styles.statusBadge} />
-                    </TouchableOpacity>
-                </Animated.View>
+                {/* Top Section: Avatar + Stats + Actions */}
+                <View style={styles.topSection}>
+                    <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
+                        <TouchableOpacity
+                            style={styles.avatarContainer}
+                            onPress={() => handlePress('avatar')}
+                            activeOpacity={isOwnProfile ? 0.8 : 1}
+                            disabled={!isOwnProfile}
+                        >
+                            <Image
+                                source={
+                                    user.avatar && !imageError
+                                        ? { uri: getImageUrl(user.avatar) as string }
+                                        : require("../../assets/images/avatar.jpg")
+                                }
+                                style={styles.avatar}
+                                onError={() => setImageError(true)}
+                            />
+                            {isOwnProfile && <View style={styles.statusBadge} />}
+                        </TouchableOpacity>
+                    </Animated.View>
 
-                {/* User Info */}
-                <View style={styles.infoContainer}>
-                    {!!user.name && <Text style={styles.name}>{user.name}</Text>}
-                    <Text style={styles.email}>{user.username}</Text>
+                    {/* Right Section: Stats + Button */}
+                    <View style={styles.rightSection}>
+                        {/* Stats */}
+                        <View style={styles.statsContainer}>
+                            {stats.map((stat, index) => (
+                                <View key={index} style={styles.statItem}>
+                                    <Text style={styles.statValue}>{stat.value}</Text>
+                                    <Text style={styles.statLabel}>{stat.label}</Text>
+                                </View>
+                            ))}
+                        </View>
+
+                        {/* Action Buttons */}
+                        {!isOwnProfile ? (
+                            <Animated.View style={{ transform: [{ scale: followScale }], width: '100%', marginTop: 12 }}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.actionButton,
+                                        isFollowing ? styles.followingButton : styles.followButton
+                                    ]}
+                                    onPress={() => handlePress('follow')}
+                                    activeOpacity={0.9}
+                                >
+                                    <Text style={[
+                                        styles.actionButtonText,
+                                        isFollowing ? styles.followingButtonText : styles.followButtonText
+                                    ]}>
+                                        {isFollowing ? "Following" : "Follow"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        ) : (
+                            <View style={{ width: '100%', marginTop: 12 }}>
+                                <TouchableOpacity
+                                    style={[styles.actionButton, styles.editButton]}
+                                    onPress={() => handlePress('settings')}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={[styles.actionButtonText, styles.editButtonText]}>
+                                        Edit Profile
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
-                {/* Actions
-                <View style={styles.actionsContainer}>
-                    <TouchableOpacity style={styles.shareButton}>
-                        <Text style={styles.shareButtonText}>Share Profile</Text>
-                    </TouchableOpacity>
-                </View>*/}
-
-                {/* Stats */}
-                <View style={styles.statsContainer}>
-                    {stats.map((stat, index) => (
-                        <View key={index} style={styles.statItem}>
-                            <Text style={styles.statValue}>{stat.value}</Text>
-                            <Text style={styles.statLabel}>{stat.label}</Text>
-                        </View>
-                    ))}
+                {/* User Bio Section */}
+                <View style={styles.bioSection}>
+                    <Text style={styles.username}>@{user.username}</Text>
                 </View>
             </View>
         </View>
@@ -130,104 +203,114 @@ export function ProfileHeader({ user, onAddList, listsCount }: ProfileHeaderProp
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#0B0F19",
-        paddingTop: 20,
         paddingBottom: 20,
-        position: "relative",
     },
-    settingsButton: {
-        position: "absolute",
-        top: 20,
-        left: 20,
-        zIndex: 10,
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        height: 50,
+        alignItems: 'center',
     },
-    addButton: {
-        position: "absolute",
-        top: 20,
-        right: 20,
-        zIndex: 10,
+    iconButton: {
+        padding: 4,
     },
     headerContent: {
-        alignItems: "center",
         paddingHorizontal: 20,
+        marginTop: 10,
+    },
+    topSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
     },
     avatarContainer: {
         position: "relative",
-        marginBottom: 16,
     },
     avatar: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        borderWidth: 3,
+        borderWidth: 2,
         borderColor: "#1F2937",
-        backgroundColor: "#9ca1a7ff",
+        backgroundColor: "#1F2937",
     },
     statusBadge: {
         position: "absolute",
-        bottom: 4,
-        right: 4,
+        bottom: 2,
+        right: 2,
         width: 20,
         height: 20,
         borderRadius: 10,
         backgroundColor: "#10B981",
-        borderWidth: 3,
+        borderWidth: 2,
         borderColor: "#0B0F19",
     },
-    infoContainer: {
-        alignItems: "center",
-        marginBottom: 20,
-    },
-    name: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#F9FAFB",
-        marginBottom: 4,
-    },
-    email: {
-        fontSize: 14,
-        color: "#9CA3AF",
-    },
-    actionsContainer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        marginBottom: 24,
-    },
-    shareButton: {
-        backgroundColor: "#1F2937",
-        paddingVertical: 8,
-        paddingHorizontal: 24,
-        borderRadius: 20,
-        minWidth: 120,
-        alignItems: "center",
-    },
-    shareButtonText: {
-        color: "#E5E7EB",
-        fontWeight: "600",
-        fontSize: 13,
+    rightSection: {
+        flex: 1,
+        marginLeft: 20,
+        justifyContent: 'center',
     },
     statsContainer: {
         flexDirection: "row",
-        justifyContent: "space-between",
-        width: "100%",
-        paddingHorizontal: 20,
-        borderTopWidth: 1,
-        borderTopColor: "#1F2937",
-        paddingTop: 20,
+        justifyContent: "space-around",
     },
     statItem: {
         alignItems: "center",
-        flex: 1,
     },
     statValue: {
-        fontSize: 20,
-        fontWeight: "bold",
+        fontSize: 18,
+        fontFamily: "Nunito-SemiBold", // Slightly bolder than regular for numbers to be readable
         color: "#F9FAFB",
-        marginBottom: 4,
+        marginBottom: 2,
     },
     statLabel: {
-        fontSize: 12,
-        color: "#9CA3AF",
-        textTransform: "uppercase",
-        letterSpacing: 1,
+        fontSize: 13,
+        fontFamily: "Nunito-Regular",
+        color: "#F9FAFB",
+    },
+    bioSection: {
+        marginTop: 4,
+    },
+    username: {
+        fontSize: 16,
+        fontFamily: "Nunito-Regular", // Regular as requested
+        color: "#F9FAFB",
+    },
+    actionButton: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 8,
+        borderRadius: 8,
+        width: '100%',
+    },
+    followButton: {
+        backgroundColor: "#3B82F6",
+    },
+    followingButton: {
+        backgroundColor: "#1F2937",
+        borderWidth: 1,
+        borderColor: "#374151",
+    },
+    actionButtonText: {
+        fontSize: 14,
+        fontFamily: "Nunito-SemiBold",
+    },
+    followButtonText: {
+        color: "#FFFFFF",
+    },
+    followingButtonText: {
+        color: "#F9FAFB",
+    },
+    editButton: {
+        backgroundColor: "#1F2937",
+        borderWidth: 1,
+        borderColor: "#374151",
+    },
+    editButtonText: {
+        color: "#F9FAFB",
+        fontFamily: "Nunito-SemiBold",
     },
 });

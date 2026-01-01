@@ -1,6 +1,6 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import { getItem, setItem, removeItem } from "../utils/storage";
-import { api, authApi, booksApi } from "../constants/api/index";
+import { api, authApi, booksApi, userApi } from "../constants/api/index";
 import { authEvents, AUTH_EVENTS } from "../utils/authEvents";
 import { User } from "../types/user";
 
@@ -12,6 +12,7 @@ interface AuthContextType {
     register: (values: any) => Promise<boolean>;
     logout: () => Promise<void>;
     updateUserProfile: (data: FormData) => Promise<boolean>;
+    refreshUser: (username: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ export const AuthContext = createContext<AuthContextType>({
     register: async () => false,
     logout: async () => { },
     updateUserProfile: async () => false,
+    refreshUser: async (username: string) => { },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -162,8 +164,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    const refreshUser = useCallback(async (username: string) => {
+        try {
+            const res = await userApi.getUserByUsername(username);
+            if (res.status === 200) {
+                const updatedUser = res.data;
+                setUser(prev => {
+                    const newUser = { ...prev!, ...updatedUser };
+                    // Avoid update if data is identical to prevent infinite loops
+                    if (JSON.stringify(prev) === JSON.stringify(newUser)) {
+                        return prev;
+                    }
+                    setItem("user", JSON.stringify(newUser)).catch(err => console.error("Failed to save user", err));
+                    return newUser;
+                });
+            }
+        } catch (error) {
+            console.error("Failed to refresh user:", error);
+        }
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

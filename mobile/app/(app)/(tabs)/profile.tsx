@@ -18,7 +18,7 @@ import { bookListApi } from "../../../constants/api";
 
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const { lists, loading, refetch } = useUserLists({
         username: user?.username ?? "",
         enabled: !!user?.username,
@@ -35,8 +35,9 @@ export default function ProfileScreen() {
         useCallback(() => {
             if (user?.username) {
                 refetch();
+                refreshUser(user.username);
             }
-        }, [user?.username, refetch])
+        }, [user?.username, refetch, refreshUser])
     );
 
     const handleCreateList = () => {
@@ -90,7 +91,7 @@ export default function ProfileScreen() {
     const handleUnsaveList = async (listId: string) => {
         try {
             await bookListApi.unsaveList(listId);
-            showToast("List removed from your profile", "error"); // Warning style
+            showToast("List removed from your profile", "error");
             refetch();
         } catch (error) {
             console.error("Failed to unsave list:", error);
