@@ -148,8 +148,10 @@ export default function Settings() {
                     showsVerticalScrollIndicator={false}
                     enableOnAndroid={true}
                     enableAutomaticScroll={true}
-                    extraHeight={100}
-                    extraScrollHeight={20}
+                    extraHeight={200}
+                    extraScrollHeight={150}
+                    enableResetScrollToCoords={true}
+                    keyboardOpeningTime={0}
                     keyboardShouldPersistTaps="handled"
                 >
                     {/* Avatar Section */}
@@ -264,9 +266,9 @@ const styles = StyleSheet.create({
         paddingBottom: 24,
     },
     headerTitle: {
-        fontSize: 34,
+        fontSize: 38,
         color: '#fff',
-        fontFamily: 'PlaywrightNorge-Regular',
+        fontFamily: 'Nunito-Regular',
         textShadowColor: 'rgba(0,0,0,0.3)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 4,
@@ -402,6 +404,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Nunito-Bold',
     },
     footerSpacer: {
-        height: 100,
+        height: 200,
     }
 });
