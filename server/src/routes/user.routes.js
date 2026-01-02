@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { protect } from "../middleware/protect.js";
-import { followUser, unfollowUser, getFollowers, getFollowing, getUser, getUserLists, getUserReviews, searchUsers } from "../controllers/user.controller.js";
+import { followUser, unfollowUser, getFollowers, getFollowing, getUser, getUserLists, getUserReviews, searchUsers, saveUserSearchHistory, getUserSearchHistory, deleteUserSearchHistoryItem, clearUserSearchHistory } from "../controllers/user.controller.js";
 
 const router = Router();
 
 router.get("/search", protect, searchUsers);
+router.post("/history", protect, saveUserSearchHistory);
+router.get("/history", protect, getUserSearchHistory);
+router.delete("/history/:searchedUserId", protect, deleteUserSearchHistoryItem);
+router.delete("/history", protect, clearUserSearchHistory);
+
 router.put("/follow-user/:id", protect, followUser);
 router.put("/unfollow-user/:id", protect, unfollowUser);
 router.get("/followers/:id", protect, getFollowers);

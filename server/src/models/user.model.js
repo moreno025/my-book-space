@@ -59,7 +59,24 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: Date,
   pendingEmail: { type: String },
   emailVerificationToken: { type: String },
-  emailVerificationExpires: { type: Date }
+  emailVerificationExpires: { type: Date },
+  readingProfile: {
+    favoriteGenres: [{ type: String }],
+    favoriteAuthors: [{ type: String }],
+    bookLengthPreference: {
+      type: String,
+      enum: ["short", "medium", "long", "mixed"],
+      default: "mixed",
+    },
+    mostLikedBooks: [
+      {
+        googleBookId: String,
+        title: String,
+        author: String,
+        cover: String,
+      },
+    ],
+  },
 }, { timestamps: true });
 
 userSchema.pre("save", async function () {
