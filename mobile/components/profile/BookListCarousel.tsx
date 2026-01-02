@@ -20,13 +20,14 @@ interface BookListCarouselProps {
     onUnsave?: (listId: string) => void;
     onRename?: (listId: string, currentTitle: string) => void;
     onToggleVisibility?: (listId: string, currentIsPublic: boolean) => void;
+    onCopy?: (listId: string) => void;
 }
 
 // const { width } = Dimensions.get("window"); // Unused for now
 const CARD_WIDTH = 100;
 const CARD_HEIGHT = 150;
 
-export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility }: BookListCarouselProps) {
+export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility, onCopy }: BookListCarouselProps) {
     const router = useRouter();
     const { user } = useAuth();
     const fontsLoaded = useAppFonts();
@@ -133,16 +134,23 @@ export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAd
             </View>
 
             {books.length === 0 ? (
-                <TouchableOpacity
-                    style={styles.emptyContainer}
-                    onPress={onAddBook}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.emptyIconContainer}>
-                        <Ionicons name="add" size={24} color="#3B82F6" />
+                onAddBook ? (
+                    <TouchableOpacity
+                        style={styles.emptyContainer}
+                        onPress={onAddBook}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.emptyIconContainer}>
+                            <Ionicons name="add" size={24} color="#3B82F6" />
+                        </View>
+                        <Text style={styles.emptyText}>Add your first book</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <View style={[styles.emptyContainer, { borderStyle: 'solid', borderColor: 'transparent', backgroundColor: 'transparent' }]}>
+                        <Ionicons name="book-outline" size={32} color="#4B5563" style={{ marginBottom: 8 }} />
+                        <Text style={[styles.emptyText, { color: "#6B7280" }]}>No books in this list</Text>
                     </View>
-                    <Text style={styles.emptyText}>Add your first book</Text>
-                </TouchableOpacity>
+                )
             ) : (
                 <FlatList
                     horizontal
@@ -208,7 +216,8 @@ export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAd
                 isOwner={isOwner}
                 onRename={() => onRename?.(listId, title)}
                 onToggleVisibility={() => onToggleVisibility?.(listId, isPublic)}
-                onDelete={isOwner ? confirmDeleteList : confirmUnsaveList}
+                onDelete={isOwner ? confirmDeleteList : (onUnsave ? confirmUnsaveList : undefined)}
+                onCopy={onCopy ? () => onCopy(listId) : undefined}
             />
         </View>
     );

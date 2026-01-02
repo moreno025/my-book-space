@@ -9,7 +9,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { userApi } from "../../../constants/api";
+import { userApi, bookListApi } from "../../../constants/api";
 import { User } from "../../../types/user";
 import { BookList } from "../../../types/bookList";
 import { useAppFonts } from "../../../hooks/useFonts";
@@ -88,6 +88,16 @@ export default function UserProfileScreen() {
         }
     };
 
+    const handleCopyList = async (listId: string) => {
+        try {
+            await bookListApi.copyList(listId);
+            showToast("List copied to your profile", "success");
+        } catch (error: any) {
+            console.error("Failed to copy list:", error);
+            showToast(error.response?.data?.message || "Failed to copy list", "error");
+        }
+    };
+
     if (!fontsLoaded || loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -139,6 +149,7 @@ export default function UserProfileScreen() {
                                 isPublic={list.isPublic}
                                 ownerId={list.user._id}
                                 books={list.books || []}
+                                onCopy={handleCopyList}
                             />
                         ))}
                     </View>

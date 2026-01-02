@@ -17,8 +17,9 @@ interface ListOptionsModalProps {
     isPublic: boolean;
     isOwner: boolean;
     onRename: () => void;
-    onToggleVisibility: () => void;
-    onDelete: () => void;
+    onToggleVisibility?: () => void;
+    onDelete?: () => void;
+    onCopy?: () => void;
 }
 
 export function ListOptionsModal({
@@ -30,6 +31,7 @@ export function ListOptionsModal({
     onRename,
     onToggleVisibility,
     onDelete,
+    onCopy,
 }: ListOptionsModalProps) {
     return (
         <Modal
@@ -63,7 +65,7 @@ export function ListOptionsModal({
                                     <TouchableOpacity
                                         style={styles.option}
                                         onPress={() => {
-                                            onRename();
+                                            onRename && onRename();
                                             onClose();
                                         }}
                                     >
@@ -76,7 +78,7 @@ export function ListOptionsModal({
                                     <TouchableOpacity
                                         style={styles.option}
                                         onPress={() => {
-                                            onToggleVisibility();
+                                            onToggleVisibility && onToggleVisibility();
                                             onClose();
                                         }}
                                     >
@@ -94,20 +96,37 @@ export function ListOptionsModal({
                                 </>
                             )}
 
-                            <TouchableOpacity
-                                style={[styles.option, styles.lastOption, !isOwner && { borderTopWidth: 0 }]}
-                                onPress={() => {
-                                    onDelete();
-                                    onClose();
-                                }}
-                            >
-                                <View style={[styles.iconContainer, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}>
-                                    <Ionicons name={isOwner ? "trash-outline" : "close-circle-outline"} size={22} color="#EF4444" />
-                                </View>
-                                <Text style={[styles.optionText, { color: "#EF4444" }]}>
-                                    {isOwner ? "Delete List" : "Remove from Profile"}
-                                </Text>
-                            </TouchableOpacity>
+                            {onCopy && (
+                                <TouchableOpacity
+                                    style={[styles.option, !isOwner && { borderTopWidth: 0 }]}
+                                    onPress={() => {
+                                        onCopy();
+                                        onClose();
+                                    }}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: "rgba(59, 130, 246, 0.1)" }]}>
+                                        <Ionicons name="copy-outline" size={22} color="#3B82F6" />
+                                    </View>
+                                    <Text style={styles.optionText}>Copy to my profile</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {onDelete && (
+                                <TouchableOpacity
+                                    style={[styles.option, styles.lastOption]}
+                                    onPress={() => {
+                                        onDelete();
+                                        onClose();
+                                    }}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}>
+                                        <Ionicons name={isOwner ? "trash-outline" : "close-circle-outline"} size={22} color="#EF4444" />
+                                    </View>
+                                    <Text style={[styles.optionText, { color: "#EF4444" }]}>
+                                        {isOwner ? "Delete List" : "Remove from Profile"}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 </TouchableWithoutFeedback>
