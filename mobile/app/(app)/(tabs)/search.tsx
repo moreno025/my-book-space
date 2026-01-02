@@ -172,7 +172,7 @@ export default function SearchScreen() {
                                     style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12, backgroundColor: "#E5E7EB" }}
                                 />
                                 <View>
-                                    <Text style={styles.historyText}>@{item.searchedUser.username}</Text>
+                                    <Text style={styles.historyText}>{item.searchedUser.username}</Text>
                                     {item.searchedUser.name && (
                                         <Text style={{ fontSize: 12, fontFamily: "Nunito-Regular", color: "#6B7280" }}>
                                             {item.searchedUser.name}
