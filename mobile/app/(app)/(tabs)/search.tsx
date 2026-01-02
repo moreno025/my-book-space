@@ -8,7 +8,7 @@ import {
     FlatList,
     Image,
 } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -35,6 +35,13 @@ export default function SearchScreen() {
 
     const [query, setQuery] = useState("");
     const [activeTab, setActiveTab] = useState<SearchTab>("books");
+    const { tab } = useLocalSearchParams<{ tab?: string }>();
+
+    React.useEffect(() => {
+        if (tab === "users") {
+            setActiveTab("users");
+        }
+    }, [tab]);
 
     const { books, loading: booksLoading, hasSearched: booksSearched } = useBookSearch(query);
     const { users, loading: usersLoading, hasSearched: usersSearched } = useUserSearch(query);
@@ -51,7 +58,7 @@ export default function SearchScreen() {
         if (userId) {
             await saveUser(userId);
         }
-        router.push({ pathname: "/user/[username]", params: { username: user.username } });
+        router.push({ pathname: "/(app)/(tabs)/user/[username]", params: { username: user.username } });
     };
 
     if (!fontsLoaded) return null;

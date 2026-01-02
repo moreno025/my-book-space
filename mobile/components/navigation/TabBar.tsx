@@ -39,7 +39,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                         iconName = isFocused ? "person" : "person-outline";
                     }
 
-                    if (route.name === "settings") return null;
+                    if (route.name === "settings" || route.name === "user/[username]") return null;
 
                     return (
                         <TouchableOpacity
