@@ -14,10 +14,10 @@ interface ListOptionsModalProps {
     visible: boolean;
     onClose: () => void;
     listTitle: string;
-    isPublic: boolean;
+    visibility: 'public' | 'private';
     isOwner: boolean;
     onRename: () => void;
-    onToggleVisibility?: () => void;
+    onToggleVisibility?: (visibility: 'public' | 'private') => void;
     onDelete?: () => void;
     onCopy?: () => void;
 }
@@ -26,13 +26,14 @@ export function ListOptionsModal({
     visible,
     onClose,
     listTitle,
-    isPublic,
+    visibility,
     isOwner,
     onRename,
     onToggleVisibility,
     onDelete,
     onCopy,
 }: ListOptionsModalProps) {
+
     return (
         <Modal
             visible={visible}
@@ -75,24 +76,30 @@ export function ListOptionsModal({
                                         <Text style={styles.optionText}>Rename List</Text>
                                     </TouchableOpacity>
 
+                                    <View style={styles.divider} />
                                     <TouchableOpacity
                                         style={styles.option}
                                         onPress={() => {
-                                            onToggleVisibility && onToggleVisibility();
+                                            const nextVisibility = visibility === 'public' ? 'private' : 'public';
+                                            onToggleVisibility && onToggleVisibility(nextVisibility);
                                             onClose();
                                         }}
                                     >
-                                        <View style={[styles.iconContainer, { backgroundColor: "rgba(59, 130, 246, 0.1)" }]}>
+                                        <View style={[
+                                            styles.iconContainer,
+                                            { backgroundColor: visibility === 'public' ? "rgba(156, 163, 175, 0.1)" : "rgba(16, 185, 129, 0.1)" }
+                                        ]}>
                                             <Ionicons
-                                                name={isPublic ? "lock-closed-outline" : "globe-outline"}
+                                                name={visibility === 'public' ? "lock-closed-outline" : "globe-outline"}
                                                 size={22}
-                                                color="#3B82F6"
+                                                color={visibility === 'public' ? "#9CA3AF" : "#10B981"}
                                             />
                                         </View>
                                         <Text style={styles.optionText}>
-                                            {isPublic ? "Make Private" : "Make Public"}
+                                            {visibility === 'public' ? "Make Private" : "Make Public"}
                                         </Text>
                                     </TouchableOpacity>
+                                    <View style={styles.divider} />
                                 </>
                             )}
 
@@ -200,5 +207,13 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         color: "#E5E7EB",
         fontFamily: "Nunito-SemiBold",
+    },
+    divider: {
+        height: 1,
+        backgroundColor: "#374151",
+        marginVertical: 5,
+    },
+    selectedOption: {
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
     },
 });

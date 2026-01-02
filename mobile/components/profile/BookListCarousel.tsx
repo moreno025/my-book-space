@@ -12,22 +12,23 @@ import { useAuth } from "../../hooks/useAuth";
 interface BookListCarouselProps {
     title: string;
     listId: string;
-    isPublic: boolean;
+    visibility: 'public' | 'private';
     ownerId: string; // ID of the list creator
     books: BookListBook[];
     onAddBook?: () => void;
     onRefresh?: () => void;
     onUnsave?: (listId: string) => void;
     onRename?: (listId: string, currentTitle: string) => void;
-    onToggleVisibility?: (listId: string, currentIsPublic: boolean) => void;
+    onToggleVisibility?: (listId: string, currentVisibility: 'public' | 'private') => void;
     onCopy?: (listId: string) => void;
+    isOwnerPrivate?: boolean;
 }
 
 // const { width } = Dimensions.get("window"); // Unused for now
 const CARD_WIDTH = 100;
 const CARD_HEIGHT = 150;
 
-export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility, onCopy }: BookListCarouselProps) {
+export function BookListCarousel({ title, listId, visibility, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility, onCopy, isOwnerPrivate }: BookListCarouselProps) {
     const router = useRouter();
     const { user } = useAuth();
     const fontsLoaded = useAppFonts();
@@ -114,7 +115,7 @@ export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAd
             <View style={styles.header}>
                 <View style={styles.titleContainer}>
                     <Text style={styles.title}>{title}</Text>
-                    {!isPublic && (
+                    {visibility === 'private' && (
                         <Ionicons
                             name="lock-closed"
                             size={16}
@@ -212,10 +213,10 @@ export function BookListCarousel({ title, listId, isPublic, ownerId, books, onAd
                 visible={showListOptionsModal}
                 onClose={() => setShowListOptionsModal(false)}
                 listTitle={title}
-                isPublic={isPublic}
+                visibility={visibility}
                 isOwner={isOwner}
                 onRename={() => onRename?.(listId, title)}
-                onToggleVisibility={() => onToggleVisibility?.(listId, isPublic)}
+                onToggleVisibility={(newVisibility) => onToggleVisibility?.(listId, newVisibility)}
                 onDelete={isOwner ? confirmDeleteList : (onUnsave ? confirmUnsaveList : undefined)}
                 onCopy={onCopy ? () => onCopy(listId) : undefined}
             />

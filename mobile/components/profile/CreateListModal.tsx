@@ -1,152 +1,151 @@
 import React, { useState } from "react";
 import {
-    Modal,
     View,
     Text,
     StyleSheet,
-    TextInput,
     TouchableOpacity,
-    Switch,
+    TextInput,
+    Modal,
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
 } from "react-native";
-import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../hooks/useAuth";
 
 interface CreateListModalProps {
     visible: boolean;
     onClose: () => void;
-    onSubmit: (data: { title: string; description: string; isPublic: boolean }) => Promise<void>;
+    onSubmit: (data: { title: string; description: string; visibility: "public" | "private" }) => Promise<void>;
 }
 
 export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalProps) {
+    const { user } = useAuth();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [isPublic, setIsPublic] = useState(true);
-    const [loading, setLoading] = useState(false);
-
-    const handleClose = () => {
-        setTitle("");
-        setDescription("");
-        setIsPublic(true);
-        onClose();
-    };
+    const [visibility, setVisibility] = useState<"public" | "private">("public");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async () => {
         if (!title.trim()) return;
-
+        setIsSubmitting(true);
         try {
-            setLoading(true);
-            await onSubmit({ title, description, isPublic });
-            handleClose();
-        } catch (error) {
-            console.error(error);
+            await onSubmit({ title, description, visibility });
+            // Reset form
+            setTitle("");
+            setDescription("");
+            setVisibility("public");
+            onClose();
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
+
+    if (!visible) return null;
+
+    const visibilityOptions = [
+        {
+            id: "public",
+            label: user?.isPrivate ? "Followers Only" : "Public",
+            icon: user?.isPrivate ? "people-outline" : "globe-outline",
+            color: user?.isPrivate ? "#3B82F6" : "#10B981"
+        },
+        { id: "private", label: "Private", icon: "lock-closed-outline", color: "#6B7280" },
+    ];
 
     return (
         <Modal
             visible={visible}
             transparent
             animationType="fade"
-            onRequestClose={handleClose}
+            onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <BlurView
-                    intensity={40}
-                    tint="dark"
-                    style={StyleSheet.absoluteFill}
-                >
-                    <TouchableWithoutFeedback onPress={handleClose}>
-                        <View style={styles.backdrop} />
-                    </TouchableWithoutFeedback>
-                </BlurView>
-
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.keyboardWrapper}
+                    style={styles.content}
                 >
-                    <View style={styles.container}>
+                    <View style={styles.header}>
                         <Text style={styles.title}>Create New List</Text>
+                        <TouchableOpacity onPress={onClose}>
+                            <Ionicons name="close" size={24} color="#94A3B8" />
+                        </TouchableOpacity>
+                    </View>
 
-                        <View style={styles.form}>
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Title</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="e.g., Summer Reading"
-                                    placeholderTextColor="#6B7280"
-                                    value={title}
-                                    onChangeText={setTitle}
-                                    autoFocus
-                                />
-                            </View>
+                    <View style={styles.form}>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Title</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={title}
+                                onChangeText={setTitle}
+                                placeholder="Summer Reads, Best Sci-Fi..."
+                                placeholderTextColor="#4B5563"
+                                autoFocus
+                            />
+                        </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Description (Optional)</Text>
-                                <TextInput
-                                    style={[styles.input, styles.textArea]}
-                                    placeholder="What is this list about?"
-                                    placeholderTextColor="#6B7280"
-                                    value={description}
-                                    onChangeText={setDescription}
-                                    multiline
-                                    numberOfLines={3}
-                                />
-                            </View>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Description (Optional)</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                value={description}
+                                onChangeText={setDescription}
+                                placeholder="What's this list about?"
+                                placeholderTextColor="#4B5563"
+                                multiline
+                                numberOfLines={3}
+                            />
+                        </View>
 
-                            <View style={styles.switchContainer}>
-                                <View style={styles.switchLabelContainer}>
-                                    <View style={styles.row}>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Visibility</Text>
+                            <View style={styles.visibilityContainer}>
+                                {visibilityOptions.map((option) => (
+                                    <TouchableOpacity
+                                        key={option.id}
+                                        style={[
+                                            styles.visibilityOption,
+                                            visibility === option.id && styles.visibilityOptionActive,
+                                            { borderColor: visibility === option.id ? option.color : "transparent" }
+                                        ]}
+                                        onPress={() => setVisibility(option.id as any)}
+                                    >
                                         <Ionicons
-                                            name={isPublic ? "earth" : "lock-closed"}
+                                            name={option.icon as any}
                                             size={20}
-                                            color="#9CA3AF"
-                                            style={{ marginRight: 8 }}
+                                            color={visibility === option.id ? option.color : "#94A3B8"}
                                         />
-                                        <Text style={styles.switchLabel}>
-                                            {isPublic ? "Public List" : "Private List"}
+                                        <Text style={[
+                                            styles.visibilityLabel,
+                                            visibility === option.id && { color: option.color }
+                                        ]}>
+                                            {option.label}
                                         </Text>
-                                    </View>
-                                    <Text style={styles.switchSubtext}>
-                                        {isPublic
-                                            ? "Anyone can search or view this list."
-                                            : "Only you can see this list."}
-                                    </Text>
-                                </View>
-                                <Switch
-                                    value={isPublic}
-                                    onValueChange={setIsPublic}
-                                    trackColor={{ false: "#374151", true: "#3B82F6" }}
-                                    thumbColor={isPublic ? "#FFFFFF" : "#9CA3AF"}
-                                />
+                                    </TouchableOpacity>
+                                ))}
                             </View>
+                            {user?.isPrivate && (
+                                <Text style={styles.privacyHint}>
+                                    Your &quot;Followers&quot; lists are only visible to people who follow you.
+                                </Text>
+                            )}
                         </View>
 
-                        <View style={styles.footer}>
-                            <TouchableOpacity
-                                onPress={handleClose}
-                                style={[styles.button, styles.cancelButton]}
-                                disabled={loading}
-                            >
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={handleSubmit}
-                                style={[styles.button, styles.createButton]}
-                                disabled={loading || !title.trim()}
-                            >
-                                {loading ? (
-                                    <ActivityIndicator size="small" color="#FFF" />
-                                ) : (
-                                    <Text style={styles.createText}>Create List</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={[styles.submitButton, !title.trim() && styles.submitButtonDisabled]}
+                            onPress={handleSubmit}
+                            disabled={!title.trim() || isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <>
+                                    <Ionicons name="add" size={20} color="#fff" />
+                                    <Text style={styles.submitButtonText}>Create List</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
             </View>
@@ -157,52 +156,42 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        justifyContent: "flex-end",
     },
-    backdrop: {
-        flex: 1,
-    },
-    keyboardWrapper: {
-        width: "100%",
-        alignItems: "center",
-    },
-    container: {
-        width: "90%",
-        maxWidth: 400,
-        backgroundColor: "#111827",
-        borderRadius: 20,
+    content: {
+        backgroundColor: "#1F2937",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         padding: 24,
-        borderWidth: 1,
-        borderColor: "#1F2937",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.5,
-        shadowRadius: 20,
-        elevation: 10,
+        paddingBottom: Platform.OS === "ios" ? 40 : 24,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 24,
     },
     title: {
         fontSize: 20,
         fontWeight: "bold",
         color: "#F9FAFB",
-        marginBottom: 20,
-        textAlign: "center",
     },
     form: {
-        gap: 16,
+        gap: 20,
     },
     inputGroup: {
         gap: 8,
     },
     label: {
         fontSize: 14,
-        fontWeight: "500",
-        color: "#D1D5DB",
+        fontWeight: "600",
+        color: "#94A3B8",
     },
     input: {
-        backgroundColor: "#1F2937",
+        backgroundColor: "#111827",
         borderRadius: 12,
-        padding: 12,
+        padding: 16,
         color: "#F9FAFB",
         fontSize: 16,
         borderWidth: 1,
@@ -212,63 +201,52 @@ const styles = StyleSheet.create({
         height: 80,
         textAlignVertical: "top",
     },
-    switchContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: "#1F2937",
-        padding: 12,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: "#374151",
-        marginTop: 8,
-    },
-    switchLabelContainer: {
-        flex: 1,
-        paddingRight: 16,
-    },
-    row: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 4,
-    },
-    switchLabel: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#F9FAFB",
-    },
-    switchSubtext: {
-        fontSize: 12,
-        color: "#9CA3AF",
-    },
-    footer: {
+    visibilityContainer: {
         flexDirection: "row",
         gap: 12,
-        marginTop: 24,
     },
-    button: {
+    visibilityOption: {
         flex: 1,
-        padding: 14,
-        borderRadius: 12,
+        flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
+        gap: 8,
+        backgroundColor: "#111827",
+        borderRadius: 12,
+        padding: 12,
+        borderWidth: 2,
+        borderColor: "transparent",
     },
-    cancelButton: {
-        backgroundColor: "#1F2937",
-        borderWidth: 1,
-        borderColor: "#374151",
+    visibilityOptionActive: {
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
     },
-    cancelText: {
-        color: "#D1D5DB",
+    visibilityLabel: {
+        fontSize: 13,
         fontWeight: "600",
-        fontSize: 16,
+        color: "#94A3B8",
     },
-    createButton: {
+    privacyHint: {
+        fontSize: 12,
+        color: "#94A3B8",
+        fontStyle: "italic",
+        marginTop: 4,
+    },
+    submitButton: {
         backgroundColor: "#3B82F6",
+        borderRadius: 12,
+        padding: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        marginTop: 8,
     },
-    createText: {
-        color: "#FFFFFF",
-        fontWeight: "600",
+    submitButtonDisabled: {
+        opacity: 0.5,
+    },
+    submitButtonText: {
+        color: "#fff",
         fontSize: 16,
+        fontWeight: "bold",
     },
 });

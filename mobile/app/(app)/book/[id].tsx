@@ -87,7 +87,7 @@ export default function BookDetailScreen() {
         fetchDiscovery(); // Recharge discovery lists
     };
 
-    const handleCreateListSubmit = async (data: { title: string; description: string; isPublic: boolean }) => {
+    const handleCreateListSubmit = async (data: { title: string; description: string; visibility: 'public' | 'private' }) => {
         try {
             await bookListApi.createBookList(data);
             showToast("List created!", "success");

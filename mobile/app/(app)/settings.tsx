@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Animated, Switch } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,7 @@ export default function Settings() {
     const [username, setUsername] = useState(user?.username || "");
     const [bio, setBio] = useState(user?.bio || "");
     const [avatar, setAvatar] = useState<string | null>(user?.avatar || null);
+    const [isPrivate, setIsPrivate] = useState(user?.isPrivate || false);
 
     // For local preview of new image
     const [newAvatarUri, setNewAvatarUri] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function Settings() {
             setUsername(user.username || "");
             setBio(user.bio || "");
             setAvatar(user.avatar || null);
+            setIsPrivate(user.isPrivate || false);
         }
     }, [user]);
 
@@ -68,6 +70,7 @@ export default function Settings() {
         formData.append("lastName", lastName);
         formData.append("username", username);
         formData.append("bio", bio);
+        formData.append("isPrivate", String(isPrivate));
 
         // Always sending email is risky if not changing it, but backend might require it or ignore it.
         // Assuming backend merges updates.
@@ -228,6 +231,24 @@ export default function Settings() {
                             />
                         </View>
 
+                        <View style={styles.divider} />
+
+                        <View style={styles.privacyGroup}>
+                            <View style={styles.privacyInfo}>
+                                <Text style={styles.privacyLabel}>Private Account</Text>
+                                <Text style={styles.privacyDescription}>
+                                    Only your followers will be able to see the lists you set as &quot;Followers Only&quot;.
+                                    Everyone else will only see your profile as private.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={isPrivate}
+                                onValueChange={setIsPrivate}
+                                trackColor={{ false: "#334155", true: "#3b82f6" }}
+                                thumbColor={isPrivate ? "#fff" : "#94a3b8"}
+                            />
+                        </View>
+
                         <Button
                             title={isSaving ? "Saving..." : "Save Changes"}
                             onPress={handleSave}
@@ -377,9 +398,35 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginBottom: 20,
     },
+    divider: {
+        height: 1,
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        marginVertical: 20,
+    },
+    privacyGroup: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 24,
+    },
+    privacyInfo: {
+        flex: 1,
+        marginRight: 16,
+    },
+    privacyLabel: {
+        color: "#fff",
+        fontSize: 16,
+        fontFamily: "Nunito-Bold",
+        marginBottom: 4,
+    },
+    privacyDescription: {
+        color: "rgba(255, 255, 255, 0.5)",
+        fontSize: 12,
+        fontFamily: "Nunito-Regular",
+    },
     saveButton: {
         marginTop: 12,
-        backgroundColor: '#da6c12', // Maintaining brand accent
+        backgroundColor: '#da6c12',
         shadowColor: "#da6c12",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,

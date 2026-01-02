@@ -81,15 +81,15 @@ export function ListDetailHeader({
                     <View style={styles.metadataItem}>
                         <View style={styles.visibilityBadge}>
                             <Ionicons
-                                name={list.isPublic ? "eye" : "eye-off"}
-                                size={12}
-                                color={list.isPublic ? "#3B82F6" : "#64748B"}
+                                name={list.visibility === 'public' ? "globe-outline" : "lock-closed-outline"}
+                                size={14}
+                                color={list.visibility === 'private' ? "#64748B" : "#3B82F6"}
                             />
                             <Text style={[
                                 styles.visibilityText,
-                                list.isPublic && styles.visibilityTextPublic
+                                list.visibility !== 'private' && styles.visibilityTextActive
                             ]}>
-                                {list.isPublic ? "Public" : "Private"}
+                                {list.visibility === 'public' ? "Public" : "Private"}
                             </Text>
                         </View>
                     </View>
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
         fontFamily: "Nunito-Bold",
         color: "#64748B",
     },
-    visibilityTextPublic: {
+    visibilityTextActive: {
         color: "#3B82F6",
     },
     saveButton: {

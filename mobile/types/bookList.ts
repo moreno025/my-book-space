@@ -10,7 +10,8 @@ export interface BookList {
     _id: string;
     title: string;
     description: string;
-    isPublic: boolean;
+    visibility: 'public' | 'private';
+    isPublic?: boolean;
     user: {
         _id: string;
         username: string;

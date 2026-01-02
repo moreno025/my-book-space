@@ -109,9 +109,16 @@ export function SaveBookModal({
                         />
                     </View>
                     <View style={styles.listInfo}>
-                        <Text style={[styles.listTitle, isAlreadySaved && styles.listTitleDisabled]}>
-                            {item.title}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={[styles.listTitle, isAlreadySaved && styles.listTitleDisabled]}>
+                                {item.title}
+                            </Text>
+                            <Ionicons
+                                name={item.visibility === 'public' ? (user?.isPrivate ? "people-outline" : "globe-outline") : "lock-closed-outline"}
+                                size={12}
+                                color="#6B7280"
+                            />
+                        </View>
                         <Text style={styles.listCount}>
                             {item.books.length} {item.books.length === 1 ? "book" : "books"}
                         </Text>

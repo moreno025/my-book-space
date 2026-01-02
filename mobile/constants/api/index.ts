@@ -72,7 +72,7 @@ export const bookListApi = {
     getUserLists: (username: string) =>
         privateApi.get<{ lists: BookList[] }>(`/book-list/${username}/lists`),
 
-    createBookList: (data: { title: string; description?: string; isPublic?: boolean }) =>
+    createBookList: (data: { title: string; description?: string; visibility?: 'public' | 'private' }) =>
         privateApi.post<{ list: BookList }>("/book-list", data),
 
     addBookToList: (listId: string, bookData: { googleBookId: string; title: string; authors: string[]; thumbnail: string; publishedDate?: string }) =>
@@ -84,7 +84,7 @@ export const bookListApi = {
     deleteBookList: (listId: string) =>
         privateApi.delete(`/book-list/${listId}`),
 
-    updateBookList: (listId: string, data: { title?: string; description?: string; isPublic?: boolean }) =>
+    updateBookList: (listId: string, data: { title?: string; description?: string; visibility?: 'public' | 'private' }) =>
         privateApi.put(`/book-list/${listId}`, data),
 
     getListsByBookId: (googleBookId: string) =>

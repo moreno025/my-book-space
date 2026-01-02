@@ -44,12 +44,13 @@ export default function ProfileScreen() {
         setCreateModalVisible(true);
     };
 
-    const handleCreateListSubmit = async (data: { title: string; description: string; isPublic: boolean }) => {
+    const handleCreateListSubmit = async (data: { title: string; description: string; visibility: 'public' | 'private' }) => {
         try {
             await bookListApi.createBookList(data);
             refetch();
         } catch (error: any) {
             console.error("Failed to create list:", error);
+            showToast("Failed to create list", "error");
         }
     };
 
@@ -76,14 +77,16 @@ export default function ProfileScreen() {
         }
     };
 
-    const handleToggleVisibility = async (listId: string, currentIsPublic: boolean) => {
+    const handleToggleVisibility = async (listId: string, newVisibility: 'public' | 'private') => {
         try {
-            await bookListApi.updateBookList(listId, { isPublic: !currentIsPublic });
-            const newStatus = !currentIsPublic ? "public" : "private";
-            showToast(`List is now ${newStatus}!`, "success");
+            await bookListApi.updateBookList(listId, { visibility: newVisibility });
+            const visibilityLabel = newVisibility === 'public'
+                ? (user?.isPrivate ? 'Followers Only' : 'Public')
+                : 'Private';
+            showToast(`List is now ${visibilityLabel.toLowerCase()}!`, "success");
             refetch();
         } catch (error) {
-            console.error("Failed to toggle visibility:", error);
+            console.error("Failed to update visibility:", error);
             showToast("Failed to update list visibility", "error");
         }
     };
@@ -126,13 +129,14 @@ export default function ProfileScreen() {
                             key={list._id}
                             listId={list._id}
                             title={list.title}
-                            isPublic={list.isPublic}
+                            visibility={list.visibility}
                             ownerId={typeof list.user === 'string' ? list.user : list.user._id}
                             books={list.books}
-                            onAddBook={() => handleOpenAddBook(list._id)}
                             onRename={handleRenameList}
                             onToggleVisibility={handleToggleVisibility}
                             onUnsave={handleUnsaveList}
+                            isOwnerPrivate={user?.isPrivate}
+                            onAddBook={() => handleOpenAddBook(list._id)}
                             onRefresh={() => {
                                 showToast("List deleted", "error");
                                 refetch();
