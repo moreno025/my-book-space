@@ -11,6 +11,7 @@ interface ProfileHeaderProps {
     listsCount?: number;
     isOwnProfile?: boolean;
     isFollowing?: boolean;
+    isRequested?: boolean;
     onFollow?: () => void;
     onBack?: () => void;
 }
@@ -21,6 +22,7 @@ export function ProfileHeader({
     listsCount,
     isOwnProfile = true,
     isFollowing = false,
+    isRequested = false,
     onFollow,
     onBack
 }: ProfileHeaderProps) {
@@ -168,16 +170,18 @@ export function ProfileHeader({
                                 <TouchableOpacity
                                     style={[
                                         styles.actionButton,
-                                        isFollowing ? styles.followingButton : styles.followButton
+                                        isFollowing ? styles.followingButton :
+                                            isRequested ? styles.requestedButton : styles.followButton
                                     ]}
                                     onPress={() => handlePress('follow')}
                                     activeOpacity={0.9}
                                 >
                                     <Text style={[
                                         styles.actionButtonText,
-                                        isFollowing ? styles.followingButtonText : styles.followButtonText
+                                        isFollowing ? styles.followingButtonText :
+                                            isRequested ? styles.requestedButtonText : styles.followButtonText
                                     ]}>
-                                        {isFollowing ? "Following" : "Follow"}
+                                        {isFollowing ? "Following" : isRequested ? "Requested" : "Follow"}
                                     </Text>
                                 </TouchableOpacity>
                             </Animated.View>
@@ -293,6 +297,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#374151",
     },
+    requestedButton: {
+        backgroundColor: "#111827",
+        borderWidth: 1,
+        borderColor: "#374151",
+    },
     actionButtonText: {
         fontSize: 14,
         fontFamily: "Nunito-SemiBold",
@@ -303,4 +312,7 @@ const styles = StyleSheet.create({
     followingButtonText: {
         color: "#F9FAFB",
     },
+    requestedButtonText: {
+        color: "#9CA3AF",
+    }
 });

@@ -21,6 +21,14 @@ export default function AppLayout() {
                     headerShown: false,
                 }}
             />
+            <Stack.Screen
+                name="follow-requests"
+                options={{
+                    presentation: 'card',
+                    animation: 'slide_from_right',
+                    headerShown: false,
+                }}
+            />
         </Stack>
     );
 }

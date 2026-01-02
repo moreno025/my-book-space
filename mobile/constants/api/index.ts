@@ -130,4 +130,13 @@ export const userApi = {
 
     clearHistory: () =>
         privateApi.delete("/user/history"),
+
+    getFollowRequests: () =>
+        privateApi.get("/user/requests/pending"),
+
+    acceptFollowRequest: (requestId: string) =>
+        privateApi.put(`/user/requests/accept/${requestId}`),
+
+    rejectFollowRequest: (requestId: string) =>
+        privateApi.put(`/user/requests/reject/${requestId}`),
 };

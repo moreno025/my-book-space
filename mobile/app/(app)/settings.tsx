@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { getImageUrl } from '@/utils/url';
+import { userApi } from '../../constants/api';
 
 export default function Settings() {
     const { logout, user, updateUserProfile } = useAuth();
@@ -21,6 +22,7 @@ export default function Settings() {
     const [bio, setBio] = useState(user?.bio || "");
     const [avatar, setAvatar] = useState<string | null>(user?.avatar || null);
     const [isPrivate, setIsPrivate] = useState(user?.isPrivate || false);
+    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
     // For local preview of new image
     const [newAvatarUri, setNewAvatarUri] = useState<string | null>(null);
@@ -48,6 +50,18 @@ export default function Settings() {
             setIsPrivate(user.isPrivate || false);
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchPendingCount = async () => {
+            try {
+                const response = await userApi.getFollowRequests();
+                setPendingRequestsCount(response.data.requests?.length || 0);
+            } catch (error) {
+                console.error("Error fetching pending requests count:", error);
+            }
+        };
+        fetchPendingCount();
+    }, []);
 
     const handlePickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -231,14 +245,34 @@ export default function Settings() {
                             />
                         </View>
 
+                        <TouchableOpacity
+                            style={styles.menuItem}
+                            onPress={() => router.push('/follow-requests')}
+                        >
+                            <View style={styles.menuItemLeft}>
+                                <View style={styles.iconContainer}>
+                                    <Ionicons name="people-outline" size={20} color="#fff" />
+                                </View>
+                                <Text style={styles.menuItemText}>Follow Requests</Text>
+                            </View>
+                            <View style={styles.menuItemRight}>
+                                {pendingRequestsCount > 0 && (
+                                    <View style={styles.badge}>
+                                        <Text style={styles.badgeText}>{pendingRequestsCount}</Text>
+                                    </View>
+                                )}
+                                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+                            </View>
+                        </TouchableOpacity>
+
                         <View style={styles.divider} />
 
                         <View style={styles.privacyGroup}>
                             <View style={styles.privacyInfo}>
                                 <Text style={styles.privacyLabel}>Private Account</Text>
                                 <Text style={styles.privacyDescription}>
-                                    Only your followers will be able to see the lists you set as &quot;Followers Only&quot;.
-                                    Everyone else will only see your profile as private.
+                                    When private, people will need to request to follow you.
+                                    Only your followers will be able to see your lists.
                                 </Text>
                             </View>
                             <Switch
@@ -452,5 +486,49 @@ const styles = StyleSheet.create({
     },
     footerSpacer: {
         height: 200,
-    }
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+    },
+    menuItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    iconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    menuItemText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: 'Nunito-Medium',
+    },
+    menuItemRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    badge: {
+        backgroundColor: '#ef4444',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+        minWidth: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 12,
+        fontFamily: 'Nunito-Bold',
+    },
 });

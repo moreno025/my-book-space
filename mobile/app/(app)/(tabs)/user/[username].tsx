@@ -29,6 +29,7 @@ export default function UserProfileScreen() {
     const [lists, setLists] = useState<BookList[]>([]);
     const [loading, setLoading] = useState(true);
     const [following, setFollowing] = useState(false);
+    const [requested, setRequested] = useState(false);
 
     const fetchUserProfile = useCallback(async (silent = false) => {
         try {
@@ -36,6 +37,7 @@ export default function UserProfileScreen() {
             const userResponse = await userApi.getUserByUsername(username);
             setUser(userResponse.data);
             setFollowing(userResponse.data.isFollowing || false);
+            setRequested(userResponse.data.isRequested || false);
 
             // Only fetch lists if we can view the profile
             if (userResponse.data.canViewFullProfile) {
@@ -62,12 +64,26 @@ export default function UserProfileScreen() {
         const previousFollowersCount = user.followersCount || 0;
 
         // Update local state immediately
-        setFollowing(!previousFollowing);
+        const isCurrentlyRequested = requested;
+
+        if (isCurrentlyRequested || previousFollowing) {
+            // Cancel request or unfollow
+            setFollowing(false);
+            setRequested(false);
+        } else {
+            // Send request or follow
+            if (user.isPrivate) {
+                setRequested(true);
+            } else {
+                setFollowing(true);
+            }
+        }
+
         setUser({
             ...user,
             followersCount: previousFollowing
                 ? previousFollowersCount - 1
-                : previousFollowersCount + 1
+                : (!previousFollowing && !user.isPrivate ? previousFollowersCount + 1 : previousFollowersCount)
         });
 
         // Optimistically filter lists if unfollowing
@@ -76,12 +92,12 @@ export default function UserProfileScreen() {
         }
 
         try {
-            if (previousFollowing) {
+            if (previousFollowing || isCurrentlyRequested) {
                 await userApi.unfollowUser(user.id);
-                showToast(`Unfollowed ${user.username}`, "success");
+                showToast(previousFollowing ? `Unfollowed ${user.username}` : `Request cancelled`, "success");
             } else {
-                await userApi.followUser(user.id);
-                showToast(`Following ${user.username}`, "success");
+                const response = await userApi.followUser(user.id);
+                showToast(response.data.requested ? `Request sent to ${user.username}` : `Following ${user.username}`, "success");
             }
 
             // Refresh profile to update visibility and privacy-dependent data
@@ -91,6 +107,7 @@ export default function UserProfileScreen() {
             // Revert on error
             console.error("Error following/unfollowing user:", error);
             setFollowing(previousFollowing);
+            setRequested(isCurrentlyRequested);
             setUser({
                 ...user,
                 followersCount: previousFollowersCount
@@ -144,6 +161,7 @@ export default function UserProfileScreen() {
                         listsCount={lists.length}
                         isOwnProfile={false}
                         isFollowing={following}
+                        isRequested={requested}
                         onFollow={handleFollow}
                         onBack={() => {
                             router.navigate({ pathname: "/search", params: { tab: "users" } });

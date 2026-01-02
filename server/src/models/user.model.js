@@ -54,6 +54,7 @@ const userSchema = new mongoose.Schema({
   savedLists: [{ type: mongoose.Schema.Types.ObjectId, ref: "BookList" }],
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  followRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   refreshTokens: [{ type: String }],
   resetPasswordToken: String, 
   resetPasswordExpires: Date,

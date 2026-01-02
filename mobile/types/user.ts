@@ -12,6 +12,7 @@ export interface User {
     listsCount?: number;
     isPrivate?: boolean;
     isFollowing?: boolean;
+    isRequested?: boolean;
     canViewFullProfile?: boolean;
     readingProfile?: ReadingProfile;
 }
