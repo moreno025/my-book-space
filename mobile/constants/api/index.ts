@@ -115,4 +115,16 @@ export const userApi = {
 
     getUserLists: (username: string) =>
         privateApi.get(`/user/${username}/lists`),
+
+    saveHistory: (searchedUserId: string) =>
+        privateApi.post("/user/history", { searchedUserId }),
+
+    getHistory: () =>
+        privateApi.get("/user/history"),
+
+    deleteHistoryItem: (searchedUserId: string) =>
+        privateApi.delete(`/user/history/${searchedUserId}`),
+
+    clearHistory: () =>
+        privateApi.delete("/user/history"),
 };

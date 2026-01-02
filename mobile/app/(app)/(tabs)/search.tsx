@@ -15,6 +15,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useAuth } from "../../../hooks/useAuth";
 import { useBookSearch } from "../../../hooks/Search/useBookSearch";
 import { useUserSearch } from "../../../hooks/Search/useUserSearch";
+import { useUserSearchHistory } from "../../../hooks/Search/useUserSearchHistory";
 import { useSearchHistory } from "../../../hooks/Search/useSearchHistory";
 
 import { BookGrid } from "../../../components/book/BookGrid";
@@ -38,14 +39,19 @@ export default function SearchScreen() {
     const { books, loading: booksLoading, hasSearched: booksSearched } = useBookSearch(query);
     const { users, loading: usersLoading, hasSearched: usersSearched } = useUserSearch(query);
     const { history, save, remove, clear } = useSearchHistory(token);
+    const { history: userHistory, save: saveUser, remove: removeUser, clear: clearUser } = useUserSearchHistory(token);
 
     const handleBookPress = async (id: string) => {
         await save(query);
         router.push({ pathname: "/book/[id]", params: { id } });
     };
 
-    const handleUserPress = (username: string) => {
-        router.push({ pathname: "/user/[username]", params: { username } });
+    const handleUserPress = async (user: { username: string; id?: string; _id?: string }) => {
+        const userId = user.id || user._id;
+        if (userId) {
+            await saveUser(userId);
+        }
+        router.push({ pathname: "/user/[username]", params: { username: user.username } });
     };
 
     if (!fontsLoaded) return null;
@@ -144,6 +150,45 @@ export default function SearchScreen() {
                 </View>
             )}
 
+            {/* SEARCH HISTORY (only for users) */}
+            {activeTab === "users" && query.length === 0 && userHistory.length > 0 && (
+                <View style={styles.historyContainer}>
+                    <View style={styles.historyHeader}>
+                        <Text style={styles.historyTitle}>Recent users</Text>
+
+                        <TouchableOpacity onPress={clearUser}>
+                            <Ionicons name="trash-outline" size={20} color="#6B7280" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {userHistory.map((item) => (
+                        <View key={item._id} style={styles.historyRow}>
+                            <TouchableOpacity
+                                style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                                onPress={() => handleUserPress({ username: item.searchedUser.username, id: item.searchedUser._id })}
+                            >
+                                <Image
+                                    source={item.searchedUser.avatar ? { uri: getImageUrl(item.searchedUser.avatar) as string } : jpg.avatar}
+                                    style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12, backgroundColor: "#E5E7EB" }}
+                                />
+                                <View>
+                                    <Text style={styles.historyText}>@{item.searchedUser.username}</Text>
+                                    {item.searchedUser.name && (
+                                        <Text style={{ fontSize: 12, fontFamily: "Nunito-Regular", color: "#6B7280" }}>
+                                            {item.searchedUser.name}
+                                        </Text>
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => removeUser(item.searchedUser._id)}>
+                                <Ionicons name="close-outline" size={20} color="#9CA3AF" />
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </View>
+            )}
+
             {/* RESULTS */}
             {loading && activeTab === "books" && <BookGridSkeleton />}
 
@@ -169,7 +214,7 @@ export default function SearchScreen() {
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             style={styles.userItem}
-                            onPress={() => handleUserPress(item.username)}
+                            onPress={() => handleUserPress(item)}
                         >
                             <Image
                                 source={item.avatar ? { uri: getImageUrl(item.avatar) as string } : jpg.avatar}

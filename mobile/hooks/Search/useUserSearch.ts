@@ -20,7 +20,11 @@ export function useUserSearch(query: string) {
 
             try {
                 const response = await userApi.searchUsers(query);
-                setUsers(response.data.users || []);
+                const usersWithId = response.data.users.map((u: any) => ({
+                    ...u,
+                    id: u._id,
+                }));
+                setUsers(usersWithId || []);
             } catch (error) {
                 console.error("Error searching users:", error);
                 setUsers([]);

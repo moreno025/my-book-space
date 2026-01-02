@@ -13,4 +13,17 @@ export interface User {
     isPrivate?: boolean;
     isFollowing?: boolean;
     canViewFullProfile?: boolean;
+    readingProfile?: ReadingProfile;
+}
+
+export interface ReadingProfile {
+    favoriteGenres: string[];
+    favoriteAuthors: string[];
+    bookLengthPreference: 'short' | 'medium' | 'long' | 'mixed';
+    mostLikedBooks: {
+        googleBookId: string;
+        title: string;
+        author: string;
+        cover: string;
+    }[];
 }
