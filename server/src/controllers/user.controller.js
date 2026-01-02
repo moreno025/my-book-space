@@ -221,7 +221,14 @@ export const getUserLists = async (req, res) => {
 
         if (!canView) return res.status(403).json({ message: "Perfil privado" });
 
-        const lists = await BookList.find({ user: user._id })
+        const filter = { user: user._id };
+        const isOwner = req.user && user._id.equals(req.user._id);
+
+        if (!isOwner) {
+            filter.isPublic = true;
+        }
+
+        const lists = await BookList.find(filter)
         .sort({ savedBy: -1, createdAt: -1 });
 
         res.status(200).json({ lists });

@@ -98,6 +98,9 @@ export const bookListApi = {
 
     unsaveList: (listId: string) =>
         privateApi.post(`/book-list/${listId}/unsave`),
+
+    copyList: (listId: string) =>
+        privateApi.post(`/book-list/${listId}/copy`),
 };
 
 export const userApi = {

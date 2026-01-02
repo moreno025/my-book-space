@@ -98,10 +98,46 @@ export const addBookToList = async (req, res) => {
     }
 };
 
+// ------------------------
+// Copy Book List
+// ------------------------
+export const copyBookList = async (req, res) => {
+    try {
+        const { listId } = req.params;
+        const sourceList = await BookList.findById(listId);
 
-// ------------------------
-// Search List By Book
-// ------------------------
+        if (!sourceList) return res.status(404).json({ message: "List not found" });
+
+        // Check privacy/permissions (reuse getUserLists logic essentially)
+        // If public, anyone can copy. If private, only followers or owner.
+        // Simplified: if isPublic or owner.
+        // We can trust the frontend to only show this for reachable lists, 
+        // but robust check:
+        const isOwner = sourceList.user.equals(req.user._id);
+        if (!sourceList.isPublic && !isOwner) {
+             // TODO: Check following status strictly if we want to be 100% secure, 
+             // but for now, assuming if they can see it (via getListById permissions), they can copy it.
+             // Let's just rely on getListById-like implicit 'can view' check or standard privacy.
+             // For strictness:
+             const sourceUser = await User.findById(sourceList.user);
+             const canAccess = !sourceUser.isPrivate || sourceUser.followers.includes(req.user._id);
+             if (!canAccess) return res.status(403).json({ message: "Not authorized to copy this list" });
+        }
+
+        const newList = await BookList.create({
+            title: `${sourceList.title} (Copy)`,
+            description: sourceList.description,
+            isPublic: false, // Default to private for copies
+            user: req.user._id,
+            books: sourceList.books,
+        });
+
+        res.status(201).json({ message: "List copied successfully", list: newList });
+    } catch (error) {
+        console.error("Error copying list:", error);
+        res.status(500).json({ message: "Error copying list" });
+    }
+};
 export const searchListsByBook = async (req, res) => {
     try {
         const { title } = req.params;
