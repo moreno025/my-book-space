@@ -99,26 +99,32 @@ export function ProfileHeader({
         <View style={styles.container}>
             {/* Top Bar for Navigation/Settings */}
             <View style={styles.topBar}>
-                <TouchableOpacity
-                    onPress={() => handlePress(isOwnProfile ? 'settings' : 'back')}
-                    activeOpacity={0.7}
-                    style={styles.iconButton}
-                >
-                    <Ionicons
-                        name={isOwnProfile ? "settings-outline" : "arrow-back"}
-                        size={24}
-                        color="#F9FAFB"
-                    />
-                </TouchableOpacity>
-
-                {isOwnProfile && onAddList && (
+                <View style={styles.topBarLeft}>
                     <TouchableOpacity
-                        onPress={() => handlePress('add')}
+                        onPress={() => handlePress(isOwnProfile ? 'settings' : 'back')}
+                        activeOpacity={0.7}
                         style={styles.iconButton}
                     >
-                        <Ionicons name="add-circle-outline" size={28} color="#F9FAFB" />
+                        <Ionicons
+                            name={isOwnProfile ? "settings-outline" : "arrow-back"}
+                            size={24}
+                            color="#F9FAFB"
+                        />
                     </TouchableOpacity>
-                )}
+                </View>
+
+                <Text style={styles.headerTitle}>@{user.username}</Text>
+
+                <View style={styles.topBarRight}>
+                    {isOwnProfile && onAddList && (
+                        <TouchableOpacity
+                            onPress={() => handlePress('add')}
+                            style={styles.iconButton}
+                        >
+                            <Ionicons name="add-circle-outline" size={28} color="#F9FAFB" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             <View style={styles.headerContent}>
@@ -157,7 +163,7 @@ export function ProfileHeader({
                         </View>
 
                         {/* Action Buttons */}
-                        {!isOwnProfile ? (
+                        {!isOwnProfile && (
                             <Animated.View style={{ transform: [{ scale: followScale }], width: '100%', marginTop: 12 }}>
                                 <TouchableOpacity
                                     style={[
@@ -175,26 +181,11 @@ export function ProfileHeader({
                                     </Text>
                                 </TouchableOpacity>
                             </Animated.View>
-                        ) : (
-                            <View style={{ width: '100%', marginTop: 12 }}>
-                                <TouchableOpacity
-                                    style={[styles.actionButton, styles.editButton]}
-                                    onPress={() => handlePress('settings')}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text style={[styles.actionButtonText, styles.editButtonText]}>
-                                        Edit Profile
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
                         )}
                     </View>
                 </View>
 
-                {/* User Bio Section */}
-                <View style={styles.bioSection}>
-                    <Text style={styles.username}>@{user.username}</Text>
-                </View>
+                {/* User Bio Section Removed */}
             </View>
         </View>
     );
@@ -212,6 +203,21 @@ const styles = StyleSheet.create({
         paddingTop: 10,
         height: 50,
         alignItems: 'center',
+    },
+    topBarLeft: {
+        width: 40,
+        alignItems: 'flex-start',
+    },
+    topBarRight: {
+        width: 40,
+        alignItems: 'flex-end',
+    },
+    headerTitle: {
+        flex: 1,
+        textAlign: 'center',
+        fontFamily: "Nunito-Bold",
+        fontSize: 18,
+        color: "#F9FAFB",
     },
     iconButton: {
         padding: 4,
@@ -271,14 +277,7 @@ const styles = StyleSheet.create({
         fontFamily: "Nunito-Regular",
         color: "#F9FAFB",
     },
-    bioSection: {
-        marginTop: 4,
-    },
-    username: {
-        fontSize: 16,
-        fontFamily: "Nunito-Regular", // Regular as requested
-        color: "#F9FAFB",
-    },
+
     actionButton: {
         alignItems: "center",
         justifyContent: "center",
@@ -303,14 +302,5 @@ const styles = StyleSheet.create({
     },
     followingButtonText: {
         color: "#F9FAFB",
-    },
-    editButton: {
-        backgroundColor: "#1F2937",
-        borderWidth: 1,
-        borderColor: "#374151",
-    },
-    editButtonText: {
-        color: "#F9FAFB",
-        fontFamily: "Nunito-SemiBold",
     },
 });
