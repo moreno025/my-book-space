@@ -27,12 +27,32 @@ export const followUser = async (req, res) => {
             return res.status(400).json({ message: "Ya sigues a este usuario" });
         }
 
+        if (userToFollow.followRequests && userToFollow.followRequests.includes(currentUserId)) {
+            return res.status(400).json({ message: "Solicitud de seguimiento ya enviada" });
+        }
+
+        // If target is private, add to requests
+        if (userToFollow.isPrivate) {
+            userToFollow.followRequests.push(currentUserId);
+            await userToFollow.save();
+            return res.status(200).json({ 
+                message: "Solicitud de seguimiento enviada", 
+                requested: true,
+                isFollowing: false 
+            });
+        }
+
+        // If target is public, follow immediately
         currentUser.following.push(userToFollowId);
         userToFollow.followers.push(currentUserId);
         await currentUser.save();
         await userToFollow.save();
 
-        res.status(200).json({ message: "Usuario seguido correctamente" });
+        res.status(200).json({ 
+            message: "Usuario seguido correctamente", 
+            requested: false,
+            isFollowing: true 
+        });
 
     } catch (error) {
         console.log(error);
@@ -54,7 +74,7 @@ export const unfollowUser = async (req, res) => {
         }
 
         if (!userToUnfollowId) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
+            return res.status(400).json({ message: "ID de usuario requerido" });
         }
 
         const userToUnfollow = await User.findById(userToUnfollowId);
@@ -62,6 +82,13 @@ export const unfollowUser = async (req, res) => {
 
         if(!userToUnfollow || !currentUser) {
             return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        // Also handle removing pending requests
+        if (userToUnfollow.followRequests && userToUnfollow.followRequests.includes(currentUserId)) {
+            userToUnfollow.followRequests.pull(currentUserId);
+            await userToUnfollow.save();
+            return res.status(200).json({ message: "Solicitud de seguimiento cancelada" });
         }
 
         if(!currentUser.following.includes(userToUnfollowId)) {
@@ -75,10 +102,9 @@ export const unfollowUser = async (req, res) => {
 
         res.status(200).json({ message: "Usuario dejado de seguir correctamente" });
 
-
     } catch (error) {
         console.error("Error dejando de seguir:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+        res.status(500).json({ message: "Error interno del servidor" });
     }
 };
 
@@ -172,13 +198,14 @@ export const getUser = async (req, res) => {
         const currentUserId = req.user?.id;
 
         const user = await User.findOne({ username })
-            .select("username name lastName bio avatar followers following isPrivate");
+            .select("username name lastName bio avatar followers following followRequests isPrivate");
 
         if (!user) {
             console.log(`[DEBUG] getUser: User not found for username: ${username}`); // DEBUG LOG
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
         const isFollowing = currentUserId ? user.followers.includes(currentUserId) : false;
+        const isRequested = currentUserId ? (user.followRequests && user.followRequests.includes(currentUserId)) : false;
         const isSelf = currentUserId === user._id.toString();
 
         // Privacy check
@@ -195,6 +222,7 @@ export const getUser = async (req, res) => {
             followingCount: user.following.length,
             isPrivate: user.isPrivate,
             isFollowing,
+            isRequested,
             canViewFullProfile
         });
 
@@ -283,5 +311,80 @@ export const clearUserSearchHistory = async (req, res) => {
     } catch (error) {
         console.error("Error clearing user search history:", error);
         res.status(500).json({ message: "Error clearing history" });
+    }
+};
+
+// ------------------------
+// Follow Request Management
+// ------------------------
+
+export const getFollowRequests = async (req, res) => {
+    try {
+        const currentUserId = req.user.id;
+        const user = await User.findById(currentUserId)
+            .populate("followRequests", "username name avatar");
+
+        if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        res.status(200).json({ requests: user.followRequests });
+    } catch (error) {
+        console.error("Error fetching follow requests:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+export const acceptFollowRequest = async (req, res) => {
+    try {
+        const requesterId = req.params.requestId;
+        const currentUserId = req.user.id;
+
+        const currentUser = await User.findById(currentUserId);
+        const requester = await User.findById(requesterId);
+
+        if (!currentUser || !requester) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        if (!currentUser.followRequests.includes(requesterId)) {
+            return res.status(400).json({ message: "Solicitud no encontrada" });
+        }
+
+        // Add to followers/following
+        if (!currentUser.followers.includes(requesterId)) {
+            currentUser.followers.push(requesterId);
+        }
+        if (!requester.following.includes(currentUserId)) {
+            requester.following.push(currentUserId);
+        }
+
+        // Remove from requests
+        currentUser.followRequests.pull(requesterId);
+
+        await currentUser.save();
+        await requester.save();
+
+        res.status(200).json({ message: "Solicitud aceptada correctamente" });
+    } catch (error) {
+        console.error("Error accepting follow request:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+export const rejectFollowRequest = async (req, res) => {
+    try {
+        const requesterId = req.params.requestId;
+        const currentUserId = req.user.id;
+
+        const currentUser = await User.findById(currentUserId);
+
+        if (!currentUser) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        currentUser.followRequests.pull(requesterId);
+        await currentUser.save();
+
+        res.status(200).json({ message: "Solicitud rechazada" });
+    } catch (error) {
+        console.error("Error rejecting follow request:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
     }
 };

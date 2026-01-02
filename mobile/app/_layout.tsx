@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import 'react-native-reanimated';
 import { AuthProvider } from "../context/AuthContext";
 import { ToastProvider } from "../context/ToastContext";
@@ -24,6 +24,7 @@ function AuthGate() {
   const { token, user, loading, logout } = useAuth();
   console.log("🚪 [AuthGate] Render State:", { hasToken: !!token, hasUser: !!user, loading });
   const router = useRouter();
+  const segments = useSegments();
   const [pendingRoute, setPendingRoute] = useState<{ path: string, params?: any } | null>(null);
 
   useEffect(() => {
@@ -49,19 +50,6 @@ function AuthGate() {
     return () => subscription.remove();
   }, [logout]);
 
-  useEffect(() => {
-    if (loading) return;
-
-    if (!token || !user) {
-
-      setTimeout(() => {
-        router.replace("/(auth)/login");
-      }, 0);
-    } else if (token && user) {
-      // Redirect to home if authenticated and currently in auth group (optional but good for deep links)
-      // This part is handled naturally by the user navigation usually, but good to ensure
-    }
-  }, [token, user, loading, router]);
 
   // Handle pending navigation once logged out
   useEffect(() => {
@@ -76,10 +64,24 @@ function AuthGate() {
     }
   }, [token, pendingRoute, router]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!token && !inAuthGroup) {
+      // If no token and not in auth group, go to login
+      router.replace('/(auth)/login');
+    } else if (token && inAuthGroup) {
+      // If has token but in auth group, go to app
+      router.replace('/(app)/(tabs)/profile');
+    }
+  }, [token, segments, loading, router]);
+
   if (loading) return null;
 
   return (
-    <Stack key={token && user ? 'authenticated' : 'unauthenticated'} screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false }}>
       {token && user ? (
         <Stack.Screen name="(app)" />
       ) : (

@@ -52,6 +52,8 @@ export default function Settings() {
     }, [user]);
 
     useEffect(() => {
+        if (!user || !user.id) return;
+
         const fetchPendingCount = async () => {
             try {
                 const response = await userApi.getFollowRequests();
@@ -61,7 +63,7 @@ export default function Settings() {
             }
         };
         fetchPendingCount();
-    }, []);
+    }, [user]);
 
     const handlePickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -126,7 +128,6 @@ export default function Settings() {
                     style: 'destructive',
                     onPress: async () => {
                         await logout();
-                        router.replace('/login');
                     }
                 }
             ]
