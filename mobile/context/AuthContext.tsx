@@ -27,9 +27,23 @@ export const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
+    const [session, setSession] = useState<{ user: User | null, token: string | null }>({ user: null, token: null });
     const [loading, setLoading] = useState(true);
+
+    const user = session.user;
+    const token = session.token;
+
+    const setUser = useCallback((u: User | null | ((prev: User | null) => User | null)) => {
+        setSession(prev => ({ ...prev, user: typeof u === 'function' ? u(prev.user) : u }));
+    }, []);
+
+    const setToken = useCallback((t: string | null | ((prev: string | null) => string | null)) => {
+        setSession(prev => ({ ...prev, token: typeof t === 'function' ? t(prev.token) : t }));
+    }, []);
+
+    const setAuthState = useCallback((newToken: string | null, newUser: User | null) => {
+        setSession({ token: newToken, user: newUser });
+    }, []);
 
     useEffect(() => {
         async function loadSession() {
@@ -49,13 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             await booksApi.getHistory();
                             console.log("Session validation: success");
 
-                            setToken(savedToken);
-                            setUser(parsedUser);
+                            setAuthState(savedToken, parsedUser);
                         } catch (error: any) {
                             console.error("Session validation error:", error.message, error.response?.status);
                             if (error.response?.status !== 401) {
-                                setToken(savedToken);
-                                setUser(parsedUser);
+                                setAuthState(savedToken, parsedUser);
                             }
                         }
                     } else {
@@ -72,13 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         loadSession();
-    }, []);
+    }, [setAuthState]);
 
 
     useEffect(() => {
         const onSessionExpired = () => {
-            setUser(null);
-            setToken(null);
+            setAuthState(null, null);
         };
 
         authEvents.on(AUTH_EVENTS.SESSION_EXPIRED, onSessionExpired);
@@ -86,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => {
             authEvents.off(AUTH_EVENTS.SESSION_EXPIRED, onSessionExpired);
         };
-    }, []);
+    }, [setAuthState]);
 
     useEffect(() => {
         const onTokenRefreshed = (newToken: string) => {
@@ -99,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => {
             authEvents.off(AUTH_EVENTS.TOKEN_REFRESHED, onTokenRefreshed);
         };
-    }, []);
+    }, [setToken]);
 
     async function login(email: string, password: string) {
         const res = await authApi.login(email, password);
@@ -115,8 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await setItem("refreshToken", refreshToken);
         await setItem("user", JSON.stringify(user));
 
-        setToken(token);
-        setUser(user);
+        setAuthState(token, user);
 
         return true;
     }
@@ -135,8 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } catch { }
         }
 
-        setUser(null);
-        setToken(null);
+        setAuthState(null, null);
 
         await removeItem("token");
         await removeItem("refreshToken");
@@ -182,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error("Failed to refresh user:", error);
         }
-    }, []);
+    }, [setUser]);
 
     return (
         <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile, refreshUser }}>

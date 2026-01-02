@@ -27,7 +27,6 @@ export default function Login() {
             const res = await authApi.login(data.email, data.password);
             if (res.status === 200) {
                 login(data.email, data.password);
-                router.replace("/");
             }
         } catch (error: any) {
             const msg = error.response?.data?.message || "Credenciales incorrectas.";
