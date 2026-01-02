@@ -206,40 +206,6 @@ export const getUser = async (req, res) => {
 
 
 // ------------------------
-// Get User Lists
-// ------------------------
-export const getUserLists = async (req, res) => {
-    try {
-        const { username } = req.params;
-
-        const user = await User.findOne({ username });
-        if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
-
-        // Comprobar privacidad
-        const canView = !user.isPrivate ||
-        (req.user && (user.followers.includes(req.user._id) || user._id.equals(req.user._id)));
-
-        if (!canView) return res.status(403).json({ message: "Perfil privado" });
-
-        const filter = { user: user._id };
-        const isOwner = req.user && user._id.equals(req.user._id);
-
-        if (!isOwner) {
-            filter.isPublic = true;
-        }
-
-        const lists = await BookList.find(filter)
-        .sort({ savedBy: -1, createdAt: -1 });
-
-        res.status(200).json({ lists });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error obteniendo listas del usuario" });
-    }
-};
-
-
-// ------------------------
 // Get User Reviews
 // ------------------------
 export const getUserReviews = async (req, res) => {

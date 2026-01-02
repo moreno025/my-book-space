@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { protect } from "../middleware/protect.js";
-import { followUser, unfollowUser, getFollowers, getFollowing, getUser, getUserLists, getUserReviews, searchUsers, saveUserSearchHistory, getUserSearchHistory, deleteUserSearchHistoryItem, clearUserSearchHistory } from "../controllers/user.controller.js";
+import { followUser, unfollowUser, getFollowers, getFollowing, getUser, getUserReviews, searchUsers, saveUserSearchHistory, getUserSearchHistory, deleteUserSearchHistoryItem, clearUserSearchHistory } from "../controllers/user.controller.js";
+import { getUserLists } from "../controllers/bookList.controller.js";
 
 const router = Router();
 

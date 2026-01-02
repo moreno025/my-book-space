@@ -18,7 +18,7 @@ export const bookListSchema = Joi.object({
     .messages({
       "string.max": "La descripción no puede tener más de 100 caracteres",
     }),
-  isPublic: Joi.boolean().optional(),
+  visibility: Joi.string().valid("public", "private").optional(),
   books: Joi.array()
     .items(
       Joi.object({

@@ -21,7 +21,7 @@ export const register = async (req, res) => {
         await BookList.create({
             title: "Wishlist",
             description: "Mi lista de deseos",
-            isPublic: false,
+            visibility: "private",
             user: user._id,
             books: []
         });
@@ -37,6 +37,7 @@ export const register = async (req, res) => {
             name: user.name,
             lastName: user.lastName,
             bio: user.bio,
+            isPrivate: user.isPrivate,
         },
         token,
         });
@@ -83,6 +84,7 @@ export const login = async (req, res) => {
         name: user.name,
         lastName: user.lastName,
         bio: user.bio,
+        isPrivate: user.isPrivate,
       },
       token,
       refreshToken,
@@ -222,7 +224,13 @@ export const updateProfile = async (req, res) => {
     }
 
 
+    if (updates.isPrivate !== undefined) {
+      updates.isPrivate = updates.isPrivate === "true" || updates.isPrivate === true;
+    }
+
+    const oldIsPrivate = user.isPrivate;
     Object.assign(user, updates);
+
     await user.save();
 
 
@@ -240,6 +248,7 @@ export const updateProfile = async (req, res) => {
         lastName: user.lastName,
         bio: user.bio,
         avatar: user.avatar,
+        isPrivate: user.isPrivate,
       }
     });
   } catch (error) {

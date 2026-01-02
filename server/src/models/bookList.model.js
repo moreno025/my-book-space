@@ -19,10 +19,12 @@ const bookListSchema = new mongoose.Schema({
       publishedDate: String,
     }
     ],
-    isPublic: {
-        type: Boolean,
-        default: true,
+    visibility: {
+        type: String,
+        enum: ["public", "private"],
+        default: "public",
     },
+    sourceList: { type: mongoose.Schema.Types.ObjectId, ref: "BookList" },
     savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
 
 }, { timestamps: true });
