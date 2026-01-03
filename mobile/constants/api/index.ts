@@ -46,9 +46,9 @@ export const booksApi = {
 };
 
 export const reviewBookApi = {
-    async createReview(bookId: string, review: string, rating: number) {
+    async createReview(bookId: string, review: string, rating: number, authors?: string[]) {
         try {
-            const response = await privateApi.post(`/review/${bookId}`, { review, rating });
+            const response = await privateApi.post(`/review/${bookId}`, { review, rating, authors });
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 400) {
@@ -75,7 +75,7 @@ export const bookListApi = {
     createBookList: (data: { title: string; description?: string; visibility?: 'public' | 'private' }) =>
         privateApi.post<{ list: BookList }>("/book-list", data),
 
-    addBookToList: (listId: string, bookData: { googleBookId: string; title: string; authors: string[]; thumbnail: string; publishedDate?: string }) =>
+    addBookToList: (listId: string, bookData: { googleBookId: string; title: string; authors: string[]; thumbnail: string; publishedDate?: string; categories?: string[] }) =>
         privateApi.post(`/book-list/${listId}/add-book`, bookData),
 
     removeBookFromList: (listId: string, googleBookId: string) =>
@@ -139,4 +139,7 @@ export const userApi = {
 
     rejectFollowRequest: (requestId: string) =>
         privateApi.put(`/user/requests/reject/${requestId}`),
+
+    getUserStats: (userId: string) =>
+        privateApi.get(`/user/stats/${userId}`),
 };

@@ -8,6 +8,7 @@ type Book = {
     coverUrl: string;
     rating?: number;
     publishedDate?: string;
+    categories?: string[];
 };
 
 function scoreBook(item: any, query: string) {
@@ -89,6 +90,7 @@ export function useBookSearch(query: string) {
                         coverUrl: item.volumeInfo.imageLinks.thumbnail,
                         rating: item.volumeInfo.averageRating,
                         publishedDate: item.volumeInfo.publishedDate,
+                        categories: item.volumeInfo.categories || [],
                     }));
 
                 setBooks(mapped);

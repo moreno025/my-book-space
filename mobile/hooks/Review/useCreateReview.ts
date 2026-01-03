@@ -4,6 +4,7 @@ import { reviewBookApi } from "../../constants/api";
 interface CreateReviewPayload {
     rating: number;
     review: string;
+    authors?: string[];
 }
 
 export function useCreateReview(bookId: string) {
@@ -12,7 +13,7 @@ export function useCreateReview(bookId: string) {
     const [isDuplicate, setIsDuplicate] = useState(false);
 
     const createReview = useCallback(
-        async ({ rating, review }: CreateReviewPayload) => {
+        async ({ rating, review, authors }: CreateReviewPayload) => {
             setLoading(true);
             setError(null);
             setIsDuplicate(false);
@@ -21,7 +22,8 @@ export function useCreateReview(bookId: string) {
                 const data = await reviewBookApi.createReview(
                     bookId,
                     review,
-                    rating
+                    rating,
+                    authors
                 );
 
                 return data;
