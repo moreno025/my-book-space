@@ -26,6 +26,15 @@ export const register = async (req, res) => {
             books: []
         });
 
+        // Crear lista por defecto "Favourite Books"
+        await BookList.create({
+            title: "Favourite Books",
+            description: "Mis libros favoritos",
+            visibility: "public",
+            user: user._id,
+            books: []
+        });
+
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         res.status(201).json({

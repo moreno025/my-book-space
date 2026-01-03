@@ -194,14 +194,12 @@ export const searchUsers = async (req, res) => {
 export const getUser = async (req, res) => {
     try{
         const { username } = req.params;
-        console.log(`[DEBUG] getUser called with username: ${username}`); // DEBUG LOG
         const currentUserId = req.user?.id;
 
         const user = await User.findOne({ username })
             .select("username name lastName bio avatar followers following followRequests isPrivate");
 
         if (!user) {
-            console.log(`[DEBUG] getUser: User not found for username: ${username}`); // DEBUG LOG
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
         const isFollowing = currentUserId ? user.followers.includes(currentUserId) : false;
@@ -385,6 +383,96 @@ export const rejectFollowRequest = async (req, res) => {
         res.status(200).json({ message: "Solicitud rechazada" });
     } catch (error) {
         console.error("Error rejecting follow request:", error);
+        res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+// ------------------------
+// Get User Stats
+// ------------------------
+export const getUserStats = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Fetch user reading profile
+        const user = await User.findById(userId).select("readingProfile");
+        if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+        // Aggregate reviews
+        const reviews = await Review.find({ user: userId });
+        
+        const totalReviews = reviews.length;
+        const totalBooks = new Set(reviews.map(r => r.bookId)).size;
+        const averageRating = totalReviews > 0 
+            ? (reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
+            : 0;
+
+        // Rating distribution
+        const ratingDistribution = [0, 0, 0, 0, 0]; // 1, 2, 3, 4, 5 stars
+        const authorsCount = {};
+        
+        reviews.forEach(r => {
+            if (r.rating >= 1 && r.rating <= 5) {
+                ratingDistribution[r.rating - 1]++;
+            }
+            // Stats for authors
+            if (r.authors && Array.isArray(r.authors)) {
+                r.authors.forEach(author => {
+                    authorsCount[author] = (authorsCount[author] || 0) + 1;
+                });
+            }
+        });
+
+        // Stats for categories and also authors from lists
+        const categoriesCount = {};
+        const userLists = await BookList.find({ user: userId });
+        
+        userLists.forEach(list => {
+            list.books.forEach(book => {
+                if (book.categories && Array.isArray(book.categories)) {
+                    book.categories.forEach(cat => {
+                        categoriesCount[cat] = (categoriesCount[cat] || 0) + 1;
+                    });
+                }
+                if (book.authors && Array.isArray(book.authors)) {
+                    book.authors.forEach(author => {
+                        authorsCount[author] = (authorsCount[author] || 0) + 1;
+                    });
+                }
+            });
+        });
+
+        // Find top author
+        let topAuthor = "N/A";
+        let maxAuthorCount = 0;
+        for (const [author, count] of Object.entries(authorsCount)) {
+            if (count > maxAuthorCount) {
+                maxAuthorCount = count;
+                topAuthor = author;
+            }
+        }
+
+        // Find top category
+        let topCategory = "N/A";
+        let maxCategoryCount = 0;
+        for (const [cat, count] of Object.entries(categoriesCount)) {
+            if (count > maxCategoryCount) {
+                maxCategoryCount = count;
+                topCategory = cat;
+            }
+        }
+
+        res.status(200).json({
+            totalReviews,
+            totalBooks,
+            averageRating: parseFloat(averageRating),
+            ratingDistribution,
+            topAuthor,
+            topCategory,
+            readingProfile: user.readingProfile
+        });
+
+    } catch (error) {
+        console.error("Error fetching user stats:", error);
         res.status(500).json({ message: "Error interno del servidor" });
     }
 };

@@ -79,7 +79,7 @@ export const deleteList = async (req, res) => {
 export const addBookToList = async (req, res) => {
     try {
         const { listId } = req.params;
-        const { googleBookId, title, authors, thumbnail, publishedDate } = req.body;
+        const { googleBookId, title, authors, thumbnail, publishedDate, categories } = req.body;
 
         const list = await BookList.findById(listId);
         if (!list) return res.status(404).json({ message: "Lista no encontrada" });
@@ -92,7 +92,7 @@ export const addBookToList = async (req, res) => {
         
         const cleanThumbnail = cleanGoogleBooksUrl(thumbnail);
         
-        list.books.push({ googleBookId, title, authors, thumbnail: cleanThumbnail, publishedDate });
+        list.books.push({ googleBookId, title, authors, thumbnail: cleanThumbnail, publishedDate, categories });
         await list.save();
 
         res.status(200).json({ message: "Libro añadido a la lista", list });

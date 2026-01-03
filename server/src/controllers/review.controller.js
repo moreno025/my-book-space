@@ -6,7 +6,7 @@ import Review from "../models/review.model.js";
 export const createReview = async (req, res) => {
     try {
         const { bookId } = req.params;
-        const { rating, review, listId } = req.body;
+        const { rating, review, listId, authors } = req.body;
 
         if (!bookId || !rating) 
             return res.status(400).json({ message: "BookId y rating son obligatorios" });
@@ -21,6 +21,7 @@ export const createReview = async (req, res) => {
             rating,
             review,
             listId,
+            authors,
         });
 
         res.status(201).json({ message: "Reseña creada", review: newReview });
