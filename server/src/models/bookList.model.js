@@ -17,6 +17,7 @@ const bookListSchema = new mongoose.Schema({
       authors: [String],
       thumbnail: String,
       publishedDate: String,
+      categories: [String],
     }
     ],
     visibility: {
