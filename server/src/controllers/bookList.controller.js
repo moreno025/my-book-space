@@ -1,5 +1,6 @@
 import BookList from "../models/bookList.model.js";
 import User from "../models/user.model.js";
+import Review from "../models/review.model.js";
 import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
 
 // ------------------------
@@ -409,24 +410,43 @@ export const getListById = async (req, res) => {
         const requesterId = req.user ? req.user._id.toString() : null;
         const isOwner = requesterId === list.user._id.toString();
         
-        if (isOwner) {
-             return res.status(200).json({ list });
-        }
-
         // Privacy check
-        if (list.visibility === "private") {
-            return res.status(403).json({ message: "No autorizado para ver esta lista" });
-        }
+        if (!isOwner) {
+            if (list.visibility === "private") {
+                return res.status(403).json({ message: "No autorizado para ver esta lista" });
+            }
 
-        // Account privacy check
-        if (list.user.isPrivate) {
-            const isFollower = requesterId && list.user.followers.some(id => id.toString() === requesterId);
-            if (!isFollower) {
-                return res.status(403).json({ message: "Account is private. Follow to view this list." });
+            // Account privacy check
+            if (list.user.isPrivate) {
+                const isFollower = requesterId && list.user.followers.some(id => id.toString() === requesterId);
+                if (!isFollower) {
+                    return res.status(403).json({ message: "Account is private. Follow to view this list." });
+                }
             }
         }
 
-        res.status(200).json({ list });
+        // Add review counts if user is logged in
+        let listWithReviewCounts = list.toObject();
+        if (requesterId) {
+            const bookIds = list.books.map(b => b.googleBookId);
+            const reviews = await Review.find({
+                user: requesterId,
+                bookId: { $in: bookIds }
+            });
+
+            // Map review counts to books
+            const reviewCountsMap = reviews.reduce((acc, rev) => {
+                acc[rev.bookId] = (acc[rev.bookId] || 0) + 1;
+                return acc;
+            }, {});
+
+            listWithReviewCounts.books = listWithReviewCounts.books.map(book => ({
+                ...book,
+                myReviewCount: reviewCountsMap[book.googleBookId] || 0
+            }));
+        }
+
+        res.status(200).json({ list: listWithReviewCounts });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error obteniendo la lista" });
