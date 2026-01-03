@@ -86,7 +86,7 @@ export function ProfileHeader({
             } else if (target === 'follow' && onFollow) {
                 onFollow();
             }
-        }, scaleVal ? 250 : 0); // Adjust timeout based on whether animation occurred
+        }, scaleVal ? 250 : 0);
     };
 
     if (!user) return null;
@@ -115,7 +115,7 @@ export function ProfileHeader({
                     </TouchableOpacity>
                 </View>
 
-                <Text style={styles.headerTitle}>@{user.username}</Text>
+                <Text style={styles.headerTitle}>{user.username}</Text>
 
                 <View style={styles.topBarRight}>
                     {isOwnProfile && onAddList && (
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
         flex: 1,
         textAlign: 'center',
         fontFamily: "Nunito-Bold",
-        fontSize: 18,
+        fontSize: 20,
         color: "#F9FAFB",
     },
     iconButton: {
