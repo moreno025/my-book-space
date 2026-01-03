@@ -326,7 +326,7 @@ export default function BookDetailScreen() {
                                             await updateReview({ rating, review });
                                             showToast("Review updated!", "success");
                                         } else {
-                                            const result = await createReview({ rating, review });
+                                            const result = await createReview({ rating, review, authors: book.authors });
                                             if (!result) return;
                                             showToast("Review posted!", "success");
                                         }
@@ -503,7 +503,8 @@ export default function BookDetailScreen() {
                         title: book.title,
                         authors: book.authors,
                         coverUrl: book.coverUrl ?? undefined,
-                        publishedDate: book.publishedYear?.toString()
+                        publishedDate: book.publishedYear?.toString(),
+                        categories: book.categories
                     }}
                     onSuccess={handleSaveSuccess}
                     onError={(msg) => showToast(msg, "error")}

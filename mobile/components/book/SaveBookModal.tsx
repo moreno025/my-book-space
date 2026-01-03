@@ -27,6 +27,7 @@ interface SaveBookModalProps {
         authors: string[];
         coverUrl?: string;
         publishedDate?: string;
+        categories?: string[];
     } | null;
     onSuccess: (listName: string) => void;
     onError?: (message: string) => void;
@@ -66,6 +67,7 @@ export function SaveBookModal({
                 authors: book.authors,
                 thumbnail: book.coverUrl || "",
                 publishedDate: book.publishedDate,
+                categories: book.categories,
             });
             onSuccess(list.title);
             onClose();

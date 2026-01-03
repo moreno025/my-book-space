@@ -1,7 +1,8 @@
-import { ScrollView, View, Text, StyleSheet } from "react-native";
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useCallback, useState } from "react";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 // hooks
 import { useAuth } from "../../../hooks/useAuth";
@@ -15,6 +16,8 @@ import { CreateListModal } from "@/components/profile/CreateListModal";
 import { AddBookToListModal } from "@/components/profile/AddBookToListModal";
 import { RenameListModal } from "@/components/profile/RenameListModal";
 import { bookListApi } from "../../../constants/api";
+import { StatsTab } from "@/components/profile/StatsTab";
+
 
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
@@ -102,6 +105,8 @@ export default function ProfileScreen() {
         }
     };
 
+    const [activeTab, setActiveTab] = useState<'lists' | 'stats'>('lists');
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 90, flexGrow: 1 }}>
@@ -112,37 +117,62 @@ export default function ProfileScreen() {
                     listsCount={lists.length}
                 />
 
-                {/* Lists */}
-                {loading ? (
-                    <View style={styles.centerSection}>
-                        <Text style={styles.loading}>Loading lists...</Text>
-                    </View>
-                ) : lists.length === 0 ? (
-                    <View style={styles.centerSection}>
-                        <Text style={styles.empty}>
-                            {"You haven't created any lists yet."}
-                        </Text>
-                    </View>
+                {/* Tab Switcher */}
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'lists' && styles.activeTab]}
+                        onPress={() => setActiveTab('lists')}
+                    >
+                        <Ionicons name="albums-outline" size={20} color={activeTab === 'lists' ? "#3B82F6" : "#64748B"} />
+                        <Text style={[styles.tabText, activeTab === 'lists' && styles.activeTabText]}>My Lists</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'stats' && styles.activeTab]}
+                        onPress={() => setActiveTab('stats')}
+                    >
+                        <MaterialCommunityIcons name="lightning-bolt-outline" size={20} color={activeTab === 'stats' ? "#3B82F6" : "#64748B"} />
+                        <Text style={[styles.tabText, activeTab === 'stats' && styles.activeTabText]}>Reading Stats</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Content */}
+                {activeTab === 'lists' ? (
+                    <>
+                        {loading ? (
+                            <View style={styles.centerSection}>
+                                <ActivityIndicator color="#3B82F6" style={{ marginTop: 40 }} />
+                            </View>
+                        ) : lists.length === 0 ? (
+                            <View style={styles.centerSection}>
+                                <Text style={styles.empty}>
+                                    {"You haven't created any lists yet."}
+                                </Text>
+                            </View>
+                        ) : (
+                            lists.map(list => (
+                                <BookListCarousel
+                                    key={list._id}
+                                    listId={list._id}
+                                    title={list.title}
+                                    visibility={list.visibility}
+                                    ownerId={typeof list.user === 'string' ? list.user : list.user._id}
+                                    books={list.books}
+                                    onRename={handleRenameList}
+                                    onToggleVisibility={handleToggleVisibility}
+                                    onUnsave={handleUnsaveList}
+                                    isOwnerPrivate={user?.isPrivate}
+                                    onAddBook={() => handleOpenAddBook(list._id)}
+                                    onRefresh={() => {
+                                        showToast("List deleted", "error");
+                                        refetch();
+                                    }}
+                                />
+                            ))
+                        )}
+                    </>
                 ) : (
-                    lists.map(list => (
-                        <BookListCarousel
-                            key={list._id}
-                            listId={list._id}
-                            title={list.title}
-                            visibility={list.visibility}
-                            ownerId={typeof list.user === 'string' ? list.user : list.user._id}
-                            books={list.books}
-                            onRename={handleRenameList}
-                            onToggleVisibility={handleToggleVisibility}
-                            onUnsave={handleUnsaveList}
-                            isOwnerPrivate={user?.isPrivate}
-                            onAddBook={() => handleOpenAddBook(list._id)}
-                            onRefresh={() => {
-                                showToast("List deleted", "error");
-                                refetch();
-                            }}
-                        />
-                    ))
+                    <StatsTab userId={user?.id || ""} />
                 )}
             </ScrollView>
 
@@ -196,5 +226,35 @@ const styles = StyleSheet.create({
         color: "#9CA3AF",
         padding: 20,
         fontSize: 16,
+    },
+    tabContainer: {
+        flexDirection: "row",
+        paddingHorizontal: 20,
+        marginBottom: 20,
+        gap: 12,
+    },
+    tab: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 12,
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
+        borderRadius: 12,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: "transparent",
+    },
+    activeTab: {
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderColor: "rgba(59, 130, 246, 0.3)",
+    },
+    tabText: {
+        fontSize: 14,
+        fontFamily: "Nunito-Bold",
+        color: "#64748B",
+    },
+    activeTabText: {
+        color: "#3B82F6",
     },
 });

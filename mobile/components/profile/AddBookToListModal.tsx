@@ -42,6 +42,7 @@ export function AddBookToListModal({ visible, onClose, listId, onBookAdded }: Ad
                 authors: book.authors,
                 thumbnail: book.coverUrl,
                 publishedDate: book.publishedDate,
+                categories: book.categories,
             });
             setQuery("");
             onBookAdded();
