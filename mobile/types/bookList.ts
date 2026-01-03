@@ -4,6 +4,7 @@ export interface BookListBook {
     authors: string[];
     thumbnail: string;
     publishedDate: string;
+    myReviewCount?: number;
 }
 
 export interface BookList {

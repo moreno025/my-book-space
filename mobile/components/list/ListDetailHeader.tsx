@@ -19,6 +19,8 @@ interface ListDetailHeaderProps {
     isSaving: boolean;
     onSave: () => void;
     onBack: () => void;
+    onCopy?: () => void;
+    onUsernamePress?: () => void;
 }
 
 export function ListDetailHeader({
@@ -29,9 +31,22 @@ export function ListDetailHeader({
     isSaving,
     onSave,
     onBack,
+    onCopy,
+    onUsernamePress,
 }: ListDetailHeaderProps) {
     const [imageError, setImageError] = useState(false);
+    const [isCopying, setIsCopying] = useState(false);
     const savesCount = list.savedBy?.length || 0;
+
+    const handleCopy = async () => {
+        if (!onCopy) return;
+        setIsCopying(true);
+        try {
+            await onCopy();
+        } finally {
+            setIsCopying(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -44,7 +59,11 @@ export function ListDetailHeader({
             </View>
 
             {/* Creator Row */}
-            <View style={styles.creatorRow}>
+            <TouchableOpacity
+                style={styles.creatorRow}
+                onPress={onUsernamePress}
+                disabled={!onUsernamePress}
+            >
                 <View style={styles.avatarContainer}>
                     <Image
                         source={
@@ -60,7 +79,7 @@ export function ListDetailHeader({
                     <Text style={styles.creatorLabel}>A list by</Text>
                     <Text style={styles.creatorName}>{list.user.username}</Text>
                 </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Description */}
             {list.description ? (
@@ -96,31 +115,48 @@ export function ListDetailHeader({
                 </View>
             </View>
 
-            {/* Action Button */}
+            {/* Action Buttons */}
             {!isOwnList && (
-                <TouchableOpacity
-                    style={[
-                        styles.saveButton,
-                        isAlreadySaved && styles.saveButtonSaved
-                    ]}
-                    onPress={onSave}
-                    disabled={isSaving}
-                >
-                    {isSaving ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                        <>
-                            <Ionicons
-                                name={isAlreadySaved ? "checkmark-circle" : "bookmark-outline"}
-                                size={18}
-                                color="#FFFFFF"
-                            />
-                            <Text style={styles.saveButtonText}>
-                                {isAlreadySaved ? "Remove from Profile" : "Save to Profile"}
-                            </Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+                <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                        style={[
+                            styles.saveButton,
+                            isAlreadySaved && styles.saveButtonSaved
+                        ]}
+                        onPress={onSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                            <>
+                                <Ionicons
+                                    name={isAlreadySaved ? "checkmark-circle" : "bookmark-outline"}
+                                    size={18}
+                                    color="#FFFFFF"
+                                />
+                                <Text style={styles.saveButtonText}>
+                                    {isAlreadySaved ? "Saved" : "Save List"}
+                                </Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.copyButton}
+                        onPress={handleCopy}
+                        disabled={isCopying}
+                    >
+                        {isCopying ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                            <>
+                                <Ionicons name="copy-outline" size={18} color="#FFFFFF" />
+                                <Text style={styles.saveButtonText}>Copy List</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </View>
             )}
 
             {/* Bottom Divider */}
@@ -235,24 +271,42 @@ const styles = StyleSheet.create({
     visibilityTextActive: {
         color: "#3B82F6",
     },
+    saveButtonText: {
+        color: "#FFFFFF",
+        fontSize: 15,
+        fontFamily: "Nunito-Bold",
+    },
+    actionsContainer: {
+        flexDirection: "row",
+        gap: 12,
+        marginBottom: 20,
+    },
     saveButton: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#3B82F6",
         paddingVertical: 12,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         borderRadius: 8,
         gap: 8,
-        marginBottom: 20,
+    },
+    copyButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
     },
     saveButtonSaved: {
         backgroundColor: "#10B981",
-    },
-    saveButtonText: {
-        color: "#FFFFFF",
-        fontSize: 15,
-        fontFamily: "Nunito-Bold",
     },
     divider: {
         height: 1,

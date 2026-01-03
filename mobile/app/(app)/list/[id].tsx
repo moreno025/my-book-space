@@ -5,6 +5,9 @@ import {
     StyleSheet,
     TouchableOpacity,
     ActivityIndicator,
+    FlatList,
+    Image,
+    Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,15 +15,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useListDetail } from "../../../hooks/BookList/useListDetail";
 import { useAppFonts } from "../../../hooks/useFonts";
-import { BookGrid } from "../../../components/book/BookGrid";
 import { getImageUrl } from "@/utils/url";
 import { bookListApi } from "../../../constants/api";
 import { useToast } from "../../../context/ToastContext";
 import { AuthContext } from "../../../context/AuthContext";
 import { ListDetailHeader } from "../../../components/list/ListDetailHeader";
+import { BookListBook } from "../../../types/bookList";
+import { BookGrid } from "../../../components/book/BookGrid";
 
 export default function ListDetailScreen() {
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const { id, view } = useLocalSearchParams<{ id: string, view?: 'management' | 'discovery' }>();
     const router = useRouter();
     const { list, loading, error, refetch } = useListDetail(id);
     const fontsLoaded = useAppFonts();
@@ -28,6 +32,7 @@ export default function ListDetailScreen() {
     const { user } = useContext(AuthContext);
     const [isSaving, setIsSaving] = useState(false);
 
+    const isDiscovery = view === 'discovery';
     const isOwnList = !!(list?.user?._id && list.user._id === user?.id);
     const isAlreadySaved = !!(list?.savedBy && list.savedBy.includes(user?.id || ""));
 
@@ -39,7 +44,7 @@ export default function ListDetailScreen() {
             if (isAlreadySaved) {
                 // Unsave the list
                 await bookListApi.unsaveList(list._id);
-                showToast("List removed from your profile", "error");
+                showToast("List removed from your profile", "success");
             } else {
                 // Save the list
                 await bookListApi.saveList(list._id);
@@ -56,6 +61,58 @@ export default function ListDetailScreen() {
         }
     }, [list, isAlreadySaved, refetch, showToast]);
 
+    const handleCopyList = useCallback(async () => {
+        if (!list) return;
+        try {
+            await bookListApi.copyList(list._id);
+            showToast("List copied to your profile!", "success");
+        } catch (err: any) {
+            console.error(err);
+            showToast(err.response?.data?.message || "Failed to copy list", "error");
+        }
+    }, [list, showToast]);
+
+    const handleUsernamePress = useCallback(() => {
+        if (!list?.user) return;
+        if (isOwnList) {
+            router.push("/profile");
+        } else {
+            router.push({
+                pathname: "/(app)/(tabs)/user/[username]",
+                params: { username: list.user.username }
+            });
+        }
+    }, [list?.user, isOwnList, router]);
+
+    const handleDeleteBook = useCallback(async (book: BookListBook) => {
+        Alert.alert(
+            "Remove Book",
+            `Are you sure you want to remove "${book.title}" from this list?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await bookListApi.removeBookFromList(id, book.googleBookId);
+                            showToast("Book removed from list", "success");
+                            refetch();
+                        } catch (err) {
+                            console.error("Failed to remove book", err);
+                            showToast("Failed to remove book", "error");
+                        }
+                    }
+                }
+            ]
+        );
+    }, [id, refetch, showToast]);
+
+    const avatarUrl = useMemo(() => {
+        if (!list?.user?.avatar) return null;
+        return getImageUrl(list.user.avatar);
+    }, [list?.user?.avatar]);
+
     const mappedBooks = useMemo(() => {
         if (!list) return [];
         return list.books.map(b => ({
@@ -64,25 +121,41 @@ export default function ListDetailScreen() {
         }));
     }, [list]);
 
-    const avatarUrl = useMemo(() => {
-        if (!list?.user?.avatar) return null;
-        return getImageUrl(list.user.avatar);
-    }, [list?.user?.avatar]);
-
-    const ListHeader = useCallback(() => {
-        if (!list) return null;
-        return (
-            <ListDetailHeader
-                list={list}
-                avatarUrl={avatarUrl}
-                isOwnList={isOwnList}
-                isAlreadySaved={isAlreadySaved}
-                isSaving={isSaving}
-                onSave={handleSaveList}
-                onBack={() => router.back()}
+    const renderBookItem = ({ item }: { item: BookListBook }) => (
+        <TouchableOpacity
+            style={styles.bookRow}
+            activeOpacity={0.7}
+            onPress={() => router.push({ pathname: "/book/[id]", params: { id: item.googleBookId } })}
+        >
+            <Image
+                source={{ uri: item.thumbnail }}
+                style={styles.bookThumbnail}
+                resizeMode="cover"
             />
-        );
-    }, [list, avatarUrl, isOwnList, isAlreadySaved, isSaving, handleSaveList, router]);
+            <View style={styles.bookInfo}>
+                <Text numberOfLines={2} style={styles.bookTitle}>{item.title}</Text>
+                <Text numberOfLines={1} style={styles.bookAuthor}>{item.authors?.[0] || "Unknown author"}</Text>
+
+                <View style={styles.reviewBadge}>
+                    <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
+                    <Text style={styles.reviewText}>
+                        {(item.myReviewCount || 0) === 0
+                            ? "No reviews written"
+                            : `${item.myReviewCount} review${(item.myReviewCount || 0) > 1 ? 's' : ''} written`}
+                    </Text>
+                </View>
+            </View>
+
+            {isOwnList && !isDiscovery && (
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteBook(item)}
+                >
+                    <Ionicons name="close" size={20} color="#EF4444" />
+                </TouchableOpacity>
+            )}
+        </TouchableOpacity>
+    );
 
     if (!fontsLoaded || (loading && !list)) {
         return (
@@ -103,6 +176,20 @@ export default function ListDetailScreen() {
         );
     }
 
+    const ListHeader = () => (
+        <ListDetailHeader
+            list={list}
+            avatarUrl={avatarUrl}
+            isOwnList={isOwnList}
+            isAlreadySaved={isAlreadySaved}
+            isSaving={isSaving}
+            onSave={handleSaveList}
+            onBack={() => router.back()}
+            onCopy={handleCopyList}
+            onUsernamePress={handleUsernamePress}
+        />
+    );
+
     return (
         <View style={styles.container}>
             <LinearGradient
@@ -111,22 +198,28 @@ export default function ListDetailScreen() {
             />
 
             <SafeAreaView style={styles.safe} edges={["top"]}>
-
-                {list.books.length > 0 ? (
+                {isDiscovery ? (
                     <BookGrid
                         books={mappedBooks}
                         onBookPress={(bookId) => router.push({ pathname: "/book/[id]", params: { id: bookId } })}
                         ListHeaderComponent={ListHeader}
-                        contentContainerStyle={styles.gridContent}
+                        contentContainerStyle={styles.listContent}
                     />
                 ) : (
-                    <View style={{ flex: 1 }}>
-                        <ListHeader />
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="book-outline" size={48} color="#4B5563" />
-                            <Text style={styles.emptyText}>This list is currently empty.</Text>
-                        </View>
-                    </View>
+                    <FlatList
+                        data={list.books}
+                        keyExtractor={(item) => item.googleBookId}
+                        renderItem={renderBookItem}
+                        ListHeaderComponent={ListHeader}
+                        ListEmptyComponent={() => (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="book-outline" size={48} color="#4B5563" />
+                                <Text style={styles.emptyText}>This list is currently empty.</Text>
+                            </View>
+                        )}
+                        contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
+                    />
                 )}
             </SafeAreaView>
         </View>
@@ -171,35 +264,58 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
         fontFamily: "Nunito-Bold",
     },
-    topBar: {
+    listContent: {
+        paddingBottom: 40,
+    },
+    bookRow: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 16,
         paddingVertical: 12,
-        zIndex: 10,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(255, 255, 255, 0.05)",
     },
-    backButton: {
-        width: 44,
-        height: 44,
-        alignItems: "center",
+    bookThumbnail: {
+        width: 50,
+        height: 75,
+        borderRadius: 6,
+        backgroundColor: "#1E293B",
+    },
+    bookInfo: {
+        flex: 1,
+        marginLeft: 16,
         justifyContent: "center",
     },
-    headerTitle: {
-        fontSize: 18,
-        fontFamily: "Nunito-Bold",
+    bookTitle: {
         color: "#F9FAFB",
-        flex: 1,
-        textAlign: "center",
-        marginHorizontal: 10,
+        fontSize: 15,
+        fontFamily: "Nunito-Bold",
+        marginBottom: 2,
     },
-    gridContent: {
-        paddingBottom: 40,
+    bookAuthor: {
+        color: "#94A3B8",
+        fontSize: 13,
+        fontFamily: "Nunito-Medium",
+        marginBottom: 6,
+    },
+    reviewBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    reviewText: {
+        color: "#94A3B8",
+        fontSize: 12,
+        fontFamily: "Nunito-Medium",
+        marginLeft: 4,
+    },
+    deleteButton: {
+        padding: 8,
+        marginLeft: 8,
     },
     emptyContainer: {
         alignItems: "center",
         justifyContent: "center",
-        marginTop: 40,
+        marginTop: 60,
         opacity: 0.5,
     },
     emptyText: {

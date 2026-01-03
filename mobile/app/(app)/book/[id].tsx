@@ -469,7 +469,7 @@ export default function BookDetailScreen() {
                                                 <TouchableOpacity
                                                     key={l._id}
                                                     style={styles.discoveryListCard}
-                                                    onPress={() => router.push({ pathname: "/list/[id]", params: { id: l._id } })}
+                                                    onPress={() => router.push({ pathname: "/list/[id]", params: { id: l._id, view: 'discovery' } })}
                                                 >
                                                     <View style={styles.discoveryListInfo}>
                                                         <Text style={styles.discoveryListTitle}>{l.title}</Text>

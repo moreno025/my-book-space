@@ -128,7 +128,14 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
                     </TouchableOpacity>
                 </View>
                 {books.length > 0 && (
-                    <TouchableOpacity onPress={() => router.push({ pathname: "/list/[id]", params: { id: listId, title } })}>
+                    <TouchableOpacity onPress={() => router.push({
+                        pathname: "/list/[id]",
+                        params: {
+                            id: listId,
+                            title,
+                            view: isOwner ? 'management' : 'discovery'
+                        }
+                    })}>
                         <Text style={styles.seeAll}>See all</Text>
                     </TouchableOpacity>
                 )}
