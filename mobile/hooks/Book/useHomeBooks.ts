@@ -21,10 +21,10 @@ export function useHomeBooks() {
                 setLoading(true);
 
                 const [sciFiRes, horrorRes, romanceRes, thrillerRes] = await Promise.all([
-                    booksApi.searchBooks('subject:"science fiction" popular'),
-                    booksApi.searchBooks('subject:"horror" popular'),
-                    booksApi.searchBooks('subject:"romance" popular'),
-                    booksApi.searchBooks('subject:"thriller" popular'),
+                    booksApi.searchBooks('subject:"science fiction"', 'newest'),
+                    booksApi.searchBooks('subject:"horror"', 'relevance'),
+                    booksApi.searchBooks('subject:"romance"', 'relevance'),
+                    booksApi.searchBooks('subject:"thriller"', 'newest'),
                 ]);
 
                 const seenIds = new Set<string>();

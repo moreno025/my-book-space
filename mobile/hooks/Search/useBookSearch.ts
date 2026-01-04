@@ -11,19 +11,61 @@ type Book = {
     categories?: string[];
 };
 
+function stripAccents(str: string) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function scoreBook(item: any, query: string) {
-    const title = item.volumeInfo?.title?.toLowerCase() ?? "";
-    const authors = item.volumeInfo?.authors?.join(" ").toLowerCase() ?? "";
+    const titleRaw = item.volumeInfo?.title?.toLowerCase() ?? "";
+    const authorsRaw = item.volumeInfo?.authors?.join(" ").toLowerCase() ?? "";
+    const qLower = query.toLowerCase();
+
+    // Normalización sin acentos
+    const title = stripAccents(titleRaw);
+    const authors = stripAccents(authorsRaw);
+    const qNorm = stripAccents(qLower);
 
     let score = 0;
 
-    if (title === query) score += 100;
-    if (title.startsWith(query)) score += 50;
-    if (title.includes(query)) score += 30;
-    if (authors.includes(query)) score += 10;
+    // 1. Title direct matches
+    if (title === qNorm) score += 200; // Exact match is king
+    if (title.startsWith(qNorm)) score += 100;
+    if (title.includes(qNorm)) score += 50;
 
-    if (item.volumeInfo?.averageRating) {
-        score += item.volumeInfo.averageRating * 2;
+    // 2. Author direct matches
+    if (authors.includes(qNorm)) score += 80;
+
+    // 3. Tokenized matching (Intelligent partials)
+    const tokens = qNorm.split(/\s+/).filter(t => t.length > 2);
+    if (tokens.length > 1) {
+        let titleTokensMatched = 0;
+        let authorTokensMatched = 0;
+
+        tokens.forEach(token => {
+            if (title.includes(token)) titleTokensMatched++;
+            if (authors.includes(token)) authorTokensMatched++;
+        });
+
+        // Boost if all tokens match across title/author
+        if (titleTokensMatched + authorTokensMatched >= tokens.length) {
+            score += 150;
+        }
+    }
+
+    // 4. Popularity Boosting
+    if (item.volumeInfo?.ratingsCount) {
+        const count = item.volumeInfo.ratingsCount;
+        // Logarithmic base boost
+        score += Math.log10(count) * 20;
+
+        // Mega-Priority Tiers
+        if (count > 5000) {
+            score += 200; // Bestseller
+        } else if (count > 1000) {
+            score += 100; // Popular
+        } else if (count > 100) {
+            score += 50;
+        }
     }
 
     return score;
@@ -48,12 +90,11 @@ export function useBookSearch(query: string) {
         const timeout = setTimeout(async () => {
             try {
                 const normalizedQuery = query.trim().replace(/\s+/g, " ");
-                const q =
-                    normalizedQuery.length >= 4
-                        ? `intitle:${normalizedQuery}`
-                        : normalizedQuery;
+                // Remove restrictive intitle: prefix to allow author searches
+                const q = normalizedQuery;
 
-                const res = await booksApi.searchBooks(q, controller.signal);
+                // Pass undefined for orderBy to use default relevance
+                const res = await booksApi.searchBooks(q, undefined, controller.signal);
                 const items = res.data.items ?? [];
 
                 const scored = items
@@ -61,7 +102,6 @@ export function useBookSearch(query: string) {
                         item,
                         score: scoreBook(item, normalizedQuery.toLowerCase()),
                     }))
-                    .filter((s: any) => s.score > 0)
                     .sort((a: any, b: any) => b.score - a.score)
                     .map((s: any) => s.item);
 
@@ -87,7 +127,7 @@ export function useBookSearch(query: string) {
                         id: item.id,
                         title: item.volumeInfo.title,
                         authors: item.volumeInfo.authors || [],
-                        coverUrl: item.volumeInfo.imageLinks.thumbnail,
+                        coverUrl: item.volumeInfo.imageLinks?.thumbnail || "",
                         rating: item.volumeInfo.averageRating,
                         publishedDate: item.volumeInfo.publishedDate,
                         categories: item.volumeInfo.categories || [],

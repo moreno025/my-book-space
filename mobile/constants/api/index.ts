@@ -26,8 +26,8 @@ export const authApi = {
 };
 
 export const booksApi = {
-    searchBooks: (query: string, signal?: AbortSignal) =>
-        publicApi.get("/book/search", { params: { q: query }, signal }),
+    searchBooks: (query: string, orderBy?: 'relevance' | 'newest', signal?: AbortSignal) =>
+        publicApi.get("/book/search", { params: { q: query, orderBy }, signal }),
 
     saveHistory: (query: string) =>
         privateApi.post("/book/search/history", { query }),
@@ -101,6 +101,9 @@ export const bookListApi = {
 
     copyList: (listId: string) =>
         privateApi.post(`/book-list/${listId}/copy`),
+
+    updateBookStatus: (listId: string, googleBookId: string, status: "not read" | "reading" | "read") =>
+        privateApi.patch(`/book-list/${listId}/book/${googleBookId}/status`, { status }),
 };
 
 export const userApi = {
