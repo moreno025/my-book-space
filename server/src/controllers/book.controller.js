@@ -49,7 +49,8 @@ export const searchBooks = async (req, res) => {
     const books = Array.from(uniqueMap.values())
       .filter(item => item.volumeInfo?.imageLinks?.thumbnail)
       .map(item => {
-        item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail);
+        // Use standard/reliable resolution for search results to prevent missing covers
+        item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail, false);
         return item;
       });
 
@@ -90,7 +91,8 @@ export const getBookById = async (req, res) => {
       title: v.title ?? "",
       authors: v.authors ?? [],
       description: v.description ?? "",
-      coverUrl: cleanGoogleBooksUrl(v.imageLinks?.thumbnail),
+      // Use high-resolution (zoom=2) for detail screens
+      coverUrl: cleanGoogleBooksUrl(v.imageLinks?.thumbnail, true),
       rating: v.averageRating ?? null,
       ratingsCount: v.ratingsCount ?? null,
       pages: v.pageCount ?? null,

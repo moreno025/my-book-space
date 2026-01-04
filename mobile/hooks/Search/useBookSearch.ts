@@ -15,6 +15,22 @@ function stripAccents(str: string) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+function simplifyTitle(title: string) {
+    // Remove subtitles (after :), parentheticals ( ( [ ), and dashes ( - )
+    const base = title.split(":")[0].split("(")[0].split("[")[0].split(" - ")[0];
+    return stripAccents(base.trim().toLowerCase());
+}
+
+function normalizeAuthor(author: string) {
+    // Strip accents, dots, spaces, and punctuation to merge variants like "J.K. Rowling" and "J. K. Rowling"
+    const cleaned = stripAccents(author.toLowerCase());
+    return cleaned.replace(/[^a-z0-9]/g, "");
+}
+
+function normalizeKey(title: string, author: string) {
+    return `${simplifyTitle(title)}|${normalizeAuthor(author)}`;
+}
+
 function scoreBook(item: any, query: string) {
     const titleRaw = item.volumeInfo?.title?.toLowerCase() ?? "";
     const authorsRaw = item.volumeInfo?.authors?.join(" ").toLowerCase() ?? "";
@@ -36,12 +52,12 @@ function scoreBook(item: any, query: string) {
     if (authors.includes(qNorm)) score += 80;
 
     // 3. Tokenized matching (Intelligent partials)
-    const tokens = qNorm.split(/\s+/).filter(t => t.length > 2);
+    const tokens = qNorm.split(/\s+/).filter((t: string) => t.length > 2);
     if (tokens.length > 1) {
         let titleTokensMatched = 0;
         let authorTokensMatched = 0;
 
-        tokens.forEach(token => {
+        tokens.forEach((token: string) => {
             if (title.includes(token)) titleTokensMatched++;
             if (authors.includes(token)) authorTokensMatched++;
         });
@@ -66,6 +82,31 @@ function scoreBook(item: any, query: string) {
         } else if (count > 100) {
             score += 50;
         }
+    }
+
+    // 5. Aesthetic & Quality Heuristics
+    const ratingsCount = item.volumeInfo?.ratingsCount || 0;
+    const publishedDate = item.volumeInfo?.publishedDate || "";
+    const year = parseInt(publishedDate.substring(0, 4));
+    const description = item.volumeInfo?.description || "";
+
+    // Penalty for no ratings (obscure/niche books)
+    if (ratingsCount === 0) {
+        score -= 50;
+    }
+
+    // Classic vs Obscure/Typographic Covers
+    // Many "weird" typography-only covers are for old public domain scans.
+    // We penalize old books unless they are verified classics (high rating count).
+    if (!isNaN(year) && year < 1950 && ratingsCount < 10) {
+        score -= 100;
+    }
+
+    // Metadata richness boost (Real books tend to have longer descriptions)
+    if (description.length > 500) {
+        score += 30;
+    } else if (description.length > 100) {
+        score += 15;
     }
 
     return score;
@@ -108,12 +149,12 @@ export function useBookSearch(query: string) {
                 const unique = new Map<string, any>();
 
                 scored.forEach((item: any) => {
-                    const title = item.volumeInfo?.title?.toLowerCase();
-                    const author = item.volumeInfo?.authors?.[0]?.toLowerCase() ?? "";
-                    const key = `${title}-${author}`;
+                    const fullTitle = item.volumeInfo?.title || "";
+                    const primaryAuthor = item.volumeInfo?.authors?.[0] || "";
+                    const key = normalizeKey(fullTitle, primaryAuthor);
 
                     if (
-                        title &&
+                        fullTitle &&
                         item.volumeInfo?.imageLinks?.thumbnail &&
                         !unique.has(key)
                     ) {
