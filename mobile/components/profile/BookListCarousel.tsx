@@ -8,6 +8,7 @@ import { bookListApi } from "../../constants/api";
 import { BookOptionsModal } from "./BookOptionsModal";
 import { ListOptionsModal } from "./ListOptionsModal";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../context/ToastContext";
 
 interface BookListCarouselProps {
     title: string;
@@ -31,6 +32,7 @@ const CARD_HEIGHT = 150;
 export function BookListCarousel({ title, listId, visibility, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility, onCopy, isOwnerPrivate }: BookListCarouselProps) {
     const router = useRouter();
     const { user } = useAuth();
+    const { showToast } = useToast();
     const fontsLoaded = useAppFonts();
 
     const isOwner = user?.id === ownerId;
@@ -38,6 +40,7 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
     const [selectedBook, setSelectedBook] = useState<BookListBook | null>(null);
     const [showOptionsModal, setShowOptionsModal] = useState(false);
     const [showListOptionsModal, setShowListOptionsModal] = useState(false);
+    // const [showStatusModal, setShowStatusModal] = useState(false); // Removed
 
     if (!fontsLoaded) return null;
 
@@ -60,6 +63,7 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
                     onPress: async () => {
                         try {
                             await bookListApi.removeBookFromList(listId, book.googleBookId);
+                            showToast("Book removed from list", "success");
                             onRefresh?.();
                         } catch (error) {
                             console.error("Failed to remove book", error);
@@ -69,6 +73,20 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
             ]
         );
     };
+
+    const handleStatusChange = async (status: "not read" | "reading" | "read") => {
+        if (!selectedBook) return;
+        try {
+            await bookListApi.updateBookStatus(listId, selectedBook.googleBookId, status);
+            showToast("Status updated", "success");
+            onRefresh?.();
+        } catch (error) {
+            console.error("Failed to update status", error);
+            Alert.alert("Error", "Failed to update book status");
+        }
+    };
+
+    // const handleOpenStatusModal = () => { ... } // Removed
 
     const confirmDeleteList = () => {
         Alert.alert(
@@ -82,6 +100,7 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
                     onPress: async () => {
                         try {
                             await bookListApi.deleteBookList(listId);
+                            showToast("List deleted", "success");
                             onRefresh?.();
                         } catch (error) {
                             console.error("Failed to delete list", error);
@@ -212,6 +231,8 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
                 visible={showOptionsModal}
                 onClose={() => setShowOptionsModal(false)}
                 bookTitle={selectedBook?.title || ""}
+                currentStatus={selectedBook?.readingStatus || "not read"}
+                onStatusChange={handleStatusChange}
                 onWriteReview={() => selectedBook && handleWriteReview(selectedBook)}
                 onDelete={() => selectedBook && handleDeleteBook(selectedBook)}
             />

@@ -5,6 +5,7 @@ export interface BookListBook {
     thumbnail: string;
     publishedDate: string;
     myReviewCount?: number;
+    readingStatus?: "not read" | "reading" | "read";
 }
 
 export interface BookList {

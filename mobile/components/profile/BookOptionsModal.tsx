@@ -16,13 +16,15 @@ interface BookOptionsModalProps {
     visible: boolean;
     onClose: () => void;
     bookTitle: string;
-    onWriteReview: () => void;
-    onDelete: () => void;
+    onWriteReview?: () => void;
+    onDelete?: () => void;
+    currentStatus?: "not read" | "reading" | "read";
+    onStatusChange?: (status: "not read" | "reading" | "read") => void;
 }
 
 const { height } = Dimensions.get('window');
 
-export function BookOptionsModal({ visible, onClose, bookTitle, onWriteReview, onDelete }: BookOptionsModalProps) {
+export function BookOptionsModal({ visible, onClose, bookTitle, onWriteReview, onDelete, currentStatus, onStatusChange }: BookOptionsModalProps) {
     const slideAnim = useRef(new Animated.Value(height)).current;
 
     useEffect(() => {
@@ -40,7 +42,7 @@ export function BookOptionsModal({ visible, onClose, bookTitle, onWriteReview, o
                 useNativeDriver: true,
             }).start();
         }
-    }, [visible]);
+    }, [visible, slideAnim]);
 
     return (
         <Modal
@@ -68,31 +70,77 @@ export function BookOptionsModal({ visible, onClose, bookTitle, onWriteReview, o
                         </View>
 
                         <View style={styles.optionsContainer}>
-                            <TouchableOpacity
-                                style={styles.option}
-                                onPress={() => {
-                                    onClose();
-                                    onWriteReview();
-                                }}
-                            >
-                                <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                                    <Ionicons name="create-outline" size={22} color="#3B82F6" />
-                                </View>
-                                <Text style={styles.optionText}>Write a Review</Text>
-                            </TouchableOpacity>
+                            {onStatusChange && (
+                                <View style={styles.statusContainer}>
+                                    <Text style={styles.sectionTitle}>Reading Status</Text>
+                                    <View style={styles.statusRow}>
+                                        {(["not read", "reading", "read"] as const).map((status) => {
+                                            const isActive = currentStatus === status;
+                                            const config = {
+                                                "not read": { label: "Not Read", icon: "book-outline", activeColor: "#94A3B8", bg: "rgba(148, 163, 184, 0.15)" },
+                                                "reading": { label: "Reading", icon: "book", activeColor: "#3B82F6", bg: "rgba(59, 130, 246, 0.15)" },
+                                                "read": { label: "Read", icon: "checkmark-circle", activeColor: "#10B981", bg: "rgba(16, 185, 129, 0.15)" },
+                                            }[status];
 
-                            <TouchableOpacity
-                                style={[styles.option, styles.deleteOption]}
-                                onPress={() => {
-                                    onClose();
-                                    onDelete();
-                                }}
-                            >
-                                <View style={[styles.iconContainer, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                                    <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                                            return (
+                                                <TouchableOpacity
+                                                    key={status}
+                                                    style={[
+                                                        styles.statusButton,
+                                                        isActive && { backgroundColor: config.bg, borderColor: config.activeColor, borderWidth: 1 }
+                                                    ]}
+                                                    onPress={() => {
+                                                        onStatusChange(status);
+                                                        onClose();
+                                                    }}
+                                                >
+                                                    <Ionicons
+                                                        name={config.icon as any}
+                                                        size={16}
+                                                        color={isActive ? config.activeColor : "#6B7280"}
+                                                    />
+                                                    <Text style={[
+                                                        styles.statusButtonText,
+                                                        isActive && { color: config.activeColor }
+                                                    ]}>
+                                                        {config.label}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
                                 </View>
-                                <Text style={[styles.optionText, styles.deleteText]}>Remove from List</Text>
-                            </TouchableOpacity>
+                            )}
+
+                            {onWriteReview && (
+                                <TouchableOpacity
+                                    style={[styles.option, { marginBottom: 12 }]}
+                                    onPress={() => {
+                                        onClose();
+                                        onWriteReview();
+                                    }}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.1)', marginRight: 16 }]}>
+                                        <Ionicons name="create-outline" size={22} color="#3B82F6" />
+                                    </View>
+                                    <Text style={styles.optionText}>Write a Review</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {onDelete && (
+                                <TouchableOpacity
+                                    style={[styles.option, styles.deleteOption, { marginBottom: 12 }]}
+                                    onPress={() => {
+                                        onClose();
+                                        onDelete();
+                                    }}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(239, 68, 68, 0.1)', marginRight: 16 }]}>
+                                        <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                                    </View>
+                                    <Text style={[styles.optionText, styles.deleteText]}>Remove from List</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
 
                         <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
@@ -142,8 +190,39 @@ const styles = StyleSheet.create({
         fontFamily: 'Nunito-Bold',
     },
     optionsContainer: {
-        gap: 12,
         marginBottom: 24,
+    },
+    statusContainer: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 14,
+        color: "#9CA3AF",
+        marginBottom: 12,
+        fontFamily: "Nunito-Bold",
+        paddingHorizontal: 4,
+    },
+    statusRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 8,
+    },
+    statusButton: {
+        flex: 1,
+        height: 40,
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
+        borderRadius: 12,
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+        gap: 6,
+        borderWidth: 1,
+        borderColor: "transparent",
+    },
+    statusButtonText: {
+        fontSize: 12,
+        color: "#6B7280",
+        fontFamily: "Nunito-Bold",
     },
     option: {
         flexDirection: 'row',
@@ -151,7 +230,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#1F2937',
         padding: 16,
         borderRadius: 20,
-        gap: 16,
     },
     deleteOption: {
         // Option specific styles if needed

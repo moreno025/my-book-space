@@ -23,6 +23,8 @@ import { ListDetailHeader } from "../../../components/list/ListDetailHeader";
 import { BookListBook } from "../../../types/bookList";
 import { BookGrid } from "../../../components/book/BookGrid";
 
+import { BookOptionsModal } from "../../../components/profile/BookOptionsModal";
+
 export default function ListDetailScreen() {
     const { id, view } = useLocalSearchParams<{ id: string, view?: 'management' | 'discovery' }>();
     const router = useRouter();
@@ -31,6 +33,9 @@ export default function ListDetailScreen() {
     const { showToast } = useToast();
     const { user } = useContext(AuthContext);
     const [isSaving, setIsSaving] = useState(false);
+    // const [statusModalVisible, setStatusModalVisible] = useState(false); // Removed
+    const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+    const [selectedBook, setSelectedBook] = useState<BookListBook | null>(null);
 
     const isDiscovery = view === 'discovery';
     const isOwnList = !!(list?.user?._id && list.user._id === user?.id);
@@ -108,6 +113,26 @@ export default function ListDetailScreen() {
         );
     }, [id, refetch, showToast]);
 
+    const handleStatusChange = useCallback(async (status: "not read" | "reading" | "read") => {
+        if (!selectedBook || !list) return;
+        try {
+            await bookListApi.updateBookStatus(list._id, selectedBook.googleBookId, status);
+            showToast(`Status updated to "${status}"`, "success");
+            refetch();
+        } catch (err) {
+            console.error("Failed to update status", err);
+            showToast("Failed to update status", "error");
+        }
+    }, [selectedBook, list, refetch, showToast]);
+
+    const handleLongPress = useCallback((book: BookListBook) => {
+        if (!isOwnList || isDiscovery) return;
+        setSelectedBook(book);
+        setOptionsModalVisible(true);
+    }, [isOwnList, isDiscovery]);
+
+    // const handleOpenStatusModal = ... // Removed
+
     const avatarUrl = useMemo(() => {
         if (!list?.user?.avatar) return null;
         return getImageUrl(list.user.avatar);
@@ -118,14 +143,30 @@ export default function ListDetailScreen() {
         return list.books.map(b => ({
             id: b.googleBookId,
             coverUrl: b.thumbnail,
+            readingStatus: b.readingStatus,
         }));
     }, [list]);
+
+    const StatusBadge = ({ status }: { status: "not read" | "reading" | "read" }) => {
+        const config = {
+            "not read": { icon: "book-outline", color: "#94A3B8", bg: "rgba(148, 163, 184, 0.15)" },
+            "reading": { icon: "book", color: "#3B82F6", bg: "rgba(59, 130, 246, 0.15)" },
+            "read": { icon: "checkmark-circle", color: "#10B981", bg: "rgba(16, 185, 129, 0.15)" },
+        }[status];
+
+        return (
+            <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
+                <Ionicons name={config.icon as any} size={12} color={config.color} />
+            </View>
+        );
+    };
 
     const renderBookItem = ({ item }: { item: BookListBook }) => (
         <TouchableOpacity
             style={styles.bookRow}
             activeOpacity={0.7}
             onPress={() => router.push({ pathname: "/book/[id]", params: { id: item.googleBookId } })}
+            onLongPress={() => handleLongPress(item)}
         >
             <Image
                 source={{ uri: item.thumbnail }}
@@ -136,13 +177,16 @@ export default function ListDetailScreen() {
                 <Text numberOfLines={2} style={styles.bookTitle}>{item.title}</Text>
                 <Text numberOfLines={1} style={styles.bookAuthor}>{item.authors?.[0] || "Unknown author"}</Text>
 
-                <View style={styles.reviewBadge}>
-                    <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
-                    <Text style={styles.reviewText}>
-                        {(item.myReviewCount || 0) === 0
-                            ? "No reviews written"
-                            : `${item.myReviewCount} review${(item.myReviewCount || 0) > 1 ? 's' : ''} written`}
-                    </Text>
+                <View style={styles.badgeRow}>
+                    <StatusBadge status={item.readingStatus || "not read"} />
+                    <View style={styles.reviewBadge}>
+                        <Ionicons name="chatbubble-outline" size={14} color="#94A3B8" />
+                        <Text style={styles.reviewText}>
+                            {(item.myReviewCount || 0) === 0
+                                ? "No reviews"
+                                : `${item.myReviewCount} review${(item.myReviewCount || 0) > 1 ? 's' : ''}`}
+                        </Text>
+                    </View>
                 </View>
             </View>
 
@@ -222,6 +266,28 @@ export default function ListDetailScreen() {
                     />
                 )}
             </SafeAreaView>
+
+            {/* BookStatusModal removed */}
+
+            <BookOptionsModal
+                visible={optionsModalVisible}
+                onClose={() => setOptionsModalVisible(false)}
+                bookTitle={selectedBook?.title || ""}
+                currentStatus={selectedBook?.readingStatus || "not read"}
+                onStatusChange={handleStatusChange}
+                onDelete={() => {
+                    if (selectedBook) {
+                        setOptionsModalVisible(false);
+                        setTimeout(() => handleDeleteBook(selectedBook), 300);
+                    }
+                }}
+                onWriteReview={() => {
+                    if (selectedBook) {
+                        setOptionsModalVisible(false);
+                        router.push({ pathname: "/book/[id]", params: { id: selectedBook.googleBookId } });
+                    }
+                }}
+            />
         </View>
     );
 }
@@ -297,6 +363,18 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: "Nunito-Medium",
         marginBottom: 6,
+    },
+    badgeRow: {
+        flexDirection: "row",
+        gap: 8,
+        alignItems: "center",
+    },
+    statusBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        justifyContent: "center",
+        alignItems: "center",
     },
     reviewBadge: {
         flexDirection: "row",

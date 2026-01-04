@@ -10,6 +10,7 @@ type Book = {
     id: string;
     coverUrl: string;
     rating?: number;
+    readingStatus?: "not read" | "reading" | "read";
 };
 
 type BookGridProps = {
@@ -50,6 +51,7 @@ export function BookGrid({ books, onBookPress, contentContainerStyle, ListHeader
                     rating={item.rating}
                     onPress={onBookPress}
                     width={ITEM_WIDTH}
+                    readingStatus={item.readingStatus}
                 />
             )}
         />

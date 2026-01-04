@@ -164,7 +164,6 @@ export default function ProfileScreen() {
                                     isOwnerPrivate={user?.isPrivate}
                                     onAddBook={() => handleOpenAddBook(list._id)}
                                     onRefresh={() => {
-                                        showToast("List deleted", "error");
                                         refetch();
                                     }}
                                 />

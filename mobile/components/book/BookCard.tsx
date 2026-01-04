@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     Text,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 type BookCardProps = {
     id: string;
@@ -13,6 +14,7 @@ type BookCardProps = {
     rating?: number;
     onPress: (id: string) => void;
     width: number;
+    readingStatus?: "not read" | "reading" | "read";
 };
 
 export function BookCard({
@@ -21,6 +23,7 @@ export function BookCard({
     rating,
     onPress,
     width,
+    readingStatus,
 }: BookCardProps) {
     return (
         <TouchableOpacity
@@ -33,6 +36,18 @@ export function BookCard({
                 style={styles.cover}
                 resizeMode="cover"
             />
+
+            {readingStatus && readingStatus !== "not read" && (
+                <View style={[styles.statusBadge,
+                readingStatus === "read" ? styles.statusRead : styles.statusReading
+                ]}>
+                    <Ionicons
+                        name={readingStatus === "read" ? "checkmark" : "book"}
+                        size={12}
+                        color="#FFF"
+                    />
+                </View>
+            )}
 
             {rating !== undefined && rating > 0 && (
                 <View style={styles.ratingContainer}>
@@ -65,5 +80,23 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: "600",
         color: "#F9FAFB",
+    },
+    statusBadge: {
+        position: "absolute",
+        top: 6,
+        right: 6,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        borderWidth: 1.5,
+        borderColor: "rgba(0,0,0,0.2)",
+    },
+    statusRead: {
+        backgroundColor: "#10B981",
+    },
+    statusReading: {
+        backgroundColor: "#3B82F6",
     },
 });

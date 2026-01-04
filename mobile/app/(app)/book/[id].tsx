@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import {
     View,
     Text,
@@ -121,6 +121,20 @@ export default function BookDetailScreen() {
 
     const isSubmitting = creatingReview || updatingReview;
 
+    const readers = useMemo(() => {
+        const readersMap = new Map();
+
+        reviews.forEach((r) => {
+            if (r?.user?._id) readersMap.set(r.user._id, r.user);
+        });
+
+        discoveryLists.forEach((l) => {
+            if (l?.user?._id) readersMap.set(l.user._id, l.user);
+        });
+
+        return Array.from(readersMap.values());
+    }, [reviews, discoveryLists]);
+
     useEffect(() => {
         if (!loading) {
             Animated.parallel([
@@ -168,9 +182,7 @@ export default function BookDetailScreen() {
         );
     }
 
-    const readers = Array.from(
-        new Map(reviews.filter((r) => r?.user?._id).map((r) => [r.user._id, r.user])).values()
-    );
+
 
     const calculateAverageRating = () => {
         if (reviews.length < 5) return null;
@@ -423,7 +435,12 @@ export default function BookDetailScreen() {
                                         <>
                                             <View style={styles.readersContainer}>
                                                 {(showMoreReaders ? readers : readers.slice(0, 5)).map((u) => (
-                                                    <View key={u._id} style={styles.readerCard}>
+                                                    <TouchableOpacity
+                                                        key={u._id}
+                                                        style={styles.readerCard}
+                                                        onPress={() => router.push(`/user/${u.username}`)}
+                                                        disabled={user?.id === u._id}
+                                                    >
                                                         <Image
                                                             source={{
                                                                 uri: getImageUrl(u.avatar) || "https://via.placeholder.com/40"
@@ -434,7 +451,7 @@ export default function BookDetailScreen() {
                                                             <Text style={styles.readerName}>{u.username}</Text>
                                                             <Text style={styles.readerLabel}>Reader</Text>
                                                         </View>
-                                                    </View>
+                                                    </TouchableOpacity>
                                                 ))}
                                             </View>
                                             {readers.length > 5 && (
