@@ -18,6 +18,11 @@ const bookListSchema = new mongoose.Schema({
       thumbnail: String,
       publishedDate: String,
       categories: [String],
+      readingStatus: {
+        type: String,
+        enum: ["not read", "reading", "read"],
+        default: "not read"
+      }
     }
     ],
     visibility: {

@@ -9,27 +9,54 @@ import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
 // ------------------------
 export const searchBooks = async (req, res) => {
   try {
-    const { q } = req.query;
+    const { q, orderBy } = req.query;
     if (!q) return res.status(400).json({ message: "Debes proporcionar un término de búsqueda" });
 
-    const response = await axios.get("https://www.googleapis.com/books/v1/volumes", {
-      params: {
-        q,
-        key: process.env.GOOGLE_BOOKS_API_KEY,
-        maxResults: 20,
-        printType: "books",
-        orderBy: "relevance",
-      },
+    // Parallel search strategy
+    const [broadResponse, titleResponse] = await Promise.all([
+      axios.get("https://www.googleapis.com/books/v1/volumes", {
+        params: {
+          q,
+          key: process.env.GOOGLE_BOOKS_API_KEY,
+          maxResults: 20,
+          printType: "books",
+          orderBy: orderBy || "relevance",
+        },
+      }),
+      axios.get("https://www.googleapis.com/books/v1/volumes", {
+        params: {
+          q: `intitle:"${q}"`,
+          key: process.env.GOOGLE_BOOKS_API_KEY,
+          maxResults: 20,
+          printType: "books",
+          orderBy: orderBy || "relevance",
+        },
+      })
+    ]);
+
+    const combinedItems = [
+      ...(broadResponse.data.items ?? []),
+      ...(titleResponse.data.items ?? [])
+    ];
+
+    const uniqueMap = new Map();
+    combinedItems.forEach(item => {
+      if (!uniqueMap.has(item.id)) {
+        uniqueMap.set(item.id, item);
+      }
     });
 
-    const books = (response.data.items ?? [])
+    const books = Array.from(uniqueMap.values())
       .filter(item => item.volumeInfo?.imageLinks?.thumbnail)
       .map(item => {
         item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail);
         return item;
       });
 
-    res.status(200).json({ ...response.data, items: books });
+    res.status(200).json({ 
+      totalItems: uniqueMap.size,
+      items: books 
+    });
   } catch (error) {
     if (error.response) {
       logger.error("Error buscando libros (Google API): " + error.response.status + " " + JSON.stringify(error.response.data));

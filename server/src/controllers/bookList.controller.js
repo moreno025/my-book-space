@@ -92,7 +92,15 @@ export const addBookToList = async (req, res) => {
         
         const cleanThumbnail = cleanGoogleBooksUrl(thumbnail);
         
-        list.books.push({ googleBookId, title, authors, thumbnail: cleanThumbnail, publishedDate, categories });
+        list.books.push({ 
+            googleBookId, 
+            title, 
+            authors, 
+            thumbnail: cleanThumbnail, 
+            publishedDate, 
+            categories,
+            readingStatus: "not read"
+        });
         await list.save();
 
         res.status(200).json({ message: "Libro añadido a la lista", list });
@@ -227,7 +235,15 @@ export const getListsByBookId = async (req, res) => {
         const requesterId = req.user ? req.user._id : null;
 
         const pipeline = [
-            { $match: { visibility: "public", "books.googleBookId": googleBookId } },
+            { 
+                $match: { 
+                    "books.googleBookId": googleBookId,
+                    $or: [
+                        { visibility: "public" },
+                        ...(requesterId ? [{ user: requesterId }] : [])
+                    ]
+                } 
+            },
             {
                 $lookup: {
                     from: "users",
@@ -295,6 +311,39 @@ export const removeBookFromList = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Error eliminando libro" });
   }
+};
+
+
+// ------------------------
+// Update Book Reading Status
+// ------------------------
+export const updateBookStatus = async (req, res) => {
+    try {
+        const { listId, googleBookId } = req.params;
+        const { status } = req.body;
+
+        // Validate status
+        const validStatuses = ["not read", "reading", "read"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: "Invalid status. Must be 'not read', 'reading', or 'read'" });
+        }
+
+        const list = await BookList.findById(listId);
+        if (!list) return res.status(404).json({ message: "Lista no encontrada" });
+        if (!list.user.equals(req.user._id)) return res.status(403).json({ message: "No autorizado" });
+
+        // Find and update the book
+        const book = list.books.find(b => b.googleBookId === googleBookId);
+        if (!book) return res.status(404).json({ message: "Libro no encontrado en la lista" });
+
+        book.readingStatus = status;
+        await list.save();
+
+        res.status(200).json({ message: "Estado actualizado", list });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error actualizando estado del libro" });
+    }
 };
 
 

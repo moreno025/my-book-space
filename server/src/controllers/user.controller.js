@@ -441,6 +441,41 @@ export const getUserStats = async (req, res) => {
             });
         });
 
+        // Calculate reading stats (unique books)
+        const uniqueBooks = new Map(); // googleBookId -> status priority (2: read, 1: reading, 0: not read)
+        
+        userLists.forEach(list => {
+            list.books.forEach(book => {
+                const currentPriority = { "read": 2, "reading": 1, "not read": 0 }[book.readingStatus || "not read"];
+                const existingPriority = uniqueBooks.get(book.googleBookId) || -1;
+                
+                if (currentPriority > existingPriority) {
+                    uniqueBooks.set(book.googleBookId, currentPriority);
+                }
+            });
+        });
+
+        const readingStats = {
+            read: 0,
+            reading: 0,
+            wantToRead: 0
+        };
+
+        for (const priority of uniqueBooks.values()) {
+            if (priority === 2) readingStats.read++;
+            else if (priority === 1) readingStats.reading++;
+            else readingStats.wantToRead++;
+        }
+
+        // Update totalBooks to reflect unique books marked as read (more accurate than just reviewed)
+        // Or should totalBooks be ALL unique books?
+        // Let's keep totalBooks as ALL unique books in library for consistency with "Books Read" usually meaning "Finished"
+        // But "Total Books" usually means Library Size. 
+        // Let's redefine totalBooks as "Library Size" (all unique books) and use readingStats.read for "Books Read"
+        // effectively replacing the review-based count.
+        
+        const librarySize = uniqueBooks.size;
+
         // Find top author
         let topAuthor = "N/A";
         let maxAuthorCount = 0;
@@ -463,7 +498,10 @@ export const getUserStats = async (req, res) => {
 
         res.status(200).json({
             totalReviews,
-            totalBooks,
+            totalBooks: readingStats.read, // Use explicitly READ books for "Books Read" stat
+            librarySize,
+            readingStats,
+            averageRating: parseFloat(averageRating),
             averageRating: parseFloat(averageRating),
             ratingDistribution,
             topAuthor,
