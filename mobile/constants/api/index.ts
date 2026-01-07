@@ -26,8 +26,8 @@ export const authApi = {
 };
 
 export const booksApi = {
-    searchBooks: (query: string, orderBy?: 'relevance' | 'newest', signal?: AbortSignal) =>
-        publicApi.get("/book/search", { params: { q: query, orderBy }, signal }),
+    searchBooks: (query: string, orderBy?: 'relevance' | 'newest', lang?: string, signal?: AbortSignal) =>
+        publicApi.get("/book/search", { params: { q: query, orderBy, lang }, signal }),
 
     saveHistory: (query: string) =>
         privateApi.post("/book/search/history", { query }),
@@ -41,8 +41,14 @@ export const booksApi = {
     deleteHistoryItem: (query: string) =>
         privateApi.delete(`/book/search/history/${query}`),
 
-    getBookById: (id: string) =>
-        publicApi.get(`/book/${id}`),
+    getBookById: (id: string, lang?: string) =>
+        publicApi.get(`/book/${id}`, { params: { lang } }),
+
+    getBookByIsbn: (isbn: string, lang?: string) =>
+        publicApi.get(`/book/isbn/${isbn}`, { params: { lang } }),
+
+    getTrendingBooks: (lang?: string) =>
+        publicApi.get("/book/trending", { params: { lang } }),
 };
 
 export const reviewBookApi = {
