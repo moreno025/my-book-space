@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     View,
     Text,
@@ -23,10 +24,12 @@ import { BookGridSkeleton } from "../../../components/skeleton/BookGridSkeleton"
 import { useAppFonts } from "../../../hooks/useFonts";
 import { getImageUrl } from "@/utils/url";
 import { jpg } from "../../../assets/images";
+import BarcodeScanner from "../../../components/search/BarcodeScanner";
 
 type SearchTab = "books" | "users";
 
 export default function SearchScreen() {
+    const { t } = useTranslation();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const fontsLoaded = useAppFonts();
@@ -35,6 +38,7 @@ export default function SearchScreen() {
 
     const [query, setQuery] = useState("");
     const [activeTab, setActiveTab] = useState<SearchTab>("books");
+    const [isScannerVisible, setIsScannerVisible] = useState(false);
     const { tab } = useLocalSearchParams<{ tab?: string }>();
 
     React.useEffect(() => {
@@ -80,7 +84,7 @@ export default function SearchScreen() {
                     <Ionicons name="search" size={20} color="#9CA3AF" />
 
                     <TextInput
-                        placeholder={`Search ${activeTab}...`}
+                        placeholder={t('search.placeholder', { tab: t(`search.${activeTab}`).toLowerCase() })}
                         placeholderTextColor="#9CA3AF"
                         style={styles.headerInput}
                         value={query}
@@ -88,12 +92,19 @@ export default function SearchScreen() {
                         autoFocus
                     />
 
-                    {query.length > 0 && (
+                    {query.length > 0 ? (
                         <TouchableOpacity
                             style={styles.clearButtonContainer}
                             onPress={() => setQuery("")}
                         >
                             <Ionicons name="close-circle" size={26} color="#9CA3AF" />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.clearButtonContainer}
+                            onPress={() => setIsScannerVisible(true)}
+                        >
+                            <Ionicons name="camera" size={26} color="#3B82F6" />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -111,7 +122,7 @@ export default function SearchScreen() {
                         color={activeTab === "books" ? "#3B82F6" : "#6B7280"}
                     />
                     <Text style={[styles.tabText, activeTab === "books" && styles.activeTabText]}>
-                        Books
+                        {t('search.books')}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -124,16 +135,35 @@ export default function SearchScreen() {
                         color={activeTab === "users" ? "#3B82F6" : "#6B7280"}
                     />
                     <Text style={[styles.tabText, activeTab === "users" && styles.activeTabText]}>
-                        Users
+                        {t('search.users')}
                     </Text>
                 </TouchableOpacity>
             </View>
+
+            {/* SCAN CTA (Prominent button to open camera) */}
+            {activeTab === "books" && query.length === 0 && (
+                <View style={styles.scanCtaContainer}>
+                    <TouchableOpacity
+                        style={styles.scanCtaContent}
+                        onPress={() => setIsScannerVisible(true)}
+                    >
+                        <View style={styles.scanIconWrapper}>
+                            <Ionicons name="camera" size={32} color="#3B82F6" />
+                        </View>
+                        <View style={styles.scanTextWrapper}>
+                            <Text style={styles.scanCtaTitle}>{t('search.scan_barcode')}</Text>
+                            <Text style={styles.scanCtaSubtitle}>{t('search.empty_subtitle')}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
+                    </TouchableOpacity>
+                </View>
+            )}
 
             {/* SEARCH HISTORY (only for books) */}
             {activeTab === "books" && query.length === 0 && history.length > 0 && (
                 <View style={styles.historyContainer}>
                     <View style={styles.historyHeader}>
-                        <Text style={styles.historyTitle}>Recent searches</Text>
+                        <Text style={styles.historyTitle}>{t('search.recent_searches')}</Text>
 
                         <TouchableOpacity onPress={clear}>
                             <Ionicons name="trash-outline" size={20} color="#6B7280" />
@@ -161,7 +191,7 @@ export default function SearchScreen() {
             {activeTab === "users" && query.length === 0 && userHistory.length > 0 && (
                 <View style={styles.historyContainer}>
                     <View style={styles.historyHeader}>
-                        <Text style={styles.historyTitle}>Recent users</Text>
+                        <Text style={styles.historyTitle}>{t('search.recent_users')}</Text>
 
                         <TouchableOpacity onPress={clearUser}>
                             <Ionicons name="trash-outline" size={20} color="#6B7280" />
@@ -182,7 +212,7 @@ export default function SearchScreen() {
                                     <Text style={styles.historyText}>{item.searchedUser.username}</Text>
                                     {item.searchedUser.name && (
                                         <Text style={{ fontSize: 12, fontFamily: "Nunito-Regular", color: "#6B7280" }}>
-                                            {item.searchedUser.name}
+                                            {t('common.reader')}
                                         </Text>
                                     )}
                                 </View>
@@ -201,7 +231,7 @@ export default function SearchScreen() {
 
             {loading && activeTab === "users" && (
                 <View style={styles.loadingContainer}>
-                    <Text style={styles.loadingText}>Searching users...</Text>
+                    <Text style={styles.loadingText}>{t('search.searching_users')}</Text>
                 </View>
             )}
 
@@ -230,7 +260,7 @@ export default function SearchScreen() {
                             <View style={styles.userInfo}>
                                 <Text style={styles.userName}>@{item.username}</Text>
                                 {item.name && (
-                                    <Text style={styles.userFullName}>{item.name}</Text>
+                                    <Text style={styles.userFullName}>{t('common.reader')}</Text>
                                 )}
                             </View>
                             {item.isPrivate && (
@@ -243,12 +273,17 @@ export default function SearchScreen() {
             )}
 
             {!loading && hasSearched && activeTab === "books" && books.length === 0 && query.length > 1 && (
-                <Text style={styles.empty}>No books found</Text>
+                <Text style={styles.empty}>{t('search.no_books_found')}</Text>
             )}
 
             {!loading && hasSearched && activeTab === "users" && users.length === 0 && query.length > 1 && (
-                <Text style={styles.empty}>No users found</Text>
+                <Text style={styles.empty}>{t('search.no_users_found')}</Text>
             )}
+
+            <BarcodeScanner
+                isVisible={isScannerVisible}
+                onClose={() => setIsScannerVisible(false)}
+            />
         </SafeAreaView>
     );
 }
@@ -394,6 +429,49 @@ const styles = StyleSheet.create({
     userFullName: {
         fontSize: 14,
         fontFamily: "Nunito-Regular",
+        color: "#6B7280",
+    },
+
+    // SCAN CTA STYLES
+    scanCtaContainer: {
+        paddingHorizontal: 16,
+        marginTop: 8,
+    },
+    scanCtaContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 2,
+    },
+    scanIconWrapper: {
+        width: 56,
+        height: 56,
+        borderRadius: 14,
+        backgroundColor: "#EFF6FF",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 16,
+    },
+    scanTextWrapper: {
+        flex: 1,
+    },
+    scanCtaTitle: {
+        fontSize: 18,
+        fontFamily: "Nunito-Bold",
+        color: "#111827",
+        marginBottom: 2,
+    },
+    scanCtaSubtitle: {
+        fontSize: 14,
+        fontFamily: "Nunito-Medium",
         color: "#6B7280",
     },
 });

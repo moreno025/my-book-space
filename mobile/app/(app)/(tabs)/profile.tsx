@@ -1,5 +1,6 @@
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ import { StatsTab } from "@/components/profile/StatsTab";
 
 
 export default function ProfileScreen() {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { user, refreshUser } = useAuth();
     const { lists, loading, refetch } = useUserLists({
@@ -124,7 +126,7 @@ export default function ProfileScreen() {
                         onPress={() => setActiveTab('lists')}
                     >
                         <Ionicons name="albums-outline" size={20} color={activeTab === 'lists' ? "#3B82F6" : "#64748B"} />
-                        <Text style={[styles.tabText, activeTab === 'lists' && styles.activeTabText]}>My Lists</Text>
+                        <Text style={[styles.tabText, activeTab === 'lists' && styles.activeTabText]}>{t('tabs.home')} {t('profile.lists', 'Lists')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -132,7 +134,7 @@ export default function ProfileScreen() {
                         onPress={() => setActiveTab('stats')}
                     >
                         <MaterialCommunityIcons name="lightning-bolt-outline" size={20} color={activeTab === 'stats' ? "#3B82F6" : "#64748B"} />
-                        <Text style={[styles.tabText, activeTab === 'stats' && styles.activeTabText]}>Reading Stats</Text>
+                        <Text style={[styles.tabText, activeTab === 'stats' && styles.activeTabText]}>{t('profile.reading_stats', 'Reading Stats')}</Text>
                     </TouchableOpacity>
                 </View>
 

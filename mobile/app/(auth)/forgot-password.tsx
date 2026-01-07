@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     StyleSheet,
     Text,
@@ -19,6 +20,7 @@ import { forgotPasswordSchema } from "../../schemas/auth";
 import { useAppFonts } from "../../hooks/useFonts";
 
 export default function ForgotPasswordScreen() {
+    const { t } = useTranslation();
     const [message, setMessage] = useState<string | null>(null);
     const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
     const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ export default function ForgotPasswordScreen() {
             setMessageType("success");
         } catch (err: any) {
             console.error(err.response?.data?.message || err.message);
-            setMessage(err.response?.data?.message || "Error al enviar el enlace");
+            setMessage(err.response?.data?.message || t('auth.errors.reset_link_error'));
             setMessageType("error");
         } finally {
             setLoading(false);
@@ -74,14 +76,14 @@ export default function ForgotPasswordScreen() {
                     style={{ width: "100%" }}
                 >
                     <View style={styles.card}>
-                        <Text style={styles.title}>Recuperar contraseña</Text>
+                        <Text style={styles.title}>{t('auth.recovery_title')}</Text>
 
                         <Controller
                             control={control}
                             name="email"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
-                                    placeholder="Email"
+                                    placeholder={t('auth.email')}
                                     value={value}
                                     onBlur={onBlur}
                                     onChangeText={onChange}
@@ -103,7 +105,7 @@ export default function ForgotPasswordScreen() {
                         )}
 
                         <Button
-                            title={loading ? "Enviando..." : "Enviar enlace"}
+                            title={loading ? t('auth.sending') : t('auth.send_reset_link')}
                             onPress={handleSubmit(onSubmit)}
                         />
                     </View>

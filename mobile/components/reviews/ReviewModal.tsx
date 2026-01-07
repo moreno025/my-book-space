@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Modal,
     View,
@@ -31,6 +32,7 @@ export function ReviewModal({
     initialRating = 0,
     initialReview = "",
 }: ReviewModalProps) {
+    const { t } = useTranslation();
     const [rating, setRating] = useState(initialRating);
     const [review, setReview] = useState(initialReview);
 
@@ -93,7 +95,7 @@ export function ReviewModal({
                                     disabled={loading}
                                     style={[styles.button, styles.cancelButton]}
                                 >
-                                    <Text style={styles.cancelButtonText}>Close</Text>
+                                    <Text style={styles.cancelButtonText}>{t('review.close')}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
@@ -112,7 +114,7 @@ export function ReviewModal({
                                         <ActivityIndicator color="#FFFFFF" size="small" />
                                     ) : (
                                         <Text style={styles.submitText}>
-                                            {isEditing ? "Update Review" : "Post Review"}
+                                            {isEditing ? t('review.update') : t('review.post')}
                                         </Text>
                                     )}
                                 </TouchableOpacity>

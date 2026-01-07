@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     Alert
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,6 +26,7 @@ interface FollowRequest {
 }
 
 export default function FollowRequestsScreen() {
+    const { t } = useTranslation();
     const router = useRouter();
     const fontsLoaded = useAppFonts();
     const [requests, setRequests] = useState<FollowRequest[]>([]);
@@ -50,10 +52,10 @@ export default function FollowRequestsScreen() {
         try {
             await userApi.acceptFollowRequest(id);
             setRequests(prev => prev.filter(req => req._id !== id));
-            Alert.alert("Success", `Accepted ${username}'s follow request`);
+            Alert.alert(t('common.success'), t('follow_requests.alerts.accept_success', { username }));
         } catch (error) {
             console.error("Error accepting request:", error);
-            Alert.alert("Error", "Failed to accept request");
+            Alert.alert(t('common.error'), t('follow_requests.alerts.accept_failed'));
         }
     };
 
@@ -61,10 +63,10 @@ export default function FollowRequestsScreen() {
         try {
             await userApi.rejectFollowRequest(id);
             setRequests(prev => prev.filter(req => req._id !== id));
-            Alert.alert("Success", `Rejected ${username}'s follow request`);
+            Alert.alert(t('common.success'), t('follow_requests.alerts.reject_success', { username }));
         } catch (error) {
             console.error("Error rejecting request:", error);
-            Alert.alert("Error", "Failed to reject request");
+            Alert.alert(t('common.error'), t('follow_requests.alerts.reject_failed'));
         }
     };
 
@@ -88,7 +90,7 @@ export default function FollowRequestsScreen() {
                     style={[styles.actionButton, styles.acceptButton]}
                     onPress={() => handleAccept(item._id, item.username)}
                 >
-                    <Text style={styles.acceptButtonText}>Accept</Text>
+                    <Text style={styles.acceptButtonText}>{t('follow_requests.accept')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.actionButton, styles.rejectButton]}
@@ -111,7 +113,7 @@ export default function FollowRequestsScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Follow Requests</Text>
+                    <Text style={styles.headerTitle}>{t('follow_requests.title')}</Text>
                     <View style={{ width: 40 }} />
                 </View>
 
@@ -122,7 +124,7 @@ export default function FollowRequestsScreen() {
                 ) : requests.length === 0 ? (
                     <View style={styles.center}>
                         <Ionicons name="people-outline" size={64} color="rgba(255,255,255,0.2)" />
-                        <Text style={styles.emptyText}>No pending requests</Text>
+                        <Text style={styles.emptyText}>{t('follow_requests.no_requests')}</Text>
                     </View>
                 ) : (
                     <FlatList

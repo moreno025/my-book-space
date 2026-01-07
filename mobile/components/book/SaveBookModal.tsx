@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Modal,
     View,
@@ -42,6 +43,7 @@ export function SaveBookModal({
     onError,
     onCreateList,
 }: SaveBookModalProps) {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { lists, loading, refetch } = useUserLists({
         username: user?.username ?? "",
@@ -122,11 +124,11 @@ export function SaveBookModal({
                             />
                         </View>
                         <Text style={styles.listCount}>
-                            {item.books.length} {item.books.length === 1 ? "book" : "books"}
+                            {t('book.books_count', { count: item.books.length })}
                         </Text>
                     </View>
                     {isAlreadySaved ? (
-                        <Text style={styles.savedBadge}>Saved</Text>
+                        <Text style={styles.savedBadge}>{t('book.saved')}</Text>
                     ) : savingId === item._id ? (
                         <ActivityIndicator size="small" color="#3B82F6" />
                     ) : (
@@ -159,7 +161,7 @@ export function SaveBookModal({
                     <View style={styles.header}>
                         <View style={styles.handle} />
                         <View style={styles.headerRow}>
-                            <Text style={styles.title}>Save to List</Text>
+                            <Text style={styles.title}>{t('book.save_to_list')}</Text>
                             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                                 <Ionicons name="close" size={24} color="#9CA3AF" />
                             </TouchableOpacity>
@@ -187,13 +189,13 @@ export function SaveBookModal({
                                     <View style={[styles.listIconContainer, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
                                         <Ionicons name="add" size={24} color="#10B981" />
                                     </View>
-                                    <Text style={styles.createButtonText}>Create New List</Text>
+                                    <Text style={styles.createButtonText}>{t('book.create_new_list')}</Text>
                                 </TouchableOpacity>
                             }
                             ListEmptyComponent={
                                 !loading ? (
                                     <View style={styles.emptyContainer}>
-                                        <Text style={styles.emptyText}>{"You haven't created any lists yet."}</Text>
+                                        <Text style={styles.emptyText}>{t('book.no_lists_created')}</Text>
                                     </View>
                                 ) : null
                             }

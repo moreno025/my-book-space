@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, Easing } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useState, useRef } from "react";
 import { User } from "../../types/user";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +27,7 @@ export function ProfileHeader({
     onFollow,
     onBack
 }: ProfileHeaderProps) {
+    const { t } = useTranslation();
     const [imageError, setImageError] = useState(false);
     const router = useRouter();
 
@@ -92,9 +94,9 @@ export function ProfileHeader({
     if (!user) return null;
 
     const stats = [
-        { label: "followers", value: user.followersCount || 0 },
-        { label: "following", value: user.followingCount || 0 },
-        { label: "lists", value: listsCount ?? user.listsCount ?? 0 },
+        { label: t('profile.followers'), value: user.followersCount || 0 },
+        { label: t('profile.following'), value: user.followingCount || 0 },
+        { label: t('profile.lists'), value: listsCount ?? user.listsCount ?? 1 },
     ];
 
     return (
@@ -181,7 +183,7 @@ export function ProfileHeader({
                                         isFollowing ? styles.followingButtonText :
                                             isRequested ? styles.requestedButtonText : styles.followButtonText
                                     ]}>
-                                        {isFollowing ? "Following" : isRequested ? "Requested" : "Follow"}
+                                        {isFollowing ? t('profile.following') : isRequested ? t('profile.requested') : t('profile.follow')}
                                     </Text>
                                 </TouchableOpacity>
                             </Animated.View>

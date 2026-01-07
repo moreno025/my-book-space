@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { booksApi } from "../../constants/api/index";
 
 type Book = {
@@ -113,6 +114,7 @@ function scoreBook(item: any, query: string) {
 }
 
 export function useBookSearch(query: string) {
+    const { i18n } = useTranslation();
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
@@ -135,7 +137,7 @@ export function useBookSearch(query: string) {
                 const q = normalizedQuery;
 
                 // Pass undefined for orderBy to use default relevance
-                const res = await booksApi.searchBooks(q, undefined, controller.signal);
+                const res = await booksApi.searchBooks(q, undefined, i18n.language, controller.signal);
                 const items = res.data.items ?? [];
 
                 const scored = items
@@ -191,7 +193,7 @@ export function useBookSearch(query: string) {
             clearTimeout(timeout);
             controller.abort();
         };
-    }, [query]);
+    }, [query, i18n.language]);
 
     return {
         books,

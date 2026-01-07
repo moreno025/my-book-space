@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Book } from "../../types/book";
 import { booksApi } from "../../constants/api/index";
 
@@ -26,6 +27,7 @@ function cleanCategories(categories: string[] | undefined, limit = 3): string[] 
 }
 
 export function useBookDetail(id: string) {
+    const { i18n } = useTranslation();
     const [book, setBook] = useState<Book | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export function useBookDetail(id: string) {
         const fetchBook = async () => {
             try {
                 setLoading(true);
-                const res = await booksApi.getBookById(id);
+                const res = await booksApi.getBookById(id, i18n.language);
 
                 const data: Book = {
                     ...res.data,
@@ -53,7 +55,7 @@ export function useBookDetail(id: string) {
         };
 
         fetchBook();
-    }, [id]);
+    }, [id, i18n.language]);
 
     return { book, loading, error };
 }

@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, ImageBackground, StyleSheet, View, useWindowDimensions } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useForm, Controller } from "react-hook-form";
@@ -12,6 +13,7 @@ import { authApi } from "../../constants/api/index";
 import { useAppFonts } from "../../hooks/useFonts";
 
 export default function Register() {
+    const { t } = useTranslation();
     const { height } = useWindowDimensions();
     const router = useRouter();
     const fontsLoaded = useAppFonts();
@@ -30,7 +32,7 @@ export default function Register() {
                 router.replace("/");
             }
         } catch (error: any) {
-            const msg = error.response?.data?.message || "Ha ocurrido un error";
+            const msg = error.response?.data?.message || t('common.error');
             setError("username", { message: msg });
             setError("email", { message: msg });
             setError("password", { message: msg });
@@ -57,7 +59,7 @@ export default function Register() {
                 bounces={false}
             >
                 <View style={[styles.innerContainer, { minHeight: height }]}>
-                    <Text style={styles.title}>My Book Space</Text>
+                    <Text style={styles.title}>{t('home.app_title')}</Text>
 
                     {/* Username */}
                     <Controller
@@ -65,7 +67,7 @@ export default function Register() {
                         name="username"
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
-                                placeholder="Username"
+                                placeholder={t('auth.username')}
                                 value={value}
                                 onBlur={onBlur}
                                 onChangeText={onChange}
@@ -81,7 +83,7 @@ export default function Register() {
                         name="email"
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
-                                placeholder="Email"
+                                placeholder={t('auth.email')}
                                 value={value}
                                 onBlur={onBlur}
                                 onChangeText={onChange}
@@ -97,7 +99,7 @@ export default function Register() {
                         name="password"
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
-                                placeholder="Contraseña"
+                                placeholder={t('auth.password')}
                                 value={value}
                                 onBlur={onBlur}
                                 onChangeText={onChange}
@@ -107,11 +109,11 @@ export default function Register() {
                         )}
                     />
 
-                    <Button title="Registrarse" onPress={handleSubmit(onSubmit)} />
+                    <Button title={t('auth.registrarse')} onPress={handleSubmit(onSubmit)} />
 
                     <View style={styles.linksContainer}>
                         <Text style={styles.link} onPress={() => router.push("../login")}>
-                            ¿Ya tienes cuenta? Inicia sesión
+                            {t('auth.already_have_account')}
                         </Text>
                     </View>
                 </View>

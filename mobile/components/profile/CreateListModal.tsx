@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     View,
     Text,
@@ -20,6 +21,7 @@ interface CreateListModalProps {
 }
 
 export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalProps) {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -46,11 +48,11 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
     const visibilityOptions = [
         {
             id: "public",
-            label: user?.isPrivate ? "Followers Only" : "Public",
+            label: user?.isPrivate ? t('list.followers_only') : t('list.public'),
             icon: user?.isPrivate ? "people-outline" : "globe-outline",
             color: user?.isPrivate ? "#3B82F6" : "#10B981"
         },
-        { id: "private", label: "Private", icon: "lock-closed-outline", color: "#6B7280" },
+        { id: "private", label: t('list.private'), icon: "lock-closed-outline", color: "#6B7280" },
     ];
 
     return (
@@ -66,7 +68,7 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
                     style={styles.content}
                 >
                     <View style={styles.header}>
-                        <Text style={styles.title}>Create New List</Text>
+                        <Text style={styles.title}>{t('list.create_title')}</Text>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color="#94A3B8" />
                         </TouchableOpacity>
@@ -74,24 +76,24 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
 
                     <View style={styles.form}>
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Title</Text>
+                            <Text style={styles.label}>{t('list.title_label')}</Text>
                             <TextInput
                                 style={styles.input}
                                 value={title}
                                 onChangeText={setTitle}
-                                placeholder="Summer Reads, Best Sci-Fi..."
+                                placeholder={t('list.title_placeholder')}
                                 placeholderTextColor="#4B5563"
                                 autoFocus
                             />
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Description (Optional)</Text>
+                            <Text style={styles.label}>{t('list.description_label')}</Text>
                             <TextInput
                                 style={[styles.input, styles.textArea]}
                                 value={description}
                                 onChangeText={setDescription}
-                                placeholder="What's this list about?"
+                                placeholder={t('list.description_placeholder')}
                                 placeholderTextColor="#4B5563"
                                 multiline
                                 numberOfLines={3}
@@ -99,7 +101,7 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Visibility</Text>
+                            <Text style={styles.label}>{t('list.visibility_label')}</Text>
                             <View style={styles.visibilityContainer}>
                                 {visibilityOptions.map((option) => (
                                     <TouchableOpacity
@@ -127,7 +129,7 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
                             </View>
                             {user?.isPrivate && (
                                 <Text style={styles.privacyHint}>
-                                    Your &quot;Followers&quot; lists are only visible to people who follow you.
+                                    {t('list.privacy_hint')}
                                 </Text>
                             )}
                         </View>
@@ -142,7 +144,7 @@ export function CreateListModal({ visible, onClose, onSubmit }: CreateListModalP
                             ) : (
                                 <>
                                     <Ionicons name="add" size={20} color="#fff" />
-                                    <Text style={styles.submitButtonText}>Create List</Text>
+                                    <Text style={styles.submitButtonText}>{t('list.create_button')}</Text>
                                 </>
                             )}
                         </TouchableOpacity>

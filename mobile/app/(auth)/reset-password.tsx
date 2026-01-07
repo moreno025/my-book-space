@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     StyleSheet,
     Text,
@@ -18,6 +19,7 @@ import { useAppFonts } from '../../hooks/useFonts';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function ResetPassword() {
+    const { t } = useTranslation();
     const { token: tokenParam } = useLocalSearchParams();
     const { logout } = useAuth();
     const [token, setToken] = useState<string>('');
@@ -40,15 +42,15 @@ export default function ResetPassword() {
         setSuccessMessage(null);
 
         if (!password || !confirmPassword) {
-            setError('Ambos campos son obligatorios');
+            setError(t('auth.errors.password_required'));
             return;
         }
         if (password !== confirmPassword) {
-            setError('Las contraseñas no coinciden');
+            setError(t('auth.errors.passwords_dont_match'));
             return;
         }
         if (!token) {
-            setError('Token inválido');
+            setError(t('auth.errors.invalid_token'));
             return;
         }
 
@@ -56,7 +58,7 @@ export default function ResetPassword() {
             setLoading(true);
             await authApi.updatePassword({ token, newPassword: password });
 
-            setSuccessMessage('Contraseña actualizada correctamente');
+            setSuccessMessage(t('auth.messages.password_updated'));
 
             // Wait a bit to show success message, then logout
             // The logout function will force a stack reset and default to Login
@@ -65,7 +67,7 @@ export default function ResetPassword() {
             }, 1500);
 
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Error al actualizar la contraseña');
+            setError(err.response?.data?.message || t('auth.errors.reset_password_error'));
         } finally {
             setLoading(false);
         }
@@ -91,10 +93,10 @@ export default function ResetPassword() {
                     style={{ width: '100%' }}
                 >
                     <View style={styles.card}>
-                        <Text style={styles.title}>Actualizar contraseña</Text>
+                        <Text style={styles.title}>{t('auth.reset_title')}</Text>
 
                         <Input
-                            placeholder="Nueva contraseña"
+                            placeholder={t('auth.new_password')}
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
@@ -103,7 +105,7 @@ export default function ResetPassword() {
                         />
 
                         <Input
-                            placeholder="Confirmar contraseña"
+                            placeholder={t('auth.confirm_password')}
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -116,7 +118,7 @@ export default function ResetPassword() {
                         )}
 
                         <Button
-                            title={loading ? 'Actualizando...' : 'Actualizar'}
+                            title={loading ? t('auth.updating') : t('auth.update')}
                             onPress={handleSubmit}
                             disabled={loading}
                         />

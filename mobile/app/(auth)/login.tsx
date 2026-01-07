@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Text, ImageBackground, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useForm, Controller } from "react-hook-form";
@@ -12,6 +13,7 @@ import { authApi } from "../../constants/api/index";
 import { useAppFonts } from "../../hooks/useFonts";
 
 export default function Login() {
+    const { t } = useTranslation();
     const { height } = useWindowDimensions();
     const router = useRouter();
     const fontsLoaded = useAppFonts();
@@ -29,7 +31,7 @@ export default function Login() {
                 login(data.email, data.password);
             }
         } catch (error: any) {
-            const msg = error.response?.data?.message || "Credenciales incorrectas.";
+            const msg = error.response?.data?.message || t('auth.errors.invalid_credentials');
             setError("email", { message: msg });
             setError("password", { message: msg });
         }
@@ -54,14 +56,14 @@ export default function Login() {
                 bounces={false}
             >
                 <View style={[styles.innerContainer, { minHeight: height }]}>
-                    <Text style={styles.title}>My Book Space</Text>
+                    <Text style={styles.title}>{t('home.app_title')}</Text>
 
                     <Controller
                         control={control}
                         name="email"
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
-                                placeholder="Email"
+                                placeholder={t('auth.email')}
                                 value={value}
                                 onBlur={onBlur}
                                 onChangeText={onChange}
@@ -76,7 +78,7 @@ export default function Login() {
                         name="password"
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
-                                placeholder="Contraseña"
+                                placeholder={t('auth.password')}
                                 secureTextEntry
                                 value={value}
                                 onBlur={onBlur}
@@ -86,15 +88,15 @@ export default function Login() {
                         )}
                     />
 
-                    <Button title="Iniciar sesión" onPress={handleSubmit(onSubmit)} />
+                    <Button title={t('auth.iniciar_sesion')} onPress={handleSubmit(onSubmit)} />
 
                     <View style={styles.linksContainer}>
                         <Text style={styles.link} onPress={() => router.push("../register")}>
-                            ¿No tienes cuenta? Regístrate
+                            {t('auth.no_account')}
                         </Text>
 
                         <Text style={styles.link} onPress={() => router.push("../forgot-password")}>
-                            ¿Olvidaste tu contraseña?
+                            {t('auth.forgot_password')}
                         </Text>
                     </View>
                 </View>

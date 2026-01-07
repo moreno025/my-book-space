@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
     View,
     Text,
@@ -44,6 +45,7 @@ const estimateReadingTime = (pages?: number | null) => {
 };
 
 export default function BookDetailScreen() {
+    const { t } = useTranslation();
     const { id, writeReview } = useLocalSearchParams<{ id: string; writeReview?: string }>();
     const fontsLoaded = useAppFonts();
     const router = useRouter();
@@ -83,7 +85,7 @@ export default function BookDetailScreen() {
     }, [fetchDiscovery]);
 
     const handleSaveSuccess = (listName: string) => {
-        showToast(`Saved to ${listName}!`, "success");
+        showToast(t('common.saved_to', { list: listName }), "success");
         fetchDiscovery(); // Recharge discovery lists
     };
 
@@ -263,7 +265,7 @@ export default function BookDetailScreen() {
                             <Metric
                                 icon={<Ionicons name="star" size={18} color="#FBBF24" />}
                                 value={displayRating ?? "—"}
-                                label={ratingSource === "user" ? `Rating (${reviews.length})` : "Rating"}
+                                label={ratingSource === "user" ? `${t('book.rating')} (${reviews.length})` : t('book.rating')}
                             />
                             <Metric
                                 icon={
@@ -274,18 +276,18 @@ export default function BookDetailScreen() {
                                     />
                                 }
                                 value={book.pages ?? "—"}
-                                label="Pages"
+                                label={t('book.pages')}
                             />
                             <Metric
                                 icon={<Ionicons name="time-outline" size={18} color="#38BDF8" />}
                                 value={estimateReadingTime(book.pages)}
-                                label="Reading"
+                                label={t('book.reading')}
                             />
                         </View>
 
                         {!!book.description && (
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>Synopsis</Text>
+                                <Text style={styles.sectionTitle}>{t('book.synopsis')}</Text>
                                 <Text
                                     style={styles.description}
                                     numberOfLines={expanded ? undefined : 4}
@@ -296,7 +298,7 @@ export default function BookDetailScreen() {
                                 {book.description.length > 180 && (
                                     <TouchableOpacity onPress={() => setExpanded(!expanded)}>
                                         <Text style={styles.readMore}>
-                                            {expanded ? "Show less" : "Read more"}
+                                            {expanded ? t('book.show_less') : t('book.read_more')}
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -309,7 +311,7 @@ export default function BookDetailScreen() {
                                 onPress={() => setShowSaveModal(true)}
                             >
                                 <Ionicons name="list-outline" size={20} color="#E5E7EB" />
-                                <Text style={styles.actionTextSecondary}>Add to list</Text>
+                                <Text style={styles.actionTextSecondary}>{t('book.add_to_list')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -322,7 +324,7 @@ export default function BookDetailScreen() {
                                     color="#FFFFFF"
                                 />
                                 <Text style={styles.actionTextPrimary}>
-                                    {userReview ? "Update review" : "Write a review"}
+                                    {userReview ? t('book.update_review') : t('book.write_review')}
                                 </Text>
                             </TouchableOpacity>
 
@@ -368,7 +370,7 @@ export default function BookDetailScreen() {
                                             activeTab === tab && styles.tabTextActive,
                                         ]}
                                     >
-                                        {tab}
+                                        {t(`book.tabs.${tab.toLowerCase()}`)}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -413,7 +415,7 @@ export default function BookDetailScreen() {
                                                         onPress={() => setShowMoreReviews(!showMoreReviews)}
                                                     >
                                                         <Text style={styles.showMoreText}>
-                                                            {showMoreReviews ? "Show Less" : `Show More (${reviews.length - 5} more)`}
+                                                            {showMoreReviews ? t('book.show_less') : `${t('book.show_more')} (${reviews.length - 5} ${t('common.more', 'more')})`}
                                                         </Text>
                                                         <Ionicons
                                                             name={showMoreReviews ? "chevron-up" : "chevron-down"}
@@ -424,7 +426,7 @@ export default function BookDetailScreen() {
                                                 )}
                                             </>
                                         ) : (
-                                            <Text style={{ color: "#E5E7EB", marginTop: 10 }}>No reviews yet</Text>
+                                            <Text style={{ color: "#E5E7EB", marginTop: 10 }}>{t('book.no_reviews')}</Text>
                                         ))}
                                 </>
                             )}
@@ -460,7 +462,7 @@ export default function BookDetailScreen() {
                                                     onPress={() => setShowMoreReaders(!showMoreReaders)}
                                                 >
                                                     <Text style={styles.showMoreText}>
-                                                        {showMoreReaders ? "Show Less" : `Show More (${readers.length - 5} more)`}
+                                                        {showMoreReaders ? t('book.show_less') : `${t('book.show_more')} (${readers.length - 5} ${t('common.more', 'more')})`}
                                                     </Text>
                                                     <Ionicons
                                                         name={showMoreReaders ? "chevron-up" : "chevron-down"}
@@ -471,7 +473,7 @@ export default function BookDetailScreen() {
                                             )}
                                         </>
                                     ) : (
-                                        <Text style={{ color: "#94A3B8", marginTop: 10, fontFamily: "Nunito-Medium" }}>No readers yet</Text>
+                                        <Text style={{ color: "#94A3B8", marginTop: 10, fontFamily: "Nunito-Medium" }}>{t('book.no_readers')}</Text>
                                     )}
                                 </>
                             )}
@@ -491,8 +493,8 @@ export default function BookDetailScreen() {
                                                     <View style={styles.discoveryListInfo}>
                                                         <Text style={styles.discoveryListTitle}>{l.title}</Text>
                                                         <View style={styles.discoveryListMeta}>
-                                                            <Text style={styles.discoveryListUser}>by {l.user.username}</Text>
-                                                            <Text style={styles.discoveryListBooks}>{l.books.length} books</Text>
+                                                            <Text style={styles.discoveryListUser}>{t('book.by')} {l.user.username}</Text>
+                                                            <Text style={styles.discoveryListBooks}>{t('book.books_count', { count: l.books.length })}</Text>
                                                         </View>
                                                     </View>
                                                     <Ionicons name="chevron-forward" size={20} color="#64748B" />
@@ -501,7 +503,7 @@ export default function BookDetailScreen() {
                                         </View>
                                     ) : (
                                         <Text style={{ color: "#94A3B8", fontFamily: "Nunito-Medium", marginTop: 10 }}>
-                                            No public lists contain this book yet.
+                                            {t('book.no_lists')}
                                         </Text>
                                     )}
                                 </>

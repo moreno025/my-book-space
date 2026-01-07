@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Book } from "../../types/book";
 import { booksApi } from "../../constants/api/index";
 
 export function useRelatedBooks(currentBook: Book | null) {
+    const { i18n } = useTranslation();
     const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -37,7 +39,7 @@ export function useRelatedBooks(currentBook: Book | null) {
 
                 // Fetching from multiple queries in parallel with error handling
                 const fetchResults = await Promise.allSettled(
-                    queries.map(q => booksApi.searchBooks(q))
+                    queries.map(q => booksApi.searchBooks(q, undefined, i18n.language))
                 );
 
                 let allItems: any[] = [];
@@ -52,7 +54,7 @@ export function useRelatedBooks(currentBook: Book | null) {
                 // Fallback: If we have very few results, fetch something popular/general
                 if (allItems.length < 5) {
                     try {
-                        const fallbackRes = await booksApi.searchBooks("fiction popular");
+                        const fallbackRes = await booksApi.searchBooks("fiction popular", undefined, i18n.language);
                         if (fallbackRes.data.items) {
                             allItems = [...allItems, ...fallbackRes.data.items];
                         }
@@ -99,7 +101,7 @@ export function useRelatedBooks(currentBook: Book | null) {
         };
 
         fetchRelated();
-    }, [currentBook?.id, currentBook]);
+    }, [currentBook?.id, currentBook, i18n.language]);
 
     return { relatedBooks, loading };
 }

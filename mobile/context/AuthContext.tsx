@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useCallback } from "react";
+import i18n from "../i18n"; // Import i18n configuration
 import { getItem, setItem, removeItem } from "../utils/storage";
 import { api, authApi, booksApi, userApi } from "../constants/api/index";
 import { authEvents, AUTH_EVENTS } from "../utils/authEvents";
@@ -13,6 +14,7 @@ interface AuthContextType {
     logout: () => Promise<void>;
     updateUserProfile: (data: FormData) => Promise<boolean>;
     refreshUser: (username: string) => Promise<void>;
+    changeLanguage: (lang: 'en' | 'es') => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -24,6 +26,7 @@ export const AuthContext = createContext<AuthContextType>({
     logout: async () => { },
     updateUserProfile: async () => false,
     refreshUser: async (username: string) => { },
+    changeLanguage: async () => { },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -62,6 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             console.log("Session validation: checking history...");
                             await booksApi.getHistory();
                             console.log("Session validation: success");
+
+                            // Apply user language preference if it exists
+                            if (parsedUser.language) {
+                                i18n.changeLanguage(parsedUser.language);
+                            }
 
                             setAuthState(savedToken, parsedUser);
                         } catch (error: any) {
@@ -126,6 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await setItem("refreshToken", refreshToken);
         await setItem("user", JSON.stringify(user));
 
+        if (user.language) {
+            i18n.changeLanguage(user.language);
+        }
+
         setAuthState(token, user);
 
         return true;
@@ -173,6 +185,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    async function changeLanguage(lang: 'en' | 'es') {
+        try {
+            // Update i18n immediately for better UX
+            await i18n.changeLanguage(lang);
+
+            // Persist to backend
+            const formData = new FormData();
+            formData.append('language', lang);
+
+            const res = await authApi.updateProfile(formData);
+            if (res.status === 200) {
+                const newUser = { ...user!, language: lang }; // Use local lang to be sure
+                setUser(newUser);
+                await setItem("user", JSON.stringify(newUser));
+            }
+        } catch (error) {
+            console.error("Failed to change language:", error);
+        }
+    }
+
     const refreshUser = useCallback(async (username: string) => {
         try {
             const res = await userApi.getUserByUsername(username);
@@ -194,7 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [setUser]);
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile, refreshUser }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile, refreshUser, changeLanguage }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,7 +1,9 @@
 import { Tabs } from "expo-router";
 import { TabBar } from "@/components/navigation/TabBar";
+import { useTranslation } from "react-i18next";
 
 export default function AppLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       tabBar={props => <TabBar {...props} />}
@@ -9,9 +11,9 @@ export default function AppLayout() {
         headerShown: false,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Inicio" }} />
-      <Tabs.Screen name="search" options={{ title: "Buscar" }} />
-      <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
+      <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
+      <Tabs.Screen name="search" options={{ title: t('tabs.search') }} />
+      <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
     </Tabs>
   );
 }

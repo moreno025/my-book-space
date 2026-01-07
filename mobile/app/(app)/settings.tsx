@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, Animated, Switch } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +14,8 @@ import { getImageUrl } from '@/utils/url';
 import { userApi } from '../../constants/api';
 
 export default function Settings() {
-    const { logout, user, updateUserProfile } = useAuth();
+    const { t } = useTranslation();
+    const { logout, user, updateUserProfile, changeLanguage } = useAuth();
     const router = useRouter();
 
     const [name, setName] = useState(user?.name || "");
@@ -109,22 +111,22 @@ export default function Settings() {
         const success = await updateUserProfile(formData);
 
         if (success) {
-            Alert.alert("Success", "Profile updated successfully");
+            Alert.alert(t('settings.alerts.success'), t('settings.alerts.profile_updated'));
             setNewAvatarUri(null); // Reset preview, actual avatar should update from context
         } else {
-            Alert.alert("Error", "Failed to update profile");
+            Alert.alert(t('settings.alerts.error'), t('settings.alerts.update_failed'));
         }
         setIsSaving(false);
     };
 
     const handleSignOut = () => {
         Alert.alert(
-            'Sign Out',
-            'Are you sure you want to sign out?',
+            t('settings.sign_out'),
+            t('settings.sign_out_confirm'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Sign Out',
+                    text: t('settings.sign_out'),
                     style: 'destructive',
                     onPress: async () => {
                         await logout();
@@ -149,8 +151,8 @@ export default function Settings() {
 
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Settings</Text>
-                    <Text style={styles.headerSubtitle}>Manage your profile & preferences</Text>
+                    <Text style={styles.headerTitle}>{t('settings.title')}</Text>
+                    <Text style={styles.headerSubtitle}>{t('settings.subtitle')}</Text>
 
                     <TouchableOpacity
                         style={styles.closeButton}
@@ -196,9 +198,9 @@ export default function Settings() {
                     {/* Glass Form Card */}
                     <View style={styles.glassCard}>
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Username</Text>
+                            <Text style={styles.label}>{t('auth.username')}</Text>
                             <Input
-                                placeholder="Username"
+                                placeholder={t('auth.username')}
                                 value={username}
                                 onChangeText={setUsername}
                                 autoCapitalize="none"
@@ -210,9 +212,9 @@ export default function Settings() {
 
                         <View style={styles.row}>
                             <View style={{ flex: 1, marginRight: 8 }}>
-                                <Text style={styles.label}>First Name</Text>
+                                <Text style={styles.label}>{t('settings.first_name')}</Text>
                                 <Input
-                                    placeholder="First Name"
+                                    placeholder={t('settings.first_name')}
                                     value={name}
                                     onChangeText={setName}
                                     placeholderTextColor="rgba(255,255,255,0.4)"
@@ -221,9 +223,9 @@ export default function Settings() {
                                 />
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
-                                <Text style={styles.label}>Last Name</Text>
+                                <Text style={styles.label}>{t('settings.last_name')}</Text>
                                 <Input
-                                    placeholder="Last Name"
+                                    placeholder={t('settings.last_name')}
                                     value={lastName}
                                     onChangeText={setLastName}
                                     placeholderTextColor="rgba(255,255,255,0.4)"
@@ -234,9 +236,9 @@ export default function Settings() {
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Bio</Text>
+                            <Text style={styles.label}>{t('profile.bio')}</Text>
                             <Input
-                                placeholder="Tell us about yourself..."
+                                placeholder={t('settings.bio_placeholder')}
                                 value={bio}
                                 onChangeText={setBio}
                                 multiline
@@ -254,7 +256,7 @@ export default function Settings() {
                                 <View style={styles.iconContainer}>
                                     <Ionicons name="people-outline" size={20} color="#fff" />
                                 </View>
-                                <Text style={styles.menuItemText}>Follow Requests</Text>
+                                <Text style={styles.menuItemText}>{t('settings.follow_requests')}</Text>
                             </View>
                             <View style={styles.menuItemRight}>
                                 {pendingRequestsCount > 0 && (
@@ -270,10 +272,9 @@ export default function Settings() {
 
                         <View style={styles.privacyGroup}>
                             <View style={styles.privacyInfo}>
-                                <Text style={styles.privacyLabel}>Private Account</Text>
+                                <Text style={styles.privacyLabel}>{t('settings.private_account')}</Text>
                                 <Text style={styles.privacyDescription}>
-                                    When private, people will need to request to follow you.
-                                    Only your followers will be able to see your lists.
+                                    {t('settings.private_description')}
                                 </Text>
                             </View>
                             <Switch
@@ -284,8 +285,41 @@ export default function Settings() {
                             />
                         </View>
 
+                        <View style={styles.divider} />
+
+                        {/* Language Section */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>{t('profile.language')}</Text>
+                            <View style={styles.languageContainer}>
+                                <TouchableOpacity
+                                    style={[styles.langButton, user?.language === 'en' && styles.activeLang]}
+                                    onPress={() => changeLanguage('en')}
+                                >
+                                    <View style={styles.langContent}>
+                                        <Text style={styles.flag}>🇺🇸</Text>
+                                        <Text style={[styles.langText, user?.language === 'en' && styles.activeLangText]}>{t('profile.english')}</Text>
+                                    </View>
+                                    {user?.language === 'en' && (
+                                        <Ionicons name="checkmark-circle" size={18} color="#3B82F6" />
+                                    )}
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.langButton, user?.language === 'es' && styles.activeLang]}
+                                    onPress={() => changeLanguage('es')}
+                                >
+                                    <View style={styles.langContent}>
+                                        <Text style={styles.flag}>🇪🇸</Text>
+                                        <Text style={[styles.langText, user?.language === 'es' && styles.activeLangText]}>{t('profile.spanish')}</Text>
+                                    </View>
+                                    {user?.language === 'es' && (
+                                        <Ionicons name="checkmark-circle" size={18} color="#3B82F6" />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
                         <Button
-                            title={isSaving ? "Saving..." : "Save Changes"}
+                            title={isSaving ? t('settings.saving') : t('settings.save_changes')}
                             onPress={handleSave}
                             disabled={isSaving}
                             style={styles.saveButton}
@@ -295,7 +329,7 @@ export default function Settings() {
                     {/* Sign Out Section */}
                     <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
                         <Ionicons name="log-out-outline" size={20} color="#f87171" />
-                        <Text style={styles.signOutText}>Sign Out</Text>
+                        <Text style={styles.signOutText}>{t('settings.sign_out')}</Text>
                     </TouchableOpacity>
 
                     <View style={styles.footerSpacer} />
@@ -531,5 +565,42 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 12,
         fontFamily: 'Nunito-Bold',
+    },
+    languageContainer: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 4,
+    },
+    langButton: {
+        flex: 1,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderWidth: 1.5,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    activeLang: {
+        backgroundColor: 'rgba(59, 130, 246, 0.12)',
+        borderColor: '#3B82F6',
+    },
+    langContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    flag: {
+        fontSize: 20,
+    },
+    langText: {
+        color: '#94A3B8',
+        fontSize: 15,
+        fontFamily: 'Nunito-Bold',
+    },
+    activeLangText: {
+        color: '#fff',
     },
 });

@@ -1,3 +1,4 @@
+/** User interface for the application */
 export interface User {
     id: string;
     name: string;
@@ -15,6 +16,7 @@ export interface User {
     isRequested?: boolean;
     canViewFullProfile?: boolean;
     readingProfile?: ReadingProfile;
+    language?: 'en' | 'es';
 }
 
 export interface ReadingProfile {

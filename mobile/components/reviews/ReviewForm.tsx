@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     StyleSheet,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 
 interface ReviewFormProps {
@@ -15,11 +16,12 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({ rating, setRating, review, setReview }: ReviewFormProps) {
+    const { t } = useTranslation();
     return (
         <View style={styles.formContainer}>
             <View style={styles.header}>
-                <Text style={styles.title}>Share your experience</Text>
-                <Text style={styles.subtitle}>How was your reading? Your review helps others discover great books.</Text>
+                <Text style={styles.title}>{t('review.form_title')}</Text>
+                <Text style={styles.subtitle}>{t('review.form_subtitle')}</Text>
             </View>
 
             <View style={styles.ratingSection}>
@@ -41,14 +43,14 @@ export function ReviewForm({ rating, setRating, review, setReview }: ReviewFormP
                 </View>
                 {rating > 0 && (
                     <Text style={styles.ratingText}>
-                        {rating === 5 ? "Excellent!" : rating === 4 ? "Very Good" : rating === 3 ? "Good" : rating === 2 ? "Fair" : "Poor"}
+                        {rating === 5 ? t('review.ratings.excellent') : rating === 4 ? t('review.ratings.very_good') : rating === 3 ? t('review.ratings.good') : rating === 2 ? t('review.ratings.fair') : t('review.ratings.poor')}
                     </Text>
                 )}
             </View>
 
             <TextInput
                 multiline
-                placeholder="Write your thoughts here..."
+                placeholder={t('review.placeholder')}
                 placeholderTextColor="#9CA3AF"
                 value={review}
                 onChangeText={setReview}
