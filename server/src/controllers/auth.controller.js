@@ -8,19 +8,21 @@ import { sendPasswordResetEmail, sendEmailChangedEmail, sendVerifyNewEmail } fro
 // ------------------------
 export const register = async (req, res) => {
     try {
-        const { username, name, lastName, bio, avatar, email, password } = req.body;
+        const { username, name, lastName, bio, avatar, email, password, language } = req.body;
 
         const existingUser = await User.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
             return res.status(400).json({ message: "Usuario o email ya existe" });
         }
 
-        const user = await User.create({ username, email, password, name, lastName, bio });
+        const user = await User.create({ username, email, password, name, lastName, bio, language });
 
+        const isSpanish = language === 'es';
+        
         // Crear lista por defecto "Wishlist"
         await BookList.create({
-            title: "Wishlist",
-            description: "Mi lista de deseos",
+            title: isSpanish ? "Lista de deseos" : "Wishlist",
+            description: isSpanish ? "Mi lista de deseos" : "My wishlist",
             visibility: "private",
             user: user._id,
             books: []
@@ -28,8 +30,8 @@ export const register = async (req, res) => {
 
         // Crear lista por defecto "Favourite Books"
         await BookList.create({
-            title: "Favourite Books",
-            description: "Mis libros favoritos",
+            title: isSpanish ? "Libros Favoritos" : "Favourite Books",
+            description: isSpanish ? "Mis libros favoritos" : "My favourite books",
             visibility: "public",
             user: user._id,
             books: []
@@ -47,6 +49,7 @@ export const register = async (req, res) => {
             lastName: user.lastName,
             bio: user.bio,
             isPrivate: user.isPrivate,
+            language: user.language,
         },
         token,
         });
@@ -94,6 +97,7 @@ export const login = async (req, res) => {
         lastName: user.lastName,
         bio: user.bio,
         isPrivate: user.isPrivate,
+        language: user.language,
       },
       token,
       refreshToken,
@@ -258,6 +262,7 @@ export const updateProfile = async (req, res) => {
         bio: user.bio,
         avatar: user.avatar,
         isPrivate: user.isPrivate,
+        language: user.language,
       }
     });
   } catch (error) {
