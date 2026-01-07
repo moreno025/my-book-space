@@ -1,0 +1,208 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "error": "Ha ocurrido un error",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "saved_to": "¡Guardado en {{list}}!",
+        "more": "más",
+        "reader": "Lector"
+    },
+    "home": {
+        "app_title": "Mi Espacio del Libro",
+        "trending_now": "TENDENCIAS AHORA",
+        "view_details": "Ver Detalles",
+        "my_list": "Mi Lista",
+        "categories": {
+            "all": "Todos",
+            "sci_fi": "Ciencia Ficción",
+            "horror": "Terror",
+            "romance": "Romance",
+            "thriller": "Suspenso",
+            "mystery": "Misterio",
+            "fantasy": "Fantasía",
+            "history": "Historia",
+            "business": "Negocios"
+        },
+        "sections": {
+            "sci_fi": "Ciencia Ficción",
+            "horror": "Horror y Terror",
+            "romance": "Éxitos de Romance",
+            "thriller": "Rincón del Suspenso"
+        }
+    },
+    "tabs": {
+        "home": "Inicio",
+        "search": "Buscar",
+        "profile": "Perfil",
+        "settings": "Ajustes"
+    },
+    "profile": {
+        "language": "Idioma",
+        "english": "Inglés",
+        "spanish": "Español",
+        "bio": "Biografía",
+        "is_private": "Perfil Privado",
+        "update_profile": "Actualizar Perfil",
+        "followers": "Seguidores",
+        "following": "Siguiendo",
+        "lists": "Listas",
+        "follow": "Seguir",
+        "requested": "Solicitado",
+        "reading_stats": "Estadísticas"
+    },
+    "book": {
+        "rating": "Calificación",
+        "pages": "Páginas",
+        "reading": "Lectura",
+        "synopsis": "Sinopsis",
+        "show_less": "Ver menos",
+        "read_more": "Leer más",
+        "add_to_list": "Añadir a lista",
+        "update_review": "Actualizar reseña",
+        "write_review": "Escribir reseña",
+        "no_reviews": "Sin reseñas aún",
+        "no_readers": "Sin lectores aún",
+        "no_lists": "Ninguna lista pública contiene este libro aún.",
+        "show_more": "Mostrar más",
+        "by": "por",
+        "books_count_one": "{{count}} libro",
+        "books_count_other": "{{count}} libros",
+        "save_to_list": "Guardar en lista",
+        "create_new_list": "Crear nueva lista",
+        "no_lists_created": "Aún no has creado ninguna lista.",
+        "saved": "Guardado",
+        "tabs": {
+            "reviews": "Reseñas",
+            "readers": "Lectores",
+            "lists": "Listas"
+        }
+    },
+    "search": {
+        "placeholder": "Buscar {{tab}}...",
+        "books": "Libros",
+        "users": "Usuarios",
+        "recent_searches": "Búsquedas recientes",
+        "recent_users": "Usuarios recientes",
+        "searching_users": "Buscando usuarios...",
+        "no_books_found": "No se encontraron libros",
+        "no_users_found": "No se encontraron usuarios",
+        "empty_title": "Encuentra tu próximo libro",
+        "empty_subtitle": "Busca por título, autor o escanea un código",
+        "scan_barcode": "Escanear Código",
+        "align_barcode": "Alinea el código de barras en el marco",
+        "camera_permission_required": "Necesitamos tu permiso para usar la cámara",
+        "grant_permission": "Conceder Permiso",
+        "book_not_found": "No se encontró ningún libro con este código",
+        "scan_error": "Ocurrió un error al escanear"
+    },
+    "auth": {
+        "login": "Iniciar sesión",
+        "register": "Registrarse",
+        "email": "Email",
+        "password": "Contraseña",
+        "confirm_password": "Confirmar contraseña",
+        "username": "Usuario",
+        "name": "Nombre",
+        "iniciar_sesion": "Iniciar sesión",
+        "registrarse": "Registrarse",
+        "already_have_account": "¿Ya tienes cuenta? Inicia sesión",
+        "no_account": "¿No tienes cuenta? Regístrate",
+        "forgot_password": "¿Olvidaste tu contraseña?",
+        "send_reset_link": "Enviar enlace de recuperación",
+        "back_to_login": "Volver al inicio",
+        "errors": {
+            "invalid_credentials": "Credenciales incorrectas.",
+            "email_required": "Email es requerido.",
+            "password_required": "Contraseña es requerida.",
+            "confirm_password_required": "Por favor confirma tu contraseña.",
+            "user_exists": "Usuario o email ya existe.",
+            "passwords_dont_match": "Las contraseñas no coinciden.",
+            "invalid_token": "Token inválido.",
+            "reset_link_error": "Error al enviar el enlace.",
+            "reset_password_error": "Error al actualizar la contraseña."
+        },
+        "messages": {
+            "reset_link_sent": "Email de recuperación enviado.",
+            "password_updated": "Contraseña actualizada correctamente."
+        },
+        "recovery_title": "Recuperar contraseña",
+        "reset_title": "Actualizar contraseña",
+        "sending": "Enviando...",
+        "updating": "Actualizando...",
+        "update": "Actualizar",
+        "new_password": "Nueva contraseña"
+    },
+    "list": {
+        "create_title": "Crear Nueva Lista",
+        "title_label": "Título",
+        "title_placeholder": "Lecturas de Verano, Ciencia Ficción...",
+        "description_label": "Descripción (Opcional)",
+        "description_placeholder": "¿De qué trata esta lista?",
+        "visibility_label": "Visibilidad",
+        "public": "Público",
+        "private": "Privado",
+        "followers_only": "Solo Seguidores",
+        "privacy_hint": "Tus listas de \"Seguidores\" solo son visibles para las personas que te siguen.",
+        "create_button": "Crear Lista",
+        "failed_to_create": "Error al crear la lista",
+        "visibility_updated": "¡La lista ahora es {{visibility}}!",
+        "removed": "Lista eliminada de tu perfil",
+        "failed_to_remove": "Error al eliminar la lista"
+    },
+    "review": {
+        "modal_title": "Escribir Reseña",
+        "rating_label": "Tu Calificación",
+        "placeholder": "¿Qué te pareció este libro?",
+        "submit": "Enviar Reseña",
+        "updating": "Actualizando Reseña...",
+        "success": "¡Reseña enviada!",
+        "update_success": "¡Reseña actualizada!",
+        "failed": "Error al enviar la reseña",
+        "post": "Publicar Reseña",
+        "update": "Actualizar Reseña",
+        "close": "Cerrar",
+        "form_title": "Comparte tu experiencia",
+        "form_subtitle": "¿Cómo fue tu lectura? Tu reseña ayuda a otros a descubrir grandes libros.",
+        "ratings": {
+            "excellent": "¡Excelente!",
+            "very_good": "Muy bueno",
+            "good": "Bueno",
+            "fair": "Regular",
+            "poor": "Malo"
+        }
+    },
+    "settings": {
+        "title": "Ajustes",
+        "subtitle": "Gestiona tu perfil y preferencias",
+        "first_name": "Nombre",
+        "last_name": "Apellidos",
+        "bio_placeholder": "Cuéntanos sobre ti...",
+        "follow_requests": "Solicitudes de seguimiento",
+        "private_account": "Cuenta Privada",
+        "private_description": "Cuando es privada, las personas necesitarán solicitar seguirte. Solo tus seguidores podrán ver tus listas.",
+        "save_changes": "Guardar Cambios",
+        "saving": "Guardando...",
+        "sign_out": "Cerrar Sesión",
+        "sign_out_confirm": "¿Estás seguro de que quieres cerrar sesión?",
+        "alerts": {
+            "success": "Éxito",
+            "profile_updated": "Perfil actualizado correctamente",
+            "error": "Error",
+            "update_failed": "Error al actualizar el perfil"
+        }
+    },
+    "follow_requests": {
+        "title": "Solicitudes de Seguimiento",
+        "no_requests": "No hay solicitudes pendientes",
+        "accept": "Aceptar",
+        "alerts": {
+            "accept_success": "Solicitud de {{username}} aceptada",
+            "accept_failed": "Error al aceptar la solicitud",
+            "reject_success": "Solicitud de {{username}} rechazada",
+            "reject_failed": "Error al rechazar la solicitud"
+        }
+    }
+}

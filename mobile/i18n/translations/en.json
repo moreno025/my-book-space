@@ -1,0 +1,208 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "saved_to": "Saved to {{list}}!",
+        "more": "more",
+        "reader": "Reader"
+    },
+    "home": {
+        "app_title": "My Book Space",
+        "trending_now": "TRENDING NOW",
+        "view_details": "View Details",
+        "my_list": "My List",
+        "categories": {
+            "all": "All",
+            "sci_fi": "Science Fiction",
+            "horror": "Horror",
+            "romance": "Romance",
+            "thriller": "Thrillers",
+            "mystery": "Mystery",
+            "fantasy": "Fantasy",
+            "history": "History",
+            "business": "Business"
+        },
+        "sections": {
+            "sci_fi": "Science Fiction",
+            "horror": "Horror & Terror",
+            "romance": "Romance Hits",
+            "thriller": "Thriller Corner"
+        }
+    },
+    "tabs": {
+        "home": "Home",
+        "search": "Search",
+        "profile": "Profile",
+        "settings": "Settings"
+    },
+    "profile": {
+        "language": "Language",
+        "english": "English",
+        "spanish": "Spanish",
+        "bio": "Bio",
+        "is_private": "Private Profile",
+        "update_profile": "Update Profile",
+        "followers": "Followers",
+        "following": "Following",
+        "lists": "Lists",
+        "follow": "Follow",
+        "requested": "Requested",
+        "reading_stats": "Reading Stats"
+    },
+    "book": {
+        "rating": "Rating",
+        "pages": "Pages",
+        "reading": "Reading",
+        "synopsis": "Synopsis",
+        "show_less": "Show less",
+        "read_more": "Read more",
+        "add_to_list": "Add to list",
+        "update_review": "Update review",
+        "write_review": "Write a review",
+        "no_reviews": "No reviews yet",
+        "no_readers": "No readers yet",
+        "no_lists": "No public lists contain this book yet.",
+        "show_more": "Show More",
+        "by": "by",
+        "books_count_one": "{{count}} book",
+        "books_count_other": "{{count}} books",
+        "save_to_list": "Save to List",
+        "create_new_list": "Create New List",
+        "no_lists_created": "You haven't created any lists yet.",
+        "saved": "Saved",
+        "tabs": {
+            "reviews": "Reviews",
+            "readers": "Readers",
+            "lists": "Lists"
+        }
+    },
+    "search": {
+        "placeholder": "Search {{tab}}...",
+        "books": "Books",
+        "users": "Users",
+        "recent_searches": "Recent searches",
+        "recent_users": "Recent users",
+        "searching_users": "Searching users...",
+        "no_books_found": "No books found",
+        "no_users_found": "No users found",
+        "empty_title": "Find your next book",
+        "empty_subtitle": "Search for title, author or scan a barcode",
+        "scan_barcode": "Scan Barcode",
+        "align_barcode": "Align the barcode within the frame",
+        "camera_permission_required": "We need your permission to use the camera",
+        "grant_permission": "Grant Permission",
+        "book_not_found": "No book found for this barcode",
+        "scan_error": "An error occurred while scanning"
+    },
+    "auth": {
+        "login": "Login",
+        "register": "Register",
+        "email": "Email",
+        "password": "Password",
+        "confirm_password": "Confirm Password",
+        "username": "Username",
+        "name": "Name",
+        "iniciar_sesion": "Log In",
+        "registrarse": "Sign Up",
+        "already_have_account": "Already have an account? Log In",
+        "no_account": "Don't have an account? Sign Up",
+        "forgot_password": "Forgot your password?",
+        "send_reset_link": "Send Reset Link",
+        "back_to_login": "Back to Login",
+        "errors": {
+            "invalid_credentials": "Invalid credentials.",
+            "email_required": "Email is required.",
+            "password_required": "Password is required.",
+            "confirm_password_required": "Please confirm your password.",
+            "passwords_dont_match": "Passwords do not match.",
+            "invalid_token": "Invalid token.",
+            "reset_link_error": "Error sending reset link.",
+            "reset_password_error": "Error updating password.",
+            "user_exists": "Username or email already exists."
+        },
+        "messages": {
+            "reset_link_sent": "Recovery email sent.",
+            "password_updated": "Password updated successfully."
+        },
+        "recovery_title": "Recover Password",
+        "reset_title": "Reset Password",
+        "sending": "Sending...",
+        "updating": "Updating...",
+        "update": "Update",
+        "new_password": "New Password"
+    },
+    "list": {
+        "create_title": "Create New List",
+        "title_label": "Title",
+        "title_placeholder": "Summer Reads, Best Sci-Fi...",
+        "description_label": "Description (Optional)",
+        "description_placeholder": "What's this list about?",
+        "visibility_label": "Visibility",
+        "public": "Public",
+        "private": "Private",
+        "followers_only": "Followers Only",
+        "privacy_hint": "Your \"Followers\" lists are only visible to people who follow you.",
+        "create_button": "Create List",
+        "failed_to_create": "Failed to create list",
+        "visibility_updated": "List is now {{visibility}}!",
+        "removed": "List removed from your profile",
+        "failed_to_remove": "Failed to remove list"
+    },
+    "review": {
+        "modal_title": "Write a Review",
+        "rating_label": "Your Rating",
+        "placeholder": "What did you think of this book?",
+        "submit": "Submit Review",
+        "updating": "Updating Review...",
+        "success": "Review submitted!",
+        "update_success": "Review updated!",
+        "failed": "Failed to submit review",
+        "post": "Post Review",
+        "update": "Update Review",
+        "close": "Close",
+        "form_title": "Share your experience",
+        "form_subtitle": "How was your reading? Your review helps others discover great books.",
+        "ratings": {
+            "excellent": "Excellent!",
+            "very_good": "Very Good",
+            "good": "Good",
+            "fair": "Fair",
+            "poor": "Poor"
+        }
+    },
+    "settings": {
+        "title": "Settings",
+        "subtitle": "Manage your profile & preferences",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "bio_placeholder": "Tell us about yourself...",
+        "follow_requests": "Follow Requests",
+        "private_account": "Private Account",
+        "private_description": "When private, people will need to request to follow you. Only your followers will be able to see your lists.",
+        "save_changes": "Save Changes",
+        "saving": "Saving...",
+        "sign_out": "Sign Out",
+        "sign_out_confirm": "Are you sure you want to sign out?",
+        "alerts": {
+            "success": "Success",
+            "profile_updated": "Profile updated successfully",
+            "error": "Error",
+            "update_failed": "Failed to update profile"
+        }
+    },
+    "follow_requests": {
+        "title": "Follow Requests",
+        "no_requests": "No pending requests",
+        "accept": "Accept",
+        "alerts": {
+            "accept_success": "Accepted {{username}}'s follow request",
+            "accept_failed": "Failed to accept request",
+            "reject_success": "Rejected {{username}}'s follow request",
+            "reject_failed": "Failed to reject request"
+        }
+    }
+}
