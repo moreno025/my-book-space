@@ -1,5 +1,5 @@
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
@@ -8,6 +8,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 // hooks
 import { useAuth } from "../../../hooks/useAuth";
 import { useUserLists } from "../../../hooks/BookList/useUserList";
+import { useReadingChallenges } from "../../../hooks/Book/useReadingChallenges";
 import { useToast } from "../../../context/ToastContext";
 
 // components
@@ -18,6 +19,8 @@ import { AddBookToListModal } from "@/components/profile/AddBookToListModal";
 import { RenameListModal } from "@/components/profile/RenameListModal";
 import { bookListApi } from "../../../constants/api";
 import { StatsTab } from "@/components/profile/StatsTab";
+import { ChallengesTab } from "@/components/profile/ChallengesTab";
+import { CreateChallengeModal } from "@/components/profile/CreateChallengeModal";
 
 
 export default function ProfileScreen() {
@@ -29,10 +32,13 @@ export default function ProfileScreen() {
         enabled: !!user?.username,
     });
 
+    const { challenges, loading: loadingChallenges, fetchChallenges, createChallenge, deleteChallenge } = useReadingChallenges();
+
     const { showToast } = useToast();
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [addBookModalVisible, setAddBookModalVisible] = useState(false);
     const [renameModalVisible, setRenameModalVisible] = useState(false);
+    const [createChallengeModalVisible, setCreateChallengeModalVisible] = useState(false);
     const [selectedListId, setSelectedListId] = useState<string | null>(null);
     const [listToRename, setListToRename] = useState<{ id: string; title: string } | null>(null);
 
@@ -40,10 +46,13 @@ export default function ProfileScreen() {
         useCallback(() => {
             if (user?.username) {
                 refetch();
+                fetchChallenges();
                 refreshUser(user.username);
             }
-        }, [user?.username, refetch, refreshUser])
+        }, [user?.username, refetch, fetchChallenges, refreshUser])
     );
+
+
 
     const handleCreateList = () => {
         setCreateModalVisible(true);
@@ -107,7 +116,14 @@ export default function ProfileScreen() {
         }
     };
 
-    const [activeTab, setActiveTab] = useState<'lists' | 'stats'>('lists');
+    const [activeTab, setActiveTab] = useState<'lists' | 'stats' | 'challenges'>('lists');
+
+    // Refresh challenges when switching to challenges tab
+    useEffect(() => {
+        if (activeTab === 'challenges' && user?.username) {
+            fetchChallenges();
+        }
+    }, [activeTab, user?.username, fetchChallenges]);
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -134,7 +150,15 @@ export default function ProfileScreen() {
                         onPress={() => setActiveTab('stats')}
                     >
                         <MaterialCommunityIcons name="lightning-bolt-outline" size={20} color={activeTab === 'stats' ? "#3B82F6" : "#64748B"} />
-                        <Text style={[styles.tabText, activeTab === 'stats' && styles.activeTabText]}>{t('profile.reading_stats', 'Reading Stats')}</Text>
+                        <Text style={[styles.tabText, activeTab === 'stats' && styles.activeTabText]}>{t('profile.reading_stats')}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
+                        onPress={() => setActiveTab('challenges')}
+                    >
+                        <Ionicons name="trophy-outline" size={20} color={activeTab === 'challenges' ? "#3B82F6" : "#64748B"} />
+                        <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>{t('profile.challenges')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -167,13 +191,21 @@ export default function ProfileScreen() {
                                     onAddBook={() => handleOpenAddBook(list._id)}
                                     onRefresh={() => {
                                         refetch();
+                                        fetchChallenges();
                                     }}
                                 />
                             ))
                         )}
                     </>
-                ) : (
+                ) : activeTab === 'stats' ? (
                     <StatsTab userId={user?.id || ""} />
+                ) : (
+                    <ChallengesTab
+                        challenges={challenges}
+                        loading={loadingChallenges}
+                        onCreatePress={() => setCreateChallengeModalVisible(true)}
+                        onDeletePress={deleteChallenge}
+                    />
                 )}
             </ScrollView>
 
@@ -203,6 +235,12 @@ export default function ProfileScreen() {
                     setListToRename(null);
                 }}
                 onSubmit={handleRenameSubmit}
+            />
+
+            <CreateChallengeModal
+                visible={createChallengeModalVisible}
+                onClose={() => setCreateChallengeModalVisible(false)}
+                onSubmit={createChallenge}
             />
         </SafeAreaView >
     );
