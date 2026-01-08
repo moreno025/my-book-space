@@ -1,68 +1,114 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { booksApi } from "../../constants/api/index";
+import { booksApi, bookListApi } from "../../constants/api/index";
+import { useAuth } from "../useAuth";
 
 export type Book = {
     id: string;
     title: string;
     authors: string[];
     coverUrl: string;
+    description?: string;
+    reason?: string; // For hero explanation
+};
+
+export type CuratedContent = {
+    hero: Book | null;
+    personal: { title: string, books: Book[] } | null;
+    editorial: { theme: string, books: Book[] } | null;
+    social: { user: string, text: string, book: Book } | null;
 };
 
 export function useHomeBooks() {
-    const { i18n } = useTranslation();
-    const [trending, setTrending] = useState<Book[]>([]);
-    const [sciFi, setSciFi] = useState<Book[]>([]);
-    const [horror, setHorror] = useState<Book[]>([]);
-    const [romance, setRomance] = useState<Book[]>([]);
-    const [thriller, setThriller] = useState<Book[]>([]);
+    const { i18n, t } = useTranslation();
+    const { user } = useAuth();
+    const [curatedData, setCuratedData] = useState<CuratedContent>({
+        hero: null,
+        personal: null,
+        editorial: null,
+        social: null,
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchAll = async () => {
+        const fetchCurated = async () => {
             try {
                 setLoading(true);
-
                 const isSpanish = i18n.language?.startsWith('es');
-                const queries = {
-                    sciFi: isSpanish ? 'subject:"ciencia ficción"' : 'subject:"science fiction"',
-                    horror: isSpanish ? 'subject:"terror"' : 'subject:"horror"',
-                    romance: isSpanish ? 'subject:"romance"' : 'subject:"romance"',
-                    thriller: isSpanish ? 'subject:"suspense"' : 'subject:"thriller"',
-                };
 
-                const [trendingRes, sciFiRes, horrorRes, romanceRes, thrillerRes] = await Promise.all([
-                    // Trending: Fetch authentic bestsellers from our new backend service
-                    booksApi.getTrendingBooks(i18n.language),
-                    booksApi.searchBooks(queries.sciFi, 'newest', i18n.language),
-                    booksApi.searchBooks(queries.horror, 'relevance', i18n.language),
-                    booksApi.searchBooks(queries.romance, 'relevance', i18n.language),
-                    booksApi.searchBooks(queries.thriller, 'newest', i18n.language),
-                ]);
+                // 1. Fetch Trending for Hero
+                const trendingRes = await booksApi.getTrendingBooks(i18n.language);
+                const trendingItems = trendingRes.data.items || [];
 
-                const seenIds = new Set<string>();
+                // Select a single hero book
+                let hero: Book | null = null;
+                if (trendingItems.length > 0) {
+                    const item = trendingItems[0];
+                    hero = {
+                        id: item.id,
+                        title: item.volumeInfo.title,
+                        authors: item.volumeInfo.authors || ["Unknown"],
+                        coverUrl: item.volumeInfo.imageLinks?.thumbnail,
+                        description: item.volumeInfo.description,
+                        reason: t('home.hero_reason_trending')
+                    };
+                }
 
-                const mapAndDedupe = (items: any[]) => {
-                    const result: Book[] = [];
-                    (items ?? []).forEach((item: any) => {
-                        if (!seenIds.has(item.id)) {
-                            seenIds.add(item.id);
-                            result.push({
-                                id: item.id,
-                                title: item.volumeInfo.title,
-                                authors: item.volumeInfo.authors || ["Unknown"],
-                                coverUrl: item.volumeInfo.imageLinks?.thumbnail,
-                            });
+                // 2. Personal Block (based on user lists)
+                let personal: { title: string, books: Book[] } | null = null;
+                if (user?.username) {
+                    try {
+                        const listsRes = await bookListApi.getUserLists(user.username);
+                        const lists = listsRes.data.lists || [];
+                        if (lists.length > 0) {
+                            const favoritelist = lists[0];
+                            // Search related to the first list's title or categories
+                            const searchQuery = favoritelist.title;
+                            const searchRes = await booksApi.searchBooks(searchQuery, 'relevance', i18n.language);
+                            personal = {
+                                title: t('home.based_on_list', { list: favoritelist.title }),
+                                books: (searchRes.data.items || []).slice(0, 6).map((item: any) => ({
+                                    id: item.id,
+                                    title: item.volumeInfo.title,
+                                    authors: item.volumeInfo.authors || ["Unknown"],
+                                    coverUrl: item.volumeInfo.imageLinks?.thumbnail,
+                                }))
+                            };
                         }
-                    });
-                    return result;
+                    } catch (err) {
+                        console.log("Error fetching personal recommendations:", err);
+                    }
+                }
+
+                // 3. Editorial Block
+                const editorialQuery = isSpanish ? 'subject:"literatura"' : 'subject:"literature"';
+                const editorialRes = await booksApi.searchBooks(editorialQuery, 'newest', i18n.language);
+                const editorialItems = (editorialRes.data.items || []).slice(0, 3);
+                const editorial = {
+                    theme: t('home.editorial_theme'),
+                    books: editorialItems.map((item: any) => ({
+                        id: item.id,
+                        title: item.volumeInfo.title,
+                        authors: item.volumeInfo.authors || ["Unknown"],
+                        coverUrl: item.volumeInfo.imageLinks?.thumbnail,
+                    }))
                 };
 
-                setTrending(mapAndDedupe(trendingRes.data.items).slice(0, 5));
-                setSciFi(mapAndDedupe(sciFiRes.data.items));
-                setHorror(mapAndDedupe(horrorRes.data.items));
-                setRomance(mapAndDedupe(romanceRes.data.items));
-                setThriller(mapAndDedupe(thrillerRes.data.items));
+                // 4. Social Snippet (Fallback if no real reviews yet)
+                const social = {
+                    user: "Elena",
+                    text: isSpanish
+                        ? "Me atrapó desde la primera página. Hacía tiempo que no leía una prosa tan cuidada."
+                        : "Caught me from the first page. It's been a while since I read such a careful prose.",
+                    book: hero || (editorial.books.length > 0 ? editorial.books[0] : null)
+                };
+
+                setCuratedData({
+                    hero,
+                    personal,
+                    editorial,
+                    social: social.book ? social as any : null
+                });
 
             } catch (error) {
                 console.error("Error fetching home books:", error);
@@ -71,8 +117,8 @@ export function useHomeBooks() {
             }
         };
 
-        fetchAll();
-    }, [i18n.language]);
+        fetchCurated();
+    }, [i18n.language, user?.username, t]);
 
-    return { trending, sciFi, horror, romance, thriller, loading };
+    return { ...curatedData, loading };
 }

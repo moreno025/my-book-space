@@ -118,6 +118,14 @@ export function useBookSearch(query: string) {
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+
+    useEffect(() => {
+        setPage(1);
+        setBooks([]);
+        setHasMore(true);
+    }, [query]);
 
     useEffect(() => {
         if (query.trim().length === 0) {
@@ -133,12 +141,14 @@ export function useBookSearch(query: string) {
         const timeout = setTimeout(async () => {
             try {
                 const normalizedQuery = query.trim().replace(/\s+/g, " ");
-                // Remove restrictive intitle: prefix to allow author searches
                 const q = normalizedQuery;
 
-                // Pass undefined for orderBy to use default relevance
-                const res = await booksApi.searchBooks(q, undefined, i18n.language, controller.signal);
+                const res = await booksApi.searchBooks(q, undefined, i18n.language, page, controller.signal);
                 const items = res.data.items ?? [];
+
+                if (items.length < 10 && page > 1) { // Google Books is inconsistent with totalItems, so we check if returned few
+                    setHasMore(false);
+                }
 
                 const scored = items
                     .map((item: any) => ({
@@ -165,7 +175,6 @@ export function useBookSearch(query: string) {
                 });
 
                 const mapped: Book[] = Array.from(unique.values())
-                    .slice(0, 12)
                     .map((item: any) => ({
                         id: item.id,
                         title: item.volumeInfo.title,
@@ -176,7 +185,12 @@ export function useBookSearch(query: string) {
                         categories: item.volumeInfo.categories || [],
                     }));
 
-                setBooks(mapped);
+                if (page === 1) {
+                    setBooks(mapped);
+                } else {
+                    setBooks(prev => [...prev, ...mapped]);
+                }
+
                 setHasSearched(true);
             } catch (err: any) {
                 if (err.name !== "CanceledError") {
@@ -187,17 +201,20 @@ export function useBookSearch(query: string) {
                     setLoading(false);
                 }
             }
-        }, 800);
+        }, page === 1 ? 800 : 0);
 
         return () => {
             clearTimeout(timeout);
             controller.abort();
         };
-    }, [query, i18n.language]);
+    }, [query, i18n.language, page]);
 
     return {
         books,
         loading,
         hasSearched,
+        page,
+        setPage,
+        hasMore
     };
 }
