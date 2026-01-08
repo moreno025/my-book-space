@@ -9,8 +9,11 @@ import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
 // ------------------------
 export const searchBooks = async (req, res) => {
   try {
-    const { q, orderBy, lang } = req.query;
+    const { q, orderBy, lang, page = 1 } = req.query;
     if (!q) return res.status(400).json({ message: "Debes proporcionar un término de búsqueda" });
+
+    const maxResults = 20;
+    const startIndex = (Math.max(1, parseInt(page)) - 1) * maxResults;
 
     // Parallel search strategy
     const [broadResponse, titleResponse] = await Promise.all([

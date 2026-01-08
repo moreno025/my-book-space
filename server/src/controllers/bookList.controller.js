@@ -337,6 +337,11 @@ export const updateBookStatus = async (req, res) => {
         if (!book) return res.status(404).json({ message: "Libro no encontrado en la lista" });
 
         book.readingStatus = status;
+        if (status === "read") {
+            book.readAt = new Date();
+        } else {
+            book.readAt = undefined;
+        }
         await list.save();
 
         res.status(200).json({ message: "Estado actualizado", list });

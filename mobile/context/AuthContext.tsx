@@ -62,20 +62,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         api.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
 
                         try {
-                            console.log("Session validation: checking history...");
                             await booksApi.getHistory();
-                            console.log("Session validation: success");
 
-                            // Apply user language preference if it exists
                             if (parsedUser.language) {
                                 i18n.changeLanguage(parsedUser.language);
                             }
 
                             setAuthState(savedToken, parsedUser);
                         } catch (error: any) {
-                            console.error("Session validation error:", error.message, error.response?.status);
+                            console.error("🔒 [AuthContext] Session validation error details:", {
+                                message: error.message,
+                                status: error.response?.status,
+                                code: error.code,
+                                url: error.config?.url
+                            });
                             if (error.response?.status !== 401) {
+                                // If it's not a 401 (e.g. timeout, 500), we might still want to keep the session
+                                // but we should be careful. For now, let's keep the existing logic.
+                                console.log("🔒 [AuthContext] Non-401 error, retaining session for resilience");
                                 setAuthState(savedToken, parsedUser);
+                            } else {
+                                console.log("🔒 [AuthContext] 401 error during validation, clearing session");
+                                await removeItem("token");
+                                await removeItem("user");
                             }
                         }
                     } else {

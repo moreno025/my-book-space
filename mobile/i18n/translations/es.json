@@ -11,7 +11,7 @@
         "reader": "Lector"
     },
     "home": {
-        "app_title": "Mi Espacio del Libro",
+        "app_title": "My Book Space",
         "trending_now": "TENDENCIAS AHORA",
         "view_details": "Ver Detalles",
         "my_list": "Mi Lista",
@@ -29,8 +29,8 @@
         "sections": {
             "sci_fi": "Ciencia Ficción",
             "horror": "Horror y Terror",
-            "romance": "Éxitos de Romance",
-            "thriller": "Rincón del Suspenso"
+            "romance": "Romance",
+            "thriller": "Suspenso"
         }
     },
     "tabs": {
@@ -49,9 +49,9 @@
         "followers": "Seguidores",
         "following": "Siguiendo",
         "lists": "Listas",
-        "follow": "Seguir",
-        "requested": "Solicitado",
-        "reading_stats": "Estadísticas"
+        "challenges": "Retos",
+        "reading_stats": "Estadísticas",
+        "no_challenges": "No tienes retos activos."
     },
     "book": {
         "rating": "Calificación",
@@ -96,7 +96,14 @@
         "camera_permission_required": "Necesitamos tu permiso para usar la cámara",
         "grant_permission": "Conceder Permiso",
         "book_not_found": "No se encontró ningún libro con este código",
-        "scan_error": "Ocurrió un error al escanear"
+        "scan_error": "Ocurrió un error al escanear",
+        "add_to_list": "Añadir a Lista",
+        "write_review": "Reseñar",
+        "view_details": "Ver Detalles",
+        "not_correct_book": "¿No es el libro correcto?",
+        "scan_again": "Escanear de nuevo",
+        "load_more": "Cargar más resultados",
+        "no_more_results": "Todos los resultados mostrados"
     },
     "auth": {
         "login": "Iniciar sesión",
@@ -204,5 +211,31 @@
             "reject_success": "Solicitud de {{username}} rechazada",
             "reject_failed": "Error al rechazar la solicitud"
         }
+    },
+    "challenges": {
+        "title": "Retos de Lectura",
+        "create_title": "Crear Reto",
+        "label_title": "Título",
+        "label_books": "Libros a leer",
+        "label_pages": "Páginas a leer (opcional)",
+        "label_start": "Fecha de Inicio",
+        "label_end": "Fecha de Fin",
+        "time_range": "Rango de Tiempo",
+        "range_year": "1 año",
+        "range_six_months": "6 meses",
+        "range_custom": "Personalizado",
+        "label_duration": "Duración",
+        "unit_days": "Días",
+        "unit_weeks": "Semanas",
+        "unit_months": "Meses",
+        "on_track": "Al día",
+        "behind": "Retrasado",
+        "active": "Activo",
+        "completed": "¡Completado!",
+        "expired": "Expirado",
+        "books_count": "{{count}} libros",
+        "books_progress": "{{current}} de {{total}} libros leídos",
+        "days_left": "Quedan {{count}} días",
+        "delete_confirm": "¿Estás seguro de que quieres eliminar este reto?"
     }
 }

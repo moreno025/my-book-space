@@ -1,6 +1,7 @@
 import { publicApi } from "./publicApi";
 import { privateApi } from "./privateApi";
 import { BookList } from "../../types/bookList";
+import { ReadingChallenge } from "../../types/challenge";
 
 export { publicApi, privateApi };
 export { privateApi as api };
@@ -26,8 +27,8 @@ export const authApi = {
 };
 
 export const booksApi = {
-    searchBooks: (query: string, orderBy?: 'relevance' | 'newest', lang?: string, signal?: AbortSignal) =>
-        publicApi.get("/book/search", { params: { q: query, orderBy, lang }, signal }),
+    searchBooks: (query: string, orderBy?: 'relevance' | 'newest', lang?: string, page?: number, signal?: AbortSignal) =>
+        publicApi.get("/book/search", { params: { q: query, orderBy, lang, page }, signal }),
 
     saveHistory: (query: string) =>
         privateApi.post("/book/search/history", { query }),
@@ -151,4 +152,15 @@ export const userApi = {
 
     getUserStats: (userId: string) =>
         privateApi.get(`/user/stats/${userId}`),
+};
+
+export const challengeApi = {
+    getChallenges: () =>
+        privateApi.get<{ challenges: ReadingChallenge[] }>("/reading-challenge"),
+
+    createChallenge: (data: { title: string; goalBooks: number; goalPages?: number; startDate: string; endDate: string; genres?: string[]; presetType?: 'year' | 'six_months' | 'custom' }) =>
+        privateApi.post<{ challenge: ReadingChallenge }>("/reading-challenge", data),
+
+    deleteChallenge: (challengeId: string) =>
+        privateApi.delete(`/reading-challenge/${challengeId}`),
 };

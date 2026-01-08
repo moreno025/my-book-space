@@ -11,6 +11,11 @@
         "reader": "Reader"
     },
     "home": {
+        "greeting": "Hi, {{name}}!",
+        "ready_for_story": "Ready for a new story?",
+        "hero_reason_trending": "Featured today: making waves in the literary world.",
+        "based_on_list": "Because you liked {{list}}",
+        "editorial_theme": "The Art of Storytelling",
         "app_title": "My Book Space",
         "trending_now": "TRENDING NOW",
         "view_details": "View Details",
@@ -49,9 +54,9 @@
         "followers": "Followers",
         "following": "Following",
         "lists": "Lists",
-        "follow": "Follow",
-        "requested": "Requested",
-        "reading_stats": "Reading Stats"
+        "challenges": "Challenges",
+        "reading_stats": "Reading Stats",
+        "no_challenges": "You have no active challenges."
     },
     "book": {
         "rating": "Rating",
@@ -96,7 +101,14 @@
         "camera_permission_required": "We need your permission to use the camera",
         "grant_permission": "Grant Permission",
         "book_not_found": "No book found for this barcode",
-        "scan_error": "An error occurred while scanning"
+        "scan_error": "An error occurred while scanning",
+        "add_to_list": "Add to List",
+        "write_review": "Review",
+        "view_details": "Details",
+        "not_correct_book": "Not the correct book?",
+        "scan_again": "Scan Again",
+        "load_more": "Load More Results",
+        "no_more_results": "All results displayed"
     },
     "auth": {
         "login": "Login",
@@ -204,5 +216,31 @@
             "reject_success": "Rejected {{username}}'s follow request",
             "reject_failed": "Failed to reject request"
         }
+    },
+    "challenges": {
+        "title": "Reading Challenges",
+        "create_title": "Create Challenge",
+        "label_title": "Title",
+        "label_books": "Books to read",
+        "label_pages": "Pages to read (optional)",
+        "label_start": "Start Date",
+        "label_end": "End Date",
+        "time_range": "Time Range",
+        "range_year": "1 Year",
+        "range_six_months": "6 Months",
+        "range_custom": "Custom Range",
+        "label_duration": "Duration",
+        "unit_days": "Days",
+        "unit_weeks": "Weeks",
+        "unit_months": "Months",
+        "on_track": "On Track",
+        "behind": "Behind",
+        "active": "Active",
+        "completed": "Completed!",
+        "expired": "Expired",
+        "books_count": "{{count}} books",
+        "books_progress": "{{current}} of {{total}} books read",
+        "days_left": "{{count}} days left",
+        "delete_confirm": "Are you sure you want to delete this challenge?"
     }
 }

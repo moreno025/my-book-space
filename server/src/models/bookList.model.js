@@ -22,6 +22,9 @@ const bookListSchema = new mongoose.Schema({
         type: String,
         enum: ["not read", "reading", "read"],
         default: "not read"
+      },
+      readAt: {
+        type: Date
       }
     }
     ],
