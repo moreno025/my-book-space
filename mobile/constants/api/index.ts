@@ -2,6 +2,7 @@ import { publicApi } from "./publicApi";
 import { privateApi } from "./privateApi";
 import { BookList } from "../../types/bookList";
 import { ReadingChallenge } from "../../types/challenge";
+import { Notification } from "../../types/notification";
 
 export { publicApi, privateApi };
 export { privateApi as api };
@@ -43,7 +44,10 @@ export const booksApi = {
         privateApi.delete(`/book/search/history/${query}`),
 
     getBookById: (id: string, lang?: string) =>
-        publicApi.get(`/book/${id}`, { params: { lang } }),
+        publicApi.get(`/book/${id}?lang=${lang || 'en'}`),
+
+    getRecommendations: (data: { genres?: string[]; mood?: string; length?: string }, lang?: string) =>
+        privateApi.post<{ recommendations: any[] }>(`/book/recommend?lang=${lang || 'en'}`, data),
 
     getBookByIsbn: (isbn: string, lang?: string) =>
         publicApi.get(`/book/isbn/${isbn}`, { params: { lang } }),
@@ -111,6 +115,12 @@ export const bookListApi = {
 
     updateBookStatus: (listId: string, googleBookId: string, status: "not read" | "reading" | "read") =>
         privateApi.patch(`/book-list/${listId}/book/${googleBookId}/status`, { status }),
+
+    addCollaborator: (listId: string, userId: string) =>
+        privateApi.post(`/book-list/${listId}/collaborators`, { userId }),
+
+    removeCollaborator: (listId: string, userId: string) =>
+        privateApi.delete(`/book-list/${listId}/collaborators/${userId}`),
 };
 
 export const userApi = {
@@ -152,6 +162,9 @@ export const userApi = {
 
     getUserStats: (userId: string) =>
         privateApi.get(`/user/stats/${userId}`),
+
+    getFriends: () =>
+        privateApi.get<{ friends: any[] }>("/user/friends"),
 };
 
 export const challengeApi = {
@@ -163,4 +176,15 @@ export const challengeApi = {
 
     deleteChallenge: (challengeId: string) =>
         privateApi.delete(`/reading-challenge/${challengeId}`),
+};
+
+export const notificationApi = {
+    getAll: () =>
+        privateApi.get<{ notifications: Notification[] }>("/notifications"),
+
+    markAsRead: (id: string) =>
+        privateApi.put<{ notification: Notification }>(`/notifications/${id}/read`),
+
+    markAllAsRead: () =>
+        privateApi.put("/notifications/read-all"),
 };

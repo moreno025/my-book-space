@@ -32,5 +32,27 @@ export function useListDetail(listId: string) {
         fetchList();
     }, [fetchList]);
 
-    return { list, loading, refreshing, error, refetch: fetchList };
+    const addCollaborator = async (userId: string) => {
+        try {
+            await bookListApi.addCollaborator(listId, userId);
+            await fetchList();
+            return true;
+        } catch (err: any) {
+            console.error("Error adding collaborator:", err);
+            throw err;
+        }
+    };
+
+    const removeCollaborator = async (userId: string) => {
+        try {
+            await bookListApi.removeCollaborator(listId, userId);
+            await fetchList();
+            return true;
+        } catch (err: any) {
+            console.error("Error removing collaborator:", err);
+            throw err;
+        }
+    };
+
+    return { list, loading, refreshing, error, refetch: fetchList, addCollaborator, removeCollaborator };
 }

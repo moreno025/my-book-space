@@ -47,7 +47,13 @@ export default function SearchScreen() {
         }
     }, [tab]);
 
-    const { books, loading: booksLoading, hasSearched: booksSearched } = useBookSearch(query);
+    const {
+        books,
+        loading: booksLoading,
+        hasSearched: booksSearched,
+        setPage,
+        hasMore
+    } = useBookSearch(query);
     const { users, loading: usersLoading, hasSearched: usersSearched } = useUserSearch(query);
     const { history, save, remove, clear } = useSearchHistory(token);
     const { history: userHistory, save: saveUser, remove: removeUser, clear: clearUser } = useUserSearchHistory(token);
@@ -89,22 +95,14 @@ export default function SearchScreen() {
                         style={styles.headerInput}
                         value={query}
                         onChangeText={setQuery}
-                        autoFocus
                     />
 
-                    {query.length > 0 ? (
+                    {query.length > 0 && (
                         <TouchableOpacity
                             style={styles.clearButtonContainer}
                             onPress={() => setQuery("")}
                         >
                             <Ionicons name="close-circle" size={26} color="#9CA3AF" />
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.clearButtonContainer}
-                            onPress={() => setIsScannerVisible(true)}
-                        >
-                            <Ionicons name="camera" size={26} color="#3B82F6" />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -240,6 +238,20 @@ export default function SearchScreen() {
                     books={books}
                     onBookPress={handleBookPress}
                     contentContainerStyle={{ paddingBottom: insets.bottom + 80 }}
+                    ListFooterComponent={
+                        hasMore ? (
+                            <TouchableOpacity
+                                style={styles.paginationButton}
+                                onPress={() => setPage(prev => prev + 1)}
+                            >
+                                <Text style={styles.paginationButtonText}>{t('search.load_more')}</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.noMoreResults}>
+                                <Text style={styles.noMoreResultsText}>{t('search.no_more_results')}</Text>
+                            </View>
+                        )
+                    }
                 />
             )}
 
@@ -473,5 +485,32 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: "Nunito-Medium",
         color: "#6B7280",
+    },
+
+    // PAGINATION STYLES
+    paginationButton: {
+        marginVertical: 20,
+        backgroundColor: "#EFF6FF",
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#DBEAFE",
+        marginHorizontal: 8,
+    },
+    paginationButtonText: {
+        color: "#3B82F6",
+        fontSize: 16,
+        fontFamily: "Nunito-Bold",
+    },
+    noMoreResults: {
+        marginVertical: 20,
+        alignItems: "center",
+        paddingBottom: 20,
+    },
+    noMoreResultsText: {
+        color: "#9CA3AF",
+        fontSize: 14,
+        fontFamily: "Nunito-Medium",
     },
 });

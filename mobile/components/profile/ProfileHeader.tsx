@@ -15,6 +15,7 @@ interface ProfileHeaderProps {
     isRequested?: boolean;
     onFollow?: () => void;
     onBack?: () => void;
+    onNotification?: () => void;
 }
 
 export function ProfileHeader({
@@ -25,7 +26,8 @@ export function ProfileHeader({
     isFollowing = false,
     isRequested = false,
     onFollow,
-    onBack
+    onBack,
+    onNotification
 }: ProfileHeaderProps) {
     const { t } = useTranslation();
     const [imageError, setImageError] = useState(false);
@@ -120,13 +122,25 @@ export function ProfileHeader({
                 <Text style={styles.headerTitle}>{user.username}</Text>
 
                 <View style={styles.topBarRight}>
-                    {isOwnProfile && onAddList && (
-                        <TouchableOpacity
-                            onPress={() => handlePress('add')}
-                            style={styles.iconButton}
-                        >
-                            <Ionicons name="add-circle-outline" size={28} color="#F9FAFB" />
-                        </TouchableOpacity>
+                    {isOwnProfile && (
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            {onNotification && (
+                                <TouchableOpacity
+                                    onPress={() => onNotification()}
+                                    style={styles.iconButton}
+                                >
+                                    <Ionicons name="notifications-outline" size={24} color="#F9FAFB" />
+                                </TouchableOpacity>
+                            )}
+                            {onAddList && (
+                                <TouchableOpacity
+                                    onPress={() => handlePress('add')}
+                                    style={styles.iconButton}
+                                >
+                                    <Ionicons name="add-circle-outline" size={28} color="#F9FAFB" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     )}
                 </View>
             </View>
