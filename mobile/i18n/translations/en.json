@@ -55,7 +55,7 @@
         "following": "Following",
         "lists": "Lists",
         "challenges": "Challenges",
-        "reading_stats": "Reading Stats",
+        "reading_stats": "Stats",
         "no_challenges": "You have no active challenges."
     },
     "book": {
@@ -147,6 +147,12 @@
         "update": "Update",
         "new_password": "New Password"
     },
+    "notifications": {
+        "title": "Notifications",
+        "empty": "No notifications yet",
+        "collaborator_added": "added you as a collaborator to",
+        "mark_all_read": "Mark all as read"
+    },
     "list": {
         "create_title": "Create New List",
         "title_label": "Title",
@@ -162,7 +168,8 @@
         "failed_to_create": "Failed to create list",
         "visibility_updated": "List is now {{visibility}}!",
         "removed": "List removed from your profile",
-        "failed_to_remove": "Failed to remove list"
+        "failed_to_remove": "Failed to remove list",
+        "add_collaborators": "Add Collaborators"
     },
     "review": {
         "modal_title": "Write a Review",
@@ -218,7 +225,7 @@
         }
     },
     "challenges": {
-        "title": "Reading Challenges",
+        "title": "Challenges",
         "create_title": "Create Challenge",
         "label_title": "Title",
         "label_books": "Books to read",
@@ -241,6 +248,27 @@
         "books_count": "{{count}} books",
         "books_progress": "{{current}} of {{total}} books read",
         "days_left": "{{count}} days left",
-        "delete_confirm": "Are you sure you want to delete this challenge?"
+        "delete_confirm": "Are you sure you want to delete this challenge?",
+        "stats_title": "Challenge Performance",
+        "stats_active": "Active",
+        "stats_completed": "Completed"
+    },
+    "wizard": {
+        "title": "Book Matchmaker",
+        "intro": "Don't know what to read? Let us find your perfect match!",
+        "start": "Find me a book",
+        "step_genre": "Pick some genres",
+        "step_mood": "What's the vibe?",
+        "step_length": "How long?",
+        "mood_happy": "Happy & Light",
+        "mood_dramatic": "Deep & Dramatic",
+        "mood_thrilling": "Thrilling",
+        "mood_educational": "Learn something",
+        "mood_romantic": "Romance",
+        "mood_fantasy": "Escape Reality",
+        "len_short": "Short (<300 pages)",
+        "len_medium": "Medium (300-600)",
+        "len_long": "Long (>600 pages)",
+        "results_title": "We found these for you"
     }
 }

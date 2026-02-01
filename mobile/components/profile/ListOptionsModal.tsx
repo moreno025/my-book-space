@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 interface ListOptionsModalProps {
     visible: boolean;
@@ -20,6 +21,7 @@ interface ListOptionsModalProps {
     onToggleVisibility?: (visibility: 'public' | 'private') => void;
     onDelete?: () => void;
     onCopy?: () => void;
+    onManageCollaborators?: () => void;
 }
 
 export function ListOptionsModal({
@@ -32,7 +34,9 @@ export function ListOptionsModal({
     onToggleVisibility,
     onDelete,
     onCopy,
+    onManageCollaborators,
 }: ListOptionsModalProps) {
+    const { t } = useTranslation();
 
     return (
         <Modal
@@ -100,6 +104,24 @@ export function ListOptionsModal({
                                         </Text>
                                     </TouchableOpacity>
                                     <View style={styles.divider} />
+
+                                    {onManageCollaborators && visibility === 'public' && (
+                                        <>
+                                            <TouchableOpacity
+                                                style={styles.option}
+                                                onPress={() => {
+                                                    onManageCollaborators();
+                                                    onClose();
+                                                }}
+                                            >
+                                                <View style={[styles.iconContainer, { backgroundColor: "rgba(59, 130, 246, 0.1)" }]}>
+                                                    <Ionicons name="people-outline" size={22} color="#3B82F6" />
+                                                </View>
+                                                <Text style={styles.optionText}>{t('list.add_collaborators')}</Text>
+                                            </TouchableOpacity>
+                                            <View style={styles.divider} />
+                                        </>
+                                    )}
                                 </>
                             )}
 

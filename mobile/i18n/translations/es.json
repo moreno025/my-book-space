@@ -142,6 +142,12 @@
         "update": "Actualizar",
         "new_password": "Nueva contraseña"
     },
+    "notifications": {
+        "title": "Notificaciones",
+        "empty": "No tienes notificaciones aún",
+        "collaborator_added": "te añadió como colaborador a",
+        "mark_all_read": "Marcar todo como leído"
+    },
     "list": {
         "create_title": "Crear Nueva Lista",
         "title_label": "Título",
@@ -157,7 +163,8 @@
         "failed_to_create": "Error al crear la lista",
         "visibility_updated": "¡La lista ahora es {{visibility}}!",
         "removed": "Lista eliminada de tu perfil",
-        "failed_to_remove": "Error al eliminar la lista"
+        "failed_to_remove": "Error al eliminar la lista",
+        "add_collaborators": "Añadir Colaboradores"
     },
     "review": {
         "modal_title": "Escribir Reseña",
@@ -236,6 +243,27 @@
         "books_count": "{{count}} libros",
         "books_progress": "{{current}} de {{total}} libros leídos",
         "days_left": "Quedan {{count}} días",
-        "delete_confirm": "¿Estás seguro de que quieres eliminar este reto?"
+        "delete_confirm": "¿Estás seguro de que quieres eliminar este reto?",
+        "stats_title": "Retos",
+        "stats_active": "Activos",
+        "stats_completed": "Completados"
+    },
+    "wizard": {
+        "title": "Recomendador",
+        "intro": "¿No sabes qué leer? ¡Déjanos ayudarte!",
+        "start": "Encuéntrame un libro",
+        "step_genre": "Elige géneros",
+        "step_mood": "¿Qué ambiente buscas?",
+        "step_length": "¿Extensión?",
+        "mood_happy": "Alegre y Ligero",
+        "mood_dramatic": "Profundo y Dramático",
+        "mood_thrilling": "Suspenso",
+        "mood_educational": "Aprender algo",
+        "mood_romantic": "Romance",
+        "mood_fantasy": "Escapar de la realidad",
+        "len_short": "Corto (<300 págs)",
+        "len_medium": "Medio (300-600)",
+        "len_long": "Largo (>600 págs)",
+        "results_title": "Hemos encontrado estos"
     }
 }

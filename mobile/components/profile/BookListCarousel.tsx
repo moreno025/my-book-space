@@ -22,6 +22,7 @@ interface BookListCarouselProps {
     onRename?: (listId: string, currentTitle: string) => void;
     onToggleVisibility?: (listId: string, currentVisibility: 'public' | 'private') => void;
     onCopy?: (listId: string) => void;
+    onManageCollaborators?: (listId: string) => void;
     isOwnerPrivate?: boolean;
 }
 
@@ -29,7 +30,7 @@ interface BookListCarouselProps {
 const CARD_WIDTH = 100;
 const CARD_HEIGHT = 150;
 
-export function BookListCarousel({ title, listId, visibility, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility, onCopy, isOwnerPrivate }: BookListCarouselProps) {
+export function BookListCarousel({ title, listId, visibility, ownerId, books, onAddBook, onRefresh, onUnsave, onRename, onToggleVisibility, onCopy, onManageCollaborators, isOwnerPrivate }: BookListCarouselProps) {
     const router = useRouter();
     const { user } = useAuth();
     const { showToast } = useToast();
@@ -247,6 +248,7 @@ export function BookListCarousel({ title, listId, visibility, ownerId, books, on
                 onToggleVisibility={(newVisibility) => onToggleVisibility?.(listId, newVisibility)}
                 onDelete={isOwner ? confirmDeleteList : (onUnsave ? confirmUnsaveList : undefined)}
                 onCopy={onCopy ? () => onCopy(listId) : undefined}
+                onManageCollaborators={onManageCollaborators ? () => onManageCollaborators(listId) : undefined}
             />
         </View>
     );

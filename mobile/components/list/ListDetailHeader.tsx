@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { BookList } from "../../types/bookList";
 import { jpg } from "../../assets/images";
+import { useTranslation } from "react-i18next";
 
 interface ListDetailHeaderProps {
     list: BookList;
@@ -21,6 +22,7 @@ interface ListDetailHeaderProps {
     onBack: () => void;
     onCopy?: () => void;
     onUsernamePress?: () => void;
+    onManageCollaborators?: () => void;
 }
 
 export function ListDetailHeader({
@@ -33,10 +35,12 @@ export function ListDetailHeader({
     onBack,
     onCopy,
     onUsernamePress,
+    onManageCollaborators,
 }: ListDetailHeaderProps) {
     const [imageError, setImageError] = useState(false);
     const [isCopying, setIsCopying] = useState(false);
     const savesCount = list.savedBy?.length || 0;
+    const { t } = useTranslation();
 
     const handleCopy = async () => {
         if (!onCopy) return;
@@ -116,48 +120,58 @@ export function ListDetailHeader({
             </View>
 
             {/* Action Buttons */}
-            {!isOwnList && (
-                <View style={styles.actionsContainer}>
-                    <TouchableOpacity
-                        style={[
-                            styles.saveButton,
-                            isAlreadySaved && styles.saveButtonSaved
-                        ]}
-                        onPress={onSave}
-                        disabled={isSaving}
-                    >
-                        {isSaving ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                            <>
-                                <Ionicons
-                                    name={isAlreadySaved ? "checkmark-circle" : "bookmark-outline"}
-                                    size={18}
-                                    color="#FFFFFF"
-                                />
-                                <Text style={styles.saveButtonText}>
-                                    {isAlreadySaved ? "Saved" : "Save List"}
-                                </Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
+            <View style={styles.actionsContainer}>
+                {!isOwnList ? (
+                    <>
+                        <TouchableOpacity
+                            style={[
+                                styles.saveButton,
+                                isAlreadySaved && styles.saveButtonSaved
+                            ]}
+                            onPress={onSave}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? (
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Ionicons
+                                        name={isAlreadySaved ? "checkmark-circle" : "bookmark-outline"}
+                                        size={18}
+                                        color="#FFFFFF"
+                                    />
+                                    <Text style={styles.saveButtonText}>
+                                        {isAlreadySaved ? "Saved" : "Save List"}
+                                    </Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
 
+                        <TouchableOpacity
+                            style={styles.copyButton}
+                            onPress={handleCopy}
+                            disabled={isCopying}
+                        >
+                            {isCopying ? (
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                                <>
+                                    <Ionicons name="copy-outline" size={18} color="#FFFFFF" />
+                                    <Text style={styles.saveButtonText}>Copy List</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </>
+                ) : (
                     <TouchableOpacity
-                        style={styles.copyButton}
-                        onPress={handleCopy}
-                        disabled={isCopying}
+                        style={styles.collaboratorButton}
+                        onPress={onManageCollaborators}
                     >
-                        {isCopying ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                            <>
-                                <Ionicons name="copy-outline" size={18} color="#FFFFFF" />
-                                <Text style={styles.saveButtonText}>Copy List</Text>
-                            </>
-                        )}
+                        <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                        <Text style={styles.saveButtonText}>{t('list.add_collaborators')}</Text>
                     </TouchableOpacity>
-                </View>
-            )}
+                )}
+            </View>
 
             {/* Bottom Divider */}
             <View style={styles.divider} />
@@ -312,5 +326,18 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: "rgba(255, 255, 255, 0.06)",
         marginBottom: 16,
+    },
+    collaboratorButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
     },
 });
