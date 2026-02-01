@@ -32,16 +32,18 @@ export function useHomeBooks() {
 
     useEffect(() => {
         const fetchCurated = async () => {
-            try {
-                setLoading(true);
-                const isSpanish = i18n.language?.startsWith('es');
+            setLoading(true);
+            const isSpanish = i18n.language?.startsWith('es');
 
-                // 1. Fetch Trending for Hero
+            let hero: Book | null = null;
+            let personal: { title: string, books: Book[] } | null = null;
+            let editorial: { theme: string, books: Book[] } | null = null;
+            let social: { user: string, text: string, book: Book } | null = null;
+
+            // 1. Fetch Trending for Hero
+            try {
                 const trendingRes = await booksApi.getTrendingBooks(i18n.language);
                 const trendingItems = trendingRes.data.items || [];
-
-                // Select a single hero book
-                let hero: Book | null = null;
                 if (trendingItems.length > 0) {
                     const item = trendingItems[0];
                     hero = {
@@ -53,38 +55,41 @@ export function useHomeBooks() {
                         reason: t('home.hero_reason_trending')
                     };
                 }
+            } catch (err) {
+                console.warn("⚠️ [Home] Trending fetch failed:", err);
+            }
 
-                // 2. Personal Block (based on user lists)
-                let personal: { title: string, books: Book[] } | null = null;
-                if (user?.username) {
-                    try {
-                        const listsRes = await bookListApi.getUserLists(user.username);
-                        const lists = listsRes.data.lists || [];
-                        if (lists.length > 0) {
-                            const favoritelist = lists[0];
-                            // Search related to the first list's title or categories
-                            const searchQuery = favoritelist.title;
-                            const searchRes = await booksApi.searchBooks(searchQuery, 'relevance', i18n.language);
-                            personal = {
-                                title: t('home.based_on_list', { list: favoritelist.title }),
-                                books: (searchRes.data.items || []).slice(0, 6).map((item: any) => ({
-                                    id: item.id,
-                                    title: item.volumeInfo.title,
-                                    authors: item.volumeInfo.authors || ["Unknown"],
-                                    coverUrl: item.volumeInfo.imageLinks?.thumbnail,
-                                }))
-                            };
-                        }
-                    } catch (err) {
-                        console.log("Error fetching personal recommendations:", err);
+            // 2. Personal Block (based on user lists)
+            if (user?.username) {
+                try {
+                    const listsRes = await bookListApi.getUserLists(user.username);
+                    const lists = listsRes.data.lists || [];
+                    if (lists.length > 0) {
+                        const favoritelist = lists[0];
+                        // Search related to the first list's title or categories
+                        const searchQuery = favoritelist.title;
+                        const searchRes = await booksApi.searchBooks(searchQuery, 'relevance', i18n.language);
+                        personal = {
+                            title: t('home.based_on_list', { list: favoritelist.title }),
+                            books: (searchRes.data.items || []).slice(0, 6).map((item: any) => ({
+                                id: item.id,
+                                title: item.volumeInfo.title,
+                                authors: item.volumeInfo.authors || ["Unknown"],
+                                coverUrl: item.volumeInfo.imageLinks?.thumbnail,
+                            }))
+                        };
                     }
+                } catch (err) {
+                    console.warn("⚠️ [Home] Personal fetch failed:", err);
                 }
+            }
 
-                // 3. Editorial Block
+            // 3. Editorial Block
+            try {
                 const editorialQuery = isSpanish ? 'subject:"literatura"' : 'subject:"literature"';
                 const editorialRes = await booksApi.searchBooks(editorialQuery, 'newest', i18n.language);
                 const editorialItems = (editorialRes.data.items || []).slice(0, 3);
-                const editorial = {
+                editorial = {
                     theme: t('home.editorial_theme'),
                     books: editorialItems.map((item: any) => ({
                         id: item.id,
@@ -93,28 +98,29 @@ export function useHomeBooks() {
                         coverUrl: item.volumeInfo.imageLinks?.thumbnail,
                     }))
                 };
+            } catch (err) {
+                console.warn("⚠️ [Home] Editorial fetch failed:", err);
+            }
 
-                // 4. Social Snippet (Fallback if no real reviews yet)
-                const social = {
+            // 4. Social Snippet
+            // Depends on previous data, safe to just check local vars
+            if (hero || (editorial?.books && editorial.books.length > 0)) {
+                social = {
                     user: "Elena",
                     text: isSpanish
                         ? "Me atrapó desde la primera página. Hacía tiempo que no leía una prosa tan cuidada."
                         : "Caught me from the first page. It's been a while since I read such a careful prose.",
-                    book: hero || (editorial.books.length > 0 ? editorial.books[0] : null)
+                    book: hero || (editorial!.books[0])
                 };
-
-                setCuratedData({
-                    hero,
-                    personal,
-                    editorial,
-                    social: social.book ? social as any : null
-                });
-
-            } catch (error) {
-                console.error("Error fetching home books:", error);
-            } finally {
-                setLoading(false);
             }
+
+            setCuratedData({
+                hero,
+                personal,
+                editorial,
+                social
+            });
+            setLoading(false);
         };
 
         fetchCurated();

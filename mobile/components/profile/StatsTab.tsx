@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     View,
     Text,
@@ -28,6 +29,10 @@ interface UserStats {
         wantToRead: number;
     };
     librarySize: number;
+    challengeStats?: {
+        active: number;
+        completed: number;
+    };
 }
 
 interface StatsTabProps {
@@ -35,6 +40,7 @@ interface StatsTabProps {
 }
 
 export function StatsTab({ userId }: StatsTabProps) {
+    const { t } = useTranslation();
     const [stats, setStats] = useState<UserStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [fadeAnim] = useState(new Animated.Value(0));
@@ -58,7 +64,7 @@ export function StatsTab({ userId }: StatsTabProps) {
             }
         };
         fetchStats();
-    }, [userId]);
+    }, [userId, fadeAnim]);
 
     if (loading) {
         return (
@@ -186,6 +192,27 @@ export function StatsTab({ userId }: StatsTabProps) {
                 </View>
             </View>
 
+            {/* Challenge Performance */}
+            {stats.challengeStats && (
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{t('challenges.stats_title')}</Text>
+                    <View style={styles.quickStatsGrid}>
+                        <QuickStatCard
+                            icon={<Ionicons name="trophy" size={24} color="#FBBF24" />}
+                            value={stats.challengeStats.completed}
+                            label={t('challenges.stats_completed')}
+                            gradient={["rgba(251, 191, 36, 0.15)", "rgba(251, 191, 36, 0.05)"]}
+                        />
+                        <QuickStatCard
+                            icon={<Ionicons name="flame" size={24} color="#EF4444" />}
+                            value={stats.challengeStats.active}
+                            label={t('challenges.stats_active')}
+                            gradient={["rgba(239, 68, 68, 0.15)", "rgba(239, 68, 68, 0.05)"]}
+                        />
+                    </View>
+                </View>
+            )}
+
             {/* Reading Profile */}
             {stats.readingProfile && (stats.readingProfile.favoriteGenres.length > 0 || stats.readingProfile.favoriteAuthors.length > 0) && (
                 <View style={styles.section}>
@@ -216,8 +243,6 @@ export function StatsTab({ userId }: StatsTabProps) {
 
 function CircularProgress({ value, max }: { value: number; max: number }) {
     const percentage = (value / max) * 100;
-    const circumference = 2 * Math.PI * 35;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     return (
         <View style={styles.circularProgress}>

@@ -11,7 +11,7 @@ import {
 import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = width * 0.35;
+const CARD_WIDTH = width * 0.28;
 const CARD_HEIGHT = CARD_WIDTH * 1.5;
 
 interface SectionCarouselProps {
@@ -78,19 +78,22 @@ const styles = StyleSheet.create({
     cover: {
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
-        borderRadius: 12,
+        borderRadius: 16,
         backgroundColor: "#1F2937",
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 8,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 10,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.12)",
     },
     bookTitle: {
-        marginTop: 8,
-        fontSize: 13,
+        marginTop: 10,
+        fontSize: 14,
         fontFamily: "Nunito-Bold",
-        color: "#E5E7EB",
+        color: "#F3F4F6",
         textAlign: "center",
+        paddingHorizontal: 4,
     },
 });

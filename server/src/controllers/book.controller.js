@@ -1,5 +1,6 @@
 import axios from "axios";
 import SearchHistory from "../models/searchHistory.model.js";
+import BookList from "../models/bookList.model.js";
 import logger from "../utils/logger.js";
 import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
 
@@ -252,10 +253,13 @@ export const getTrendingBooks = async (req, res) => {
     }
 
     // Fetch rich metadata from Google Books in parallel for consistent app data
+    // Fetch rich metadata from Google Books sequentially to avoid rate limits (503)
     const { lang } = req.query;
-    const responses = await Promise.all(
-      queryHits.map(hit => 
-        axios.get("https://www.googleapis.com/books/v1/volumes", {
+    const items = [];
+
+    for (const hit of queryHits) {
+      try {
+        const response = await axios.get("https://www.googleapis.com/books/v1/volumes", {
           params: {
             q: hit.q,
             key: process.env.GOOGLE_BOOKS_API_KEY,
@@ -266,21 +270,21 @@ export const getTrendingBooks = async (req, res) => {
           headers: {
             'Accept-Language': lang || 'en'
           }
-        }).catch(err => {
-          logger.error(`Error enrichment for trending book ${hit.q}: ${err.message}`);
-          return { data: { items: [] } };
-        })
-      )
-    );
+        });
 
-    const items = responses
-      .map(r => r.data.items?.[0])
-      .filter(item => item && item.volumeInfo?.imageLinks?.thumbnail)
-      .map(item => {
-        // Use standard resolution for home carousels
-        item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail, false);
-        return item;
-      });
+        const item = response.data.items?.[0];
+        if (item && item.volumeInfo?.imageLinks?.thumbnail) {
+            item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail, false);
+            items.push(item);
+        }
+
+        // Small delay to be gentle with the API
+        await new Promise(r => setTimeout(r, 300));
+
+      } catch (err) {
+        logger.error(`Error enrichment for trending book ${hit.q}: ${err.message}`);
+      }
+    }
 
     res.status(200).json({ items });
   } catch (error) {
@@ -364,6 +368,245 @@ export const deleteHistoryItem = async (req, res) => {
   } catch (err) {
     console.error("Delete history item error:", err);
     res.status(500).json({ message: "Error deleting history item" });
+  }
+};
+
+
+// ------------------------
+// Recommend Books (Wizard)
+// ------------------------
+// ------------------------
+// Helper: Fetch NYT Books by Genre
+// ------------------------
+const fetchNytRecommendations = async (genre, lang) => {
+    try {
+        if (!process.env.NYT_BOOKS_API_KEY) return [];
+
+        // Priority lists for each genre
+        // We try the first one; if it fails or returns 0 items, we try the next.
+        const genreMap = {
+            "fiction": ["hardcover-fiction", "trade-fiction-paperback", "combined-print-and-e-book-fiction"],
+            "mystery": ["crime-and-punishment", "hardcover-fiction"], 
+            "thriller": ["crime-and-punishment", "hardcover-fiction"],
+            "romance": ["mass-market-paperback", "trade-fiction-paperback", "combined-print-and-e-book-fiction"], 
+            "nonfiction": ["hardcover-nonfiction", "papierback-nonfiction", "combined-print-and-e-book-nonfiction"],
+            "biography": ["hardcover-nonfiction"], // "biographies" list sometimes exists but varies
+            "science": ["science"],
+            "history": ["hardcover-nonfiction"],
+            "default": ["hardcover-fiction", "combined-print-and-e-book-fiction"]
+        };
+
+        const gKey = genre?.toLowerCase();
+        const listsToTry = genreMap[gKey] || genreMap["default"];
+        
+        let rawBooks = [];
+        let usedList = "";
+
+        // Iterate through priority lists until we find books
+        for (const listName of listsToTry) {
+            try {
+                const response = await axios.get(`https://api.nytimes.com/svc/books/v3/lists/current/${listName}.json`, {
+                    params: { "api-key": process.env.NYT_BOOKS_API_KEY }
+                });
+                
+                if (response.data.results?.books?.length > 0) {
+                    rawBooks = response.data.results.books;
+                    usedList = listName;
+                    logger.info(`[NYT] Found ${rawBooks.length} items in list '${listName}' for genre '${genre}'`);
+                    break; // Found books, stop trying other lists
+                }
+            } catch (err) {
+                logger.warn(`[NYT] List '${listName}' failed or empty: ${err.message}`);
+                // Continue to next list
+            }
+        }
+
+        const nytBooks = rawBooks.slice(0, 5); // Start with Top 5
+        
+        // Enrich NYT data with Google Books
+        const enrichedBooks = [];
+        for (const book of nytBooks) {
+             // Search using Title + Author is most precise
+             const q = `intitle:"${book.title}" inauthor:"${book.author}"`;
+             try {
+                const gRes = await axios.get("https://www.googleapis.com/books/v1/volumes", {
+                    params: {
+                        q,
+                        key: process.env.GOOGLE_BOOKS_API_KEY,
+                        maxResults: 1,
+                        printType: "books",
+                        hl: lang.split('-')[0]
+                    }
+                });
+                
+                const item = gRes.data.items?.[0];
+                if (item) {
+                    // Inject NYT Metadata
+                    item.isBestseller = true;
+                    item.bestsellerInfo = {
+                        rank: book.rank,
+                        rankLastWeek: book.rank_last_week,
+                        weeksOnList: book.weeks_on_list,
+                        listName: usedList
+                    };
+                    enrichedBooks.push(item);
+                }
+             } catch (err) { }
+        }
+        
+        return enrichedBooks;
+
+    } catch (error) {
+        logger.error(`NYT Recommendation failed: ${error.message} (Genre: ${genre})`);
+        return [];
+    }
+};
+
+// ------------------------
+// Recommend Books (Wizard)
+// ------------------------
+export const recommendBooks = async (req, res) => {
+  try {
+    const { genres, mood, length } = req.body;
+    const userId = req.user.id;
+    const lang = req.query.lang || 'en';
+
+    // 1. Build Google Query (Vibe Search)
+    const moodMap = {
+      happy: "humor comedy funny",
+      dramatic: "drama emotional",
+      thrilling: "thriller suspense tension",
+      educational: "science history biography education",
+      romantic: "romance love relationship",
+      fantasy: "fantasy magic",
+      scifi: "\"science fiction\" space future",
+      mystery: "mystery detective crime"
+    };
+
+    let q = "";
+    
+    // Add Genres (Strict Category)
+    // Make sure we handle "science fiction" with quotes if it comes as a genre
+    if (genres && genres.length > 0) {
+      const genreQuery = genres.map(g => {
+          let cleanG = g.toLowerCase();
+          if (cleanG === 'science fiction' || cleanG === 'scifi') cleanG = '"science fiction"';
+          return `subject:${cleanG}`;
+      }).join(" OR ");
+      q += `(${genreQuery})`;
+    }
+
+    if (mood && moodMap[mood]) {
+       const moodKeywords = moodMap[mood].split(" ").join(" OR ");
+       q += (q ? " " : "") + `(${moodKeywords})`;
+    }
+
+    if (!q) q = "subject:fiction";
+
+    // 2. Fetch User's Read Books to exclude
+    const userLists = await BookList.find({ user: userId });
+    const excludedBookIds = new Set();
+    userLists.forEach(list => {
+      list.books.forEach(book => excludedBookIds.add(book.googleBookId));
+    });
+
+    // 3. EXECUTE PARALLEL SEARCH: NYT (Quality) + Google (Vibe)
+    logger.info(`[Recommendation] Starting Hybrid Search: Query='${q}'`);
+    
+    const primaryGenre = genres?.[0] || "fiction";
+
+    const [googleResponse, nytItems] = await Promise.all([
+        axios.get("https://www.googleapis.com/books/v1/volumes", {
+            params: {
+                q,
+                key: process.env.GOOGLE_BOOKS_API_KEY,
+                maxResults: 40,
+                printType: "books",
+                orderBy: "relevance", 
+                hl: lang.split('-')[0]
+            }
+        }).catch(e => {
+            logger.error(`Google Search Failed: ${e.message}`);
+            return { data: { items: [] } };
+        }),
+        
+        fetchNytRecommendations(primaryGenre, lang)
+    ]);
+
+    let googleItems = googleResponse.data?.items || [];
+    logger.info(`[Recommendation] Raw Results - Google: ${googleItems.length}, NYT: ${nytItems.length}`);
+
+    // FALLBACK for Google: If loose Vibe search fails, relax to strict Genre
+    if (googleItems.length === 0 && mood && genres.length > 0) {
+       const fallbackQ = genres.map(g => {
+          let cleanG = g.toLowerCase();
+          if (cleanG === 'science fiction' || cleanG === 'scifi') cleanG = '"science fiction"';
+          return `subject:${cleanG}`;
+       }).join(" OR ");
+
+       logger.info(`[Recommendation] Google 0 results. Retrying fallback: ${fallbackQ}`);
+       try {
+         const fbRes = await axios.get("https://www.googleapis.com/books/v1/volumes", {
+            params: { q: fallbackQ, key: process.env.GOOGLE_BOOKS_API_KEY, maxResults: 40, printType: "books", hl: lang.split('-')[0] }
+          });
+          googleItems = fbRes.data.items || [];
+          logger.info(`[Recommendation] Fallback SUCCESS: Found ${googleItems.length} items`);
+       } catch (e) { console.error('Fallback Error:', e.message); }
+    }
+
+    // 4. MERGE & DEDUPLICATE
+    const allCandidates = [...nytItems, ...googleItems];
+    const uniqueItems = [];
+    const seenIds = new Set();
+
+    for (const item of allCandidates) {
+        if (!seenIds.has(item.id) && !excludedBookIds.has(item.id)) {
+            seenIds.add(item.id);
+            uniqueItems.push(item);
+        }
+    }
+
+
+    // 5. Client-side Filtering (Length, etc)
+    const filteredItems = uniqueItems.filter(item => {
+      // Allow books without covers (we look them up)
+      
+      const pages = item.volumeInfo.pageCount || 0;
+      // Note: NYT books might not have page counts if enrichment was partial, be lenient
+      if (pages > 0) { 
+        if (length === 'short' && pages > 350) return false;
+        if (length === 'long' && pages < 500) return false;
+        if (length === 'medium' && (pages < 300 || pages > 600)) return false;
+      }
+      return true;
+    });
+
+    // 6. Format
+    const recommendations = filteredItems
+      .slice(0, 10)
+      .map(item => {
+        // Safety check: ensure imageLinks object exists
+        if (!item.volumeInfo.imageLinks) {
+            item.volumeInfo.imageLinks = {};
+        }
+        item.volumeInfo.imageLinks.thumbnail = cleanGoogleBooksUrl(item.volumeInfo.imageLinks.thumbnail, false);
+        return item;
+      });
+
+    logger.info(`[Recommendation] Final count: ${recommendations.length}`);
+    try {
+        return res.status(200).json({ recommendations });
+    } catch (sendError) {
+        logger.error(`Error sending response: ${sendError.message}`);
+        return res.status(500).json({ message: "Error sending response" });
+    }
+
+  } catch (error) {
+    logger.error("Error recommending books: " + error.message);
+    // Ensure we don't send headers twice
+    if (!res.headersSent) {
+        res.status(500).json({ message: "Error generating recommendations", error: error.message });
+    }
   }
 };
 

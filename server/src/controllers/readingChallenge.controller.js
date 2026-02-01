@@ -87,7 +87,20 @@ export const getUserChallenges = async (req, res) => {
 
                 await challenge.save();
             }
-            return challenge;
+            
+            // Inject computed fields
+            const challengeObj = challenge.toObject();
+            if (challenge.status === 'active' || challenge.status === 'completed') {
+                const now = new Date();
+                const end = new Date(challenge.endDate);
+                const diffTime = end - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                challengeObj.daysRemaining = diffDays > 0 ? diffDays : 0;
+            } else {
+                challengeObj.daysRemaining = 0;
+            }
+            
+            return challengeObj;
         }));
 
         res.status(200).json({ challenges: updatedChallenges });

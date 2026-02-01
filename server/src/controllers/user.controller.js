@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import BookList from "../models/bookList.model.js";
 import Review from "../models/review.model.js";
 import UserSearchHistory from "../models/userSearchHistory.model.js";
+import ReadingChallenge from "../models/readingChallenge.model.js";
 
 
 // ------------------------
@@ -496,6 +497,17 @@ export const getUserStats = async (req, res) => {
             }
         }
 
+        // Challenge Stats
+        const challenges = await ReadingChallenge.find({ user: userId });
+        const challengeStats = {
+            active:0,
+            completed: 0
+        };
+        challenges.forEach(c => {
+            if (c.status === 'active') challengeStats.active++;
+            if (c.status === 'completed') challengeStats.completed++;
+        });
+
         res.status(200).json({
             totalReviews,
             totalBooks: readingStats.read, // Use explicitly READ books for "Books Read" stat
@@ -506,11 +518,35 @@ export const getUserStats = async (req, res) => {
             ratingDistribution,
             topAuthor,
             topCategory,
-            readingProfile: user.readingProfile
+            readingProfile: user.readingProfile,
+            challengeStats
         });
 
     } catch (error) {
         console.error("Error fetching user stats:", error);
         res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
+// ------------------------
+// Get Friends (Mutual Followers)
+// ------------------------
+export const getFriends = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Find intersection of following and followers
+        const mutualIds = user.following.filter(id => user.followers.includes(id));
+        
+        const friends = await User.find({ _id: { $in: mutualIds } })
+            .select("username name avatar isPrivate");
+
+        res.status(200).json({ friends });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching friends" });
     }
 };
