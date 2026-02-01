@@ -29,6 +29,21 @@ export default function AppLayout() {
                     headerShown: false,
                 }}
             />
+            <Stack.Screen
+                name="club/create"
+                options={{
+                    presentation: 'card',
+                    animation: 'slide_from_bottom',
+                    headerShown: false,
+                }}
+            />
+            <Stack.Screen
+                name="club/[id]"
+                options={{
+                    presentation: 'card',
+                    headerShown: false,
+                }}
+            />
         </Stack>
     );
 }

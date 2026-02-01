@@ -15,6 +15,7 @@ import bookRoutes from "./routes/book.routes.js";
 import redirectRoutes from "./routes/redirect.routes.js";
 import readingChallengeRoutes from "./routes/readingChallenge.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import bookClubRoutes from "./routes/bookClub.routes.js";
 
 
 const __filename = path.resolve(process.cwd(), 'src/app.js');
@@ -63,6 +64,7 @@ app.use("/book", bookRoutes);
 app.use("/redirect", redirectRoutes);
 app.use("/reading-challenge", readingChallengeRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/book-club", bookClubRoutes);
 
 // Manejo global de errores (siempre el último middleware)
 app.use(errorHandler);

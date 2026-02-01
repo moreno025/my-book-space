@@ -41,6 +41,28 @@ export const uploadAvatar = multer({
   limits: { fileSize: 3 * 1024 * 1024 } // 2MB
 }).single("avatar");
 
+const clubStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, "../uploads/clubs");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    // Use clubId if available in params, otherwise user ID + timestamp (creation)
+    const identifier = req.params.clubId || `new-${req.user._id}`;
+    cb(null, `club-${identifier}-${Date.now()}${ext}`);
+  }
+});
+
+export const uploadClubAvatar = multer({
+  storage: clubStorage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+}).single("avatar");
+
 
 
 export const removeOldAvatar = async (req, res, next) => {

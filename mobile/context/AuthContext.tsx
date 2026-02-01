@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback } from "react";
+import { createContext, useState, useEffect, useCallback, useContext } from "react";
 import i18n from "../i18n"; // Import i18n configuration
 import { getItem, setItem, removeItem } from "../utils/storage";
 import { api, authApi, booksApi, userApi } from "../constants/api/index";
@@ -69,13 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             }
 
                             setAuthState(savedToken, parsedUser);
+                            // Handle errors
                         } catch (error: any) {
-                            console.error("🔒 [AuthContext] Session validation error details:", {
-                                message: error.message,
-                                status: error.response?.status,
-                                code: error.code,
-                                url: error.config?.url
-                            });
+                            if (error.response?.status === 401) {
+                                // Expected behavior for expired tokens
+                                console.log("🔒 [AuthContext] Session expired (401), clearing credentials.");
+                            } else {
+                                // Unexpected errors (network, server 500, etc)
+                                console.error("🔒 [AuthContext] Unexpected session validation error:", {
+                                    message: error.message,
+                                    status: error.response?.status,
+                                    url: error.config?.url
+                                });
+                            }
                             if (error.response?.status !== 401) {
                                 // If it's not a 401 (e.g. timeout, 500), we might still want to keep the session
                                 // but we should be careful. For now, let's keep the existing logic.
@@ -240,3 +246,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         </AuthContext.Provider>
     );
 }
+
+export const useAuth = () => useContext(AuthContext);

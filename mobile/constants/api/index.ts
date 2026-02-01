@@ -6,6 +6,7 @@ import { Notification } from "../../types/notification";
 
 export { publicApi, privateApi };
 export { privateApi as api };
+export { bookClubApi } from "./bookClub";
 
 export const authApi = {
     login: (email: string, password: string) =>
@@ -165,6 +166,12 @@ export const userApi = {
 
     getFriends: () =>
         privateApi.get<{ friends: any[] }>("/user/friends"),
+
+    getFollowers: (userId: string) =>
+        privateApi.get<{ followers: any[] }>(`/user/followers/${userId}`),
+
+    getFollowing: (userId: string) =>
+        privateApi.get<{ followings: any[] }>(`/user/followings/${userId}`),
 };
 
 export const challengeApi = {

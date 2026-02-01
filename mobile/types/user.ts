@@ -1,5 +1,6 @@
 /** User interface for the application */
 export interface User {
+    _id: string; // MongoDB ID
     id: string;
     name: string;
     username: string;

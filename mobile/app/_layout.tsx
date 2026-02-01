@@ -3,6 +3,7 @@ import 'react-native-reanimated';
 import '../i18n';
 import { AuthProvider } from "../context/AuthContext";
 import { ToastProvider } from "../context/ToastContext";
+import { SocketProvider } from "../context/SocketContext";
 import { useAuth } from "../hooks/useAuth";
 import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
@@ -15,7 +16,9 @@ export default function RootLayout() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <AuthGate />
+        <SocketProvider>
+          <AuthGate />
+        </SocketProvider>
       </AuthProvider>
     </ToastProvider>
   );

@@ -26,6 +26,7 @@ export default function AppLayout() {
     >
       <Tabs.Screen name="index" options={{ title: t('tabs.home') }} />
       <Tabs.Screen name="search" options={{ title: t('tabs.search') }} />
+      <Tabs.Screen name="clubs" options={{ title: t('tabs.clubs') }} />
       <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
     </Tabs>
   );

@@ -35,6 +35,8 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                         iconName = isFocused ? "home" : "home-outline";
                     } else if (route.name === "search") {
                         iconName = isFocused ? "search" : "search-outline";
+                    } else if (route.name === "clubs") {
+                        iconName = isFocused ? "people" : "people-outline";
                     } else if (route.name === "profile") {
                         iconName = isFocused ? "person" : "person-outline";
                     }
