@@ -24,21 +24,28 @@ import { BookListBook } from "../../../types/bookList";
 import { BookGrid } from "../../../components/book/BookGrid";
 
 import { BookOptionsModal } from "../../../components/profile/BookOptionsModal";
+import { CollaboratorsModal } from "../../../components/list/CollaboratorsModal";
 
 export default function ListDetailScreen() {
     const { id, view } = useLocalSearchParams<{ id: string, view?: 'management' | 'discovery' }>();
     const router = useRouter();
-    const { list, loading, error, refetch } = useListDetail(id);
+    const { list, loading, error, refetch, addCollaborator, removeCollaborator } = useListDetail(id);
     const fontsLoaded = useAppFonts();
     const { showToast } = useToast();
     const { user } = useContext(AuthContext);
     const [isSaving, setIsSaving] = useState(false);
     // const [statusModalVisible, setStatusModalVisible] = useState(false); // Removed
     const [optionsModalVisible, setOptionsModalVisible] = useState(false);
+    const [collaboratorsModalVisible, setCollaboratorsModalVisible] = useState(false);
     const [selectedBook, setSelectedBook] = useState<BookListBook | null>(null);
 
     const isDiscovery = view === 'discovery';
-    const isOwnList = !!(list?.user?._id && list.user._id === user?.id);
+
+    // Robust check for ownership
+    const listOwnerId = typeof list?.user === 'object' ? list.user._id : list?.user;
+    const currentUserId = user?.id;
+    const isOwnList = !!(listOwnerId && currentUserId && listOwnerId.toString() === currentUserId.toString());
+
     const isAlreadySaved = !!(list?.savedBy && list.savedBy.includes(user?.id || ""));
 
     const handleSaveList = useCallback(async () => {
@@ -231,6 +238,7 @@ export default function ListDetailScreen() {
             onBack={() => router.back()}
             onCopy={handleCopyList}
             onUsernamePress={handleUsernamePress}
+            onManageCollaborators={() => setCollaboratorsModalVisible(true)}
         />
     );
 
@@ -287,6 +295,15 @@ export default function ListDetailScreen() {
                         router.push({ pathname: "/book/[id]", params: { id: selectedBook.googleBookId } });
                     }
                 }}
+            />
+
+            <CollaboratorsModal
+                visible={collaboratorsModalVisible}
+                onClose={() => setCollaboratorsModalVisible(false)}
+                listId={id}
+                currentCollaborators={list?.collaborators || []}
+                onAdd={addCollaborator}
+                onRemove={removeCollaborator}
             />
         </View>
     );

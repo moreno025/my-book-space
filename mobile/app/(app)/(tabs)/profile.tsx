@@ -3,6 +3,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 // hooks
@@ -21,10 +22,12 @@ import { bookListApi } from "../../../constants/api";
 import { StatsTab } from "@/components/profile/StatsTab";
 import { ChallengesTab } from "@/components/profile/ChallengesTab";
 import { CreateChallengeModal } from "@/components/profile/CreateChallengeModal";
+import { CollaboratorsModal } from "@/components/list/CollaboratorsModal";
 
 
 export default function ProfileScreen() {
     const { t } = useTranslation();
+    const router = useRouter();
     const insets = useSafeAreaInsets();
     const { user, refreshUser } = useAuth();
     const { lists, loading, refetch } = useUserLists({
@@ -41,6 +44,8 @@ export default function ProfileScreen() {
     const [createChallengeModalVisible, setCreateChallengeModalVisible] = useState(false);
     const [selectedListId, setSelectedListId] = useState<string | null>(null);
     const [listToRename, setListToRename] = useState<{ id: string; title: string } | null>(null);
+    const [collaboratorsModalVisible, setCollaboratorsModalVisible] = useState(false);
+    const [selectedListForCollaborators, setSelectedListForCollaborators] = useState<string | null>(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -108,7 +113,7 @@ export default function ProfileScreen() {
     const handleUnsaveList = async (listId: string) => {
         try {
             await bookListApi.unsaveList(listId);
-            showToast("List removed from your profile", "error");
+            showToast("List removed from your profile", "success");
             refetch();
         } catch (error) {
             console.error("Failed to unsave list:", error);
@@ -117,6 +122,35 @@ export default function ProfileScreen() {
     };
 
     const [activeTab, setActiveTab] = useState<'lists' | 'stats' | 'challenges'>('lists');
+
+    const handleOpenCollaborators = (listId: string) => {
+        setSelectedListForCollaborators(listId);
+        setCollaboratorsModalVisible(true);
+    };
+
+    const handleAddCollaborator = async (userId: string) => {
+        if (!selectedListForCollaborators) return false;
+        try {
+            await bookListApi.addCollaborator(selectedListForCollaborators, userId);
+            refetch(); // Refresh lists to update collaborators list in state
+            return true;
+        } catch (error) {
+            console.error("Failed to add collaborator:", error);
+            throw error;
+        }
+    };
+
+    const handleRemoveCollaborator = async (userId: string) => {
+        if (!selectedListForCollaborators) return false;
+        try {
+            await bookListApi.removeCollaborator(selectedListForCollaborators, userId);
+            refetch();
+            return true;
+        } catch (error) {
+            console.error("Failed to remove collaborator:", error);
+            throw error;
+        }
+    };
 
     // Refresh challenges when switching to challenges tab
     useEffect(() => {
@@ -133,6 +167,7 @@ export default function ProfileScreen() {
                     user={user}
                     onAddList={handleCreateList}
                     listsCount={lists.length}
+                    onNotification={() => router.push('/notifications')}
                 />
 
                 {/* Tab Switcher */}
@@ -176,25 +211,57 @@ export default function ProfileScreen() {
                                 </Text>
                             </View>
                         ) : (
-                            lists.map(list => (
-                                <BookListCarousel
-                                    key={list._id}
-                                    listId={list._id}
-                                    title={list.title}
-                                    visibility={list.visibility}
-                                    ownerId={typeof list.user === 'string' ? list.user : list.user._id}
-                                    books={list.books}
-                                    onRename={handleRenameList}
-                                    onToggleVisibility={handleToggleVisibility}
-                                    onUnsave={handleUnsaveList}
-                                    isOwnerPrivate={user?.isPrivate}
-                                    onAddBook={() => handleOpenAddBook(list._id)}
-                                    onRefresh={() => {
-                                        refetch();
-                                        fetchChallenges();
-                                    }}
-                                />
-                            ))
+                            <>
+                                {/* My Lists */}
+                                {lists.filter(l => (typeof l.user === 'string' ? l.user : l.user._id) === user?.id).map((list, index) => (
+                                    <View key={list._id}>
+                                        <BookListCarousel
+                                            listId={list._id}
+                                            title={list.title}
+                                            visibility={list.visibility}
+                                            ownerId={typeof list.user === 'string' ? list.user : list.user._id}
+                                            books={list.books}
+                                            onRename={handleRenameList}
+                                            onToggleVisibility={handleToggleVisibility}
+                                            onUnsave={handleUnsaveList}
+                                            isOwnerPrivate={user?.isPrivate}
+                                            onAddBook={() => handleOpenAddBook(list._id)}
+                                            onManageCollaborators={handleOpenCollaborators}
+                                            onRefresh={() => {
+                                                refetch();
+                                                fetchChallenges();
+                                            }}
+                                        />
+                                    </View>
+                                ))}
+
+                                {/* Shared Lists */}
+                                {lists.filter(l => (typeof l.user === 'string' ? l.user : l.user._id) !== user?.id).length > 0 && (
+                                    <View style={styles.sectionHeaderContainer}>
+                                        <Ionicons name="people" size={20} color="#3B82F6" />
+                                        <Text style={styles.sectionTitle}>Shared with You</Text>
+                                    </View>
+                                )}
+                                {lists.filter(l => (typeof l.user === 'string' ? l.user : l.user._id) !== user?.id).map(list => (
+                                    <BookListCarousel
+                                        key={list._id}
+                                        listId={list._id}
+                                        title={list.title}
+                                        visibility={list.visibility}
+                                        ownerId={typeof list.user === 'string' ? list.user : list.user._id}
+                                        books={list.books}
+                                        onRename={handleRenameList}
+                                        onToggleVisibility={handleToggleVisibility}
+                                        onUnsave={handleUnsaveList}
+                                        isOwnerPrivate={user?.isPrivate}
+                                        onAddBook={() => handleOpenAddBook(list._id)}
+                                        onRefresh={() => {
+                                            refetch();
+                                            fetchChallenges();
+                                        }}
+                                    />
+                                ))}
+                            </>
                         )}
                     </>
                 ) : activeTab === 'stats' ? (
@@ -241,6 +308,18 @@ export default function ProfileScreen() {
                 visible={createChallengeModalVisible}
                 onClose={() => setCreateChallengeModalVisible(false)}
                 onSubmit={createChallenge}
+            />
+
+            <CollaboratorsModal
+                visible={collaboratorsModalVisible}
+                onClose={() => {
+                    setCollaboratorsModalVisible(false);
+                    setSelectedListForCollaborators(null);
+                }}
+                listId={selectedListForCollaborators || ""}
+                currentCollaborators={lists.find(l => l._id === selectedListForCollaborators)?.collaborators || []}
+                onAdd={handleAddCollaborator}
+                onRemove={handleRemoveCollaborator}
             />
         </SafeAreaView >
     );
@@ -295,5 +374,21 @@ const styles = StyleSheet.create({
     },
     activeTabText: {
         color: "#3B82F6",
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontFamily: "Nunito-Bold",
+        color: "#F1F5F9",
+        marginHorizontal: 20,
+        marginBottom: 10,
+        marginTop: 10,
+    },
+    sectionHeaderContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        marginTop: 20,
+        marginBottom: 5,
+        gap: 10,
     },
 });
