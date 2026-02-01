@@ -2,6 +2,7 @@ import BookList from "../models/bookList.model.js";
 import User from "../models/user.model.js";
 import Review from "../models/review.model.js";
 import { cleanGoogleBooksUrl } from "../utils/bookUtils.js";
+import Notification from "../models/notification.model.js";
 
 // ------------------------
 // Create Book List
@@ -42,6 +43,9 @@ export const updateList = async (req, res) => {
         list.description = description ?? list.description;
         
         if (visibility) {
+            if (visibility === 'private' && list.collaborators && list.collaborators.length > 0) {
+                 return res.status(403).json({ message: "Cannot make a collaborative list private. Remove collaborators first." });
+            }
             list.visibility = visibility;
         }
 
@@ -83,7 +87,11 @@ export const addBookToList = async (req, res) => {
 
         const list = await BookList.findById(listId);
         if (!list) return res.status(404).json({ message: "Lista no encontrada" });
-        if (!list.user.equals(req.user._id)) return res.status(403).json({ message: "No autorizado" });
+        
+        const isOwner = list.user.equals(req.user._id);
+        const isCollaborator = list.collaborators.some(id => id.equals(req.user._id));
+
+        if (!isOwner && !isCollaborator) return res.status(403).json({ message: "No autorizado" });
 
         // Evitar duplicados
         if (list.books.some(b => b.googleBookId === googleBookId)) {
@@ -301,7 +309,11 @@ export const removeBookFromList = async (req, res) => {
 
     const list = await BookList.findById(listId);
     if (!list) return res.status(404).json({ message: "Lista no encontrada" });
-    if (!list.user.equals(req.user._id)) return res.status(403).json({ message: "No autorizado" });
+
+    const isOwner = list.user.equals(req.user._id);
+    const isCollaborator = list.collaborators.some(id => id.equals(req.user._id));
+
+    if (!isOwner && !isCollaborator) return res.status(403).json({ message: "No autorizado" });
 
     list.books = list.books.filter(b => b.googleBookId !== googleBookId);
     await list.save();
@@ -433,18 +445,29 @@ export const getUserLists = async (req, res) => {
             }
             query.visibility = "public";
         } else {
-            // Owner can see their saved lists too
+            // Owner can see their saved lists AND lists they collaborate on
             query = {
                 $or: [
                     { user: user._id },
-                    { _id: { $in: user.savedLists } }
+                    { _id: { $in: user.savedLists } },
+                    { collaborators: user._id }
                 ]
             };
         }
 
         const lists = await BookList.find(query).populate("user", "username avatar").sort({ createdAt: -1 });
 
-        res.status(200).json({ lists });
+        // Sanitize existing lists with clean thumbnails
+        const cleanedLists = lists.map(list => {
+            const listObj = list.toObject();
+            listObj.books = listObj.books.map(b => ({
+                ...b,
+                thumbnail: cleanGoogleBooksUrl(b.thumbnail)
+            }));
+            return listObj;
+        });
+
+        res.status(200).json({ lists: cleanedLists });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error obteniendo listas del usuario" });
@@ -500,9 +523,102 @@ export const getListById = async (req, res) => {
             }));
         }
 
+        // Clean thumbnails
+        listWithReviewCounts.books = listWithReviewCounts.books.map(book => ({
+            ...book,
+            thumbnail: cleanGoogleBooksUrl(book.thumbnail)
+        }));
+
         res.status(200).json({ list: listWithReviewCounts });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error obteniendo la lista" });
+    }
+};
+
+// ------------------------
+// Add Collaborator
+// ------------------------
+export const addCollaborator = async (req, res) => {
+    try {
+        const { listId } = req.params;
+        const { userId } = req.body; // User to add
+
+        const list = await BookList.findById(listId);
+        if (!list) return res.status(404).json({ message: "List not found" });
+        if (!list.user.equals(req.user._id)) return res.status(403).json({ message: "Only the owner can add collaborators" });
+
+        if (list.visibility === 'private') {
+            return res.status(403).json({ message: "Cannot add collaborators to a private list. Make it public first." });
+        }
+
+        // Check mutual following
+        const owner = await User.findById(req.user._id);
+        const targetUser = await User.findById(userId);
+
+        if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+        const ownerFollowsTarget = owner.following.includes(userId);
+        const targetFollowsOwner = targetUser.following.includes(owner._id);
+
+        if (!ownerFollowsTarget || !targetFollowsOwner) {
+            return res.status(403).json({ message: "You can only collaborate with mutual followers" });
+        }
+
+        if (list.collaborators.includes(userId)) {
+            return res.status(400).json({ message: "User is already a collaborator" });
+        }
+
+        list.collaborators.push(userId);
+        await list.save();
+
+        res.status(200).json({ message: "Collaborator added", list });
+
+        // Trigger Notification
+        try {
+            await Notification.create({
+                recipient: userId,
+                sender: req.user._id,
+                type: 'collaborator_added',
+                data: {
+                    listId: list._id,
+                    listTitle: list.title
+                }
+            });
+        } catch (notifError) {
+            console.error("Error creating notification:", notifError);
+            // Don't fail the request if notification fails
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error adding collaborator" });
+    }
+};
+
+// ------------------------
+// Remove Collaborator
+// ------------------------
+export const removeCollaborator = async (req, res) => {
+    try {
+        const { listId, userId } = req.params;
+
+        const list = await BookList.findById(listId);
+        if (!list) return res.status(404).json({ message: "List not found" });
+
+        const isOwner = list.user.equals(req.user._id);
+        const isSelf = req.user._id.toString() === userId;
+
+        // Owner can remove anyone. Collaborator can remove themselves (leave).
+        if (!isOwner && !isSelf) {
+            return res.status(403).json({ message: "Not authorized to remove this collaborator" });
+        }
+
+        list.collaborators = list.collaborators.filter(id => id.toString() !== userId);
+        await list.save();
+
+        res.status(200).json({ message: "Collaborator removed", list });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error removing collaborator" });
     }
 };

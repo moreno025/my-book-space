@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/protect.js";
-import { createBookList, updateList, deleteList, addBookToList, searchListsByBook, removeBookFromList, saveList, unsaveList, getUserLists, getListsByBookId, getListById, copyBookList, updateBookStatus } from "../controllers/bookList.controller.js";
+import { createBookList, updateList, deleteList, addBookToList, searchListsByBook, removeBookFromList, saveList, unsaveList, getUserLists, getListsByBookId, getListById, copyBookList, updateBookStatus, addCollaborator, removeCollaborator } from "../controllers/bookList.controller.js";
 import { validateBody } from "../middleware/validate.js";
 import { bookListSchema } from "../validators/bookList.validator.js";
 
@@ -15,6 +15,8 @@ router.patch("/:listId/book/:googleBookId/status", protect, updateBookStatus);
 router.post("/:listId/save", protect, saveList);
 router.post("/:listId/unsave", protect, unsaveList);
 router.post("/:listId/copy", protect, copyBookList);
+router.post("/:listId/collaborators", protect, addCollaborator);
+router.delete("/:listId/collaborators/:userId", protect, removeCollaborator);
 router.get("/search/:title", protect, searchListsByBook);
 router.get("/:username/lists", protect, getUserLists);
 router.get("/discovery/:googleBookId", protect, getListsByBookId);

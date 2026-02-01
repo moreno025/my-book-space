@@ -19,6 +19,7 @@ export interface BookList {
         username: string;
         avatar?: string;
     };
+    collaborators: string[];
     books: BookListBook[];
     savedBy: string[];
     createdAt: string;

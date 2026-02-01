@@ -33,6 +33,7 @@ const bookListSchema = new mongoose.Schema({
         enum: ["public", "private"],
         default: "public",
     },
+    collaborators: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     sourceList: { type: mongoose.Schema.Types.ObjectId, ref: "BookList" },
     savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
 
