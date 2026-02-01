@@ -7,6 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { booksApi } from '../../constants/api';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
+import ScanResultSelection from './ScanResultSelection';
+import { SaveBookModal } from '../book/SaveBookModal';
+import { ReviewModal } from '../reviews/ReviewModal';
+import { CreateListModal } from '../profile/CreateListModal';
+import { useCreateReview } from '../../hooks/Review/useCreateReview';
+import { useToast } from '../../context/ToastContext';
 
 interface BarcodeScannerProps {
     isVisible: boolean;
@@ -19,7 +25,16 @@ export default function BarcodeScanner({ isVisible, onClose }: BarcodeScannerPro
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [scannedBook, setScannedBook] = useState<any>(null);
     const isProcessingRef = React.useRef(false);
+
+    // Modals state
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [showCreateListModal, setShowCreateListModal] = useState(false);
+
+    const { showToast } = useToast();
+    const { createReview, loading: submittingReview } = useCreateReview(scannedBook?.id || '');
 
     useEffect(() => {
         if (isVisible && !permission?.granted) {
@@ -41,13 +56,8 @@ export default function BarcodeScanner({ isVisible, onClose }: BarcodeScannerPro
             const res = await booksApi.getBookByIsbn(data, i18n.language);
 
             if (res.data) {
-                // Keep scanned = true and isProcessingRef = true to prevent further triggers
-                // while we navigate away.
-                onClose();
-                router.push(`/(app)/book/${res.data.id}`);
-
-                // Reset after a delay or after unmount (handled by being a local component)
-                // For safety, let's not reset scanned immediately here.
+                setScannedBook(res.data);
+                // We keep scanned/loading true to stop the camera
             }
         } catch (error: any) {
             console.error('Scan error:', error);
@@ -75,9 +85,30 @@ export default function BarcodeScanner({ isVisible, onClose }: BarcodeScannerPro
         if (!isVisible) {
             setScanned(false);
             setLoading(false);
+            setScannedBook(null);
             isProcessingRef.current = false;
         }
     }, [isVisible]);
+
+    const handleCreateReview = async (data: { rating: number; review: string }) => {
+        try {
+            await createReview(data);
+            showToast(t('review.success'), 'success');
+            setShowReviewModal(false);
+            onClose();
+            router.push(`/(app)/book/${scannedBook.id}`);
+        } catch (error) {
+            console.error("Create review error:", error);
+            showToast(t('review.failed'), 'error');
+        }
+    };
+
+    const handleReset = () => {
+        setScannedBook(null);
+        setScanned(false);
+        setLoading(false);
+        isProcessingRef.current = false;
+    };
 
     if (!isVisible) return null;
 
@@ -134,6 +165,48 @@ export default function BarcodeScanner({ isVisible, onClose }: BarcodeScannerPro
                         </View>
                     </CameraView>
                 )}
+
+                {scannedBook && (
+                    <ScanResultSelection
+                        book={scannedBook}
+                        onAddToList={() => setShowSaveModal(true)}
+                        onWriteReview={() => setShowReviewModal(true)}
+                        onViewDetails={() => {
+                            onClose();
+                            router.push(`/(app)/book/${scannedBook.id}`);
+                        }}
+                        onCancel={handleReset}
+                    />
+                )}
+
+                <SaveBookModal
+                    visible={showSaveModal}
+                    book={scannedBook}
+                    onClose={() => setShowSaveModal(false)}
+                    onSuccess={(listName) => {
+                        showToast(t('common.saved_to', { list: listName }), 'success');
+                        onClose(); // Close scanner
+                        router.push('/(app)/(tabs)/profile'); // Navigate to Profile
+                    }}
+                    onCreateList={() => setShowCreateListModal(true)}
+                />
+
+                <ReviewModal
+                    visible={showReviewModal}
+                    onClose={() => setShowReviewModal(false)}
+                    onSubmit={handleCreateReview}
+                    loading={submittingReview}
+                />
+
+                <CreateListModal
+                    visible={showCreateListModal}
+                    onClose={() => setShowCreateListModal(false)}
+                    onSubmit={async () => {
+                        // After creating, we just close and return to save modal
+                        setShowCreateListModal(false);
+                        setShowSaveModal(true);
+                    }}
+                />
             </View>
         </Modal>
     );
