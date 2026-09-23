@@ -2,6 +2,14 @@
 // Email clients don't recognize custom schemes like mybookspace://
 // This endpoint redirects HTTPS links to the app's deep link scheme
 
+// Strict RFC 3986 encoding: the token is interpolated into HTML attributes and
+// inline JS strings, so characters encodeURIComponent leaves as-is (like ') are encoded too
+const encodeToken = (token) =>
+  encodeURIComponent(String(token)).replace(
+    /[!'()*~]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+
 export const redirectToResetPassword = async (req, res) => {
   const { token } = req.query;
 
@@ -26,12 +34,18 @@ export const redirectToResetPassword = async (req, res) => {
     `);
   }
 
+  const safeToken = encodeToken(token);
+
   // Production deep link (for standalone app builds)
-  const productionDeepLink = `mybookspace://reset-password?token=${token}`;
-  
-  // Development deep link (for Expo Go)
-  // Format: exp://YOUR_IP:8081/--/reset-password?token=xxx
-  const devDeepLink = `exp://192.168.1.34:8081/--/reset-password?token=${token}`;
+  const productionDeepLink = `mybookspace://reset-password?token=${safeToken}`;
+
+  // Development deep link (for Expo Go), only outside production
+  // EXPO_DEV_URL format: exp://YOUR_IP:8081
+  const isDevelopment = process.env.NODE_ENV !== "production";
+  const expoDevUrl = process.env.EXPO_DEV_URL;
+  const devDeepLink = isDevelopment && expoDevUrl
+    ? `${expoDevUrl}/--/reset-password?token=${safeToken}`
+    : null;
 
   // HTML with both options
   const html = `
@@ -94,8 +108,8 @@ export const redirectToResetPassword = async (req, res) => {
         <p>Si la aplicación no se abre automáticamente, pulsa uno de los botones:</p>
         
         <div id="buttons">
-          <a href="${devDeepLink}" class="button button-dev">Abrir en Expo Go (Dev)</a>
-          <a href="${productionDeepLink}" class="button">Abrir App (Producción)</a>
+          ${devDeepLink ? `<a href="${devDeepLink}" class="button button-dev">Abrir en Expo Go (Dev)</a>` : ""}
+          <a href="${productionDeepLink}" class="button">Abrir App</a>
         </div>
         
         <p style="margin-top: 30px; font-size: 14px; color: #999;">
@@ -103,15 +117,16 @@ export const redirectToResetPassword = async (req, res) => {
         </p>
       </div>
       <script>
+        ${devDeepLink ? `
         // Try development link first (Expo Go)
         setTimeout(function() {
           window.location.href = '${devDeepLink}';
         }, 100);
-        
-        // Fallback to production link after 1 second
+        ` : ""}
+        // Production link (fallback after 1 second when the dev link is tried first)
         setTimeout(function() {
           window.location.href = '${productionDeepLink}';
-        }, 1000);
+        }, ${devDeepLink ? 1000 : 100});
         
         // Hide spinner after 2 seconds
         setTimeout(function() {
@@ -149,7 +164,7 @@ export const redirectToVerifyEmail = async (req, res) => {
     `);
   }
 
-  const deepLink = `mybookspace://verify-new-email?token=${token}`;
+  const deepLink = `mybookspace://verify-new-email?token=${encodeToken(token)}`;
 
   const html = `
     <!DOCTYPE html>
