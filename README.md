@@ -116,4 +116,4 @@ npx expo start
 
 ## 👤 Author
 
-**Marco Moreno**: [GitHub](https://github.com/moreno025) · [LinkedIn](#)
+**Marco Moreno**: [GitHub](https://github.com/moreno025/) · [LinkedIn](https://www.linkedin.com/in/marco-moreno-pedrejon-5a5b8b3b2/)
